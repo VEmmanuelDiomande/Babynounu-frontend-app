@@ -1,88 +1,135 @@
 <template>
-  
-  <IonPage  @ionScroll="onScroll($event)" :scroll-events="true">
-    
+  <IonPage>
     <IonContent>
-      <HeaderMenuLayout Title="Messageries" PlaceholderSearch="Rechercher dans messageries" :countScroll="countScroll" />
-      
-      <CardMessagerie :Messages="Messages" />
+      <IonRefresher slot="fixed" @ionRefresh="handleRefresh">
+        <IonRefresherContent />
+      </IonRefresher>
+
+      <HeaderMenuLayout
+        Title="Messageries"
+        PlaceholderSearch="Rechercher dans messageries"
+        :countScroll="scrollCount"
+      >
+        <template v-slot:ContentSearchUp>
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            class="h-11 outline-none font-love text-base w-full bg-transparent border-5"
+            v-model="searchQuery"
+            @keyup.enter="searchMessages"
+          />
+        </template>
+      </HeaderMenuLayout>
+
+
+      <PageLoader
+        class-custom="h-[100vh] fixed inset-0"
+        size="large"
+        v-if="isLoadingChats"
+      />
+      <div v-else-if="dataChats && dataChats?.length != 0">
+        <CardMessagerie :Messages="dataChats" sender="nounou" />
+      </div>
+      <EmptyError
+        v-else-if="dataChats && dataChats?.length == 0"
+        nameIcons="RiNotificationLine"
+        heading="Aucune notification"
+        subHeading="Aucune notification disponible. Interagissez avec les autres utilisateurs !"
+      />
+      <E404Error v-else="isErrorChats" />
     </IonContent>
   </IonPage>
 </template>
 
-<script lang="ts" setup>
-import MainSideBar from "@/components/headers/sidebars/MainSideBar.vue";
+<script setup lang="ts">
+import { computed, onMounted, ref } from "vue";
+import { URL_API_ROUTE } from "@/routes/_requests/index.request";
+import { StorageUtils } from "@/utils/store.utils";
+import { SettingServices } from "@/services/setting.services";
+import {
+  IonContent,
+  IonPage,
+  IonRefresher,
+  IonRefresherContent,
+} from "@ionic/vue";
 import HeaderMenuLayout from "@/layouts/HeaderMenuLayout.vue";
-import { IonContent, IonPage } from "@ionic/vue";
+import { SocketService } from "@/services/socket.services";
+import { useScrollStore } from "@/stores/scrollStore";
+import { useQuery } from "@tanstack/vue-query";
 import CardMessagerie from "./__partials/cardMessagerie.vue";
-import { ref } from "vue";
-import { ScrollUtils } from "@/utils/scroll.utils";
+import PageLoader from "@/components/loaders/pageLoader.vue";
+import CardNotification from "../notification/CardNotification.vue";
+import EmptyError from "@/components/errors/empty.error.vue";
+import E404Error from "@/components/errors/e404.error.vue";
 
+interface Room {
+  id: number;
+  parent: {
+    fullname: string;
+  };
+  nounou: {
+    fullname: string;
+  };
+  parentUnreadCount: number;
+  nounouUnreadCount: number;
+  adminUnreadCount: number;
+}
 
-const {  countScroll, onScroll} = ScrollUtils();
-const Messages = ref([
-  {
-    "name": "Alice Johnson",
-    "message": "It was great catching up with you earlier. Let’s do it again soon!",
-    "createdAt": "2024-11-05 22:58:00",
-    "viewed": true
+const props = defineProps({
+  activeConversation: {
+    type: Object as () => Room | null,
+    default: null,
   },
-  {
-    "name": "Robert Williams",
-    "message": "Just wanted to say thank you for all the support you’ve given me lately.",
-    "createdAt": "2024-10-31 02:44:12",
-    "viewed": true
-  },
-  {
-    "name": "Charles Brown",
-    "message": "I hope this message finds you well and in good spirits.",
-    "createdAt": "2024-10-22 23:17:10",
-    "viewed": false
-  },
-  {
-    "name": "Diana Smith",
-    "message": "Please let me know if there's anything else I can help you with.",
-    "createdAt": "2024-11-14 22:51:46",
-    "viewed": true
-  },
-  {
-    "name": "Evelyn Garcia",
-    "message": "Looking forward to our next meeting. Let me know if the time still works.",
-    "createdAt": "2024-10-27 07:16:28",
-    "viewed": true
-  },
-  {
-    "name": "Frank Harris",
-    "message": "I wanted to check in and see how everything is going on your end.",
-    "createdAt": "2024-11-07 10:13:39",
-    "viewed": false
-  },
-  {
-    "name": "Grace Martinez",
-    "message": "Your insights during the last meeting were incredibly helpful. Thank you!",
-    "createdAt": "2024-11-13 14:22:47",
-    "viewed": false
-  },
-  {
-    "name": "Henry Lee",
-    "message": "If you have any questions, don’t hesitate to reach out at any time.",
-    "createdAt": "2024-11-08 10:49:11",
-    "viewed": false
-  },
-  {
-    "name": "Isabella Taylor",
-    "message": "I’ll be sending over the details shortly. Thanks for your patience.",
-    "createdAt": "2024-10-25 01:02:52",
-    "viewed": true
-  },
-  {
-    "name": "Jack Wilson",
-    "message": "It’s always a pleasure working with you. Keep up the amazing work!",
-    "createdAt": "2024-11-11 02:21:10",
-    "viewed": false
-  }
-]
+});
+const socketService = new SocketService();
+const currentUserId = ref<string | null>(null);
+const searchQuery = ref("");
 
-)
+// Computed properties
+const scrollCount = computed(() => useScrollStore().countScrollMessage);
+const conversations = ref<Room[]>([]);
+const userTypeProfil = ref();
+const isOpenDetailMessage = ref(false);
+
+const searchMessages = () => {
+  // useMessageStore.setSearchValue(searchQuery.value);
+  refetch();
+};
+
+const handleRefresh = (event: CustomEvent) => {
+  refetch().finally(() => event.detail.complete());
+};
+
+const fetchConversations = async () => {
+  userTypeProfil.value = (await StorageUtils().getStore("nType_Profil")).value;
+  const userId = (await StorageUtils().getStore("nUser_Id")).value;
+  currentUserId.value = userId;
+
+  return await SettingServices()
+    .listSetting(`${URL_API_ROUTE.CONVERSATION_ALL}?userId=${userId}`)
+    .then((res) => {
+      if (res) {
+        return res;
+      }
+    });
+};
+
+// Configuration de la requête
+const {
+  refetch,
+  data: dataChats,
+  isLoading: isLoadingChats,
+  isError: isErrorChats,
+} = useQuery({
+  queryKey: ["Rooms"],
+  queryFn: fetchConversations,
+  retry: 2,
+  refetchOnWindowFocus: false,
+});
+
+onMounted(() => {
+  socketService.on("updateConversationList", () => {
+    refetch();
+  });
+});
 </script>
-<style scoped></style>

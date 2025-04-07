@@ -10,42 +10,28 @@
       <InputForm
         label="Nombre d'enfants"
         type="number"
-        name="numberOfChildren"
+        name="number_of_children"
         placeholder="5 Enfants"
-        :modelValue="useProfilStore().state.ChildrenInfoProfilValue?.numberOfChildren"
-        @update:modelValue="
-          useProfilStore().state.ChildrenInfoProfilValue.numberOfChildren =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.InformationSurLesEnfants.number_of_children"
         :error="useProfilStore().state.in_error"
       />
 
-      <InputForm
-        label="Âge des enfants"
-        type="text"
-        name="agesOfChildrens"
-        placeholder="Préscolaire"
-        :data="DataSettingAgesOfChildrens"
-        dataName="name"
-        v-model="useProfilStore().state.ChildrenInfoProfilValue.agesOfChildrens"
-        :error="useProfilStore().state.in_error"
-      />
-
-      <InputForm
+      <InputBoxForm
         label="Besoins spécifiques "
         type="text"
-        name="specificNeeds"
+        name="besions_specifiques"
         placeholder="Support émotionnel, Gestion des comportements"
         :error="useProfilStore().state.in_error"
-        :data="DataSettingSpecificNeeds"
-        v-model="useProfilStore().state.ChildrenInfoProfilValue.specificNeeds"
-        dataName="name"
+        :options="DataSettingSpecificNeeds?.parameter"
+        v-model="useProfilStore().state.InformationSurLesEnfants.besions_specifiques"
+        optionName="name"
       />
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
 import HeadingText from "@/components/texts/headingText.vue";

@@ -1,67 +1,125 @@
 import { z } from "zod";
 
-export const ChidrenInfoProfilSchema = z.object({
-  numberOfChildren: z
+// Schéma pour un fichier individuel
+const fileSchema = z
+  .instanceof(File)
+  .refine(
+    (file) => file.size > 0, // Vérifie que le fichier n'est pas vide
+    { message: "Le fichier ne doit pas être vide." }
+  )
+  .refine(
+    (file) => ["image/jpeg", "image/png"].includes(file.type), // Vérifie le type MIME
+    { message: "Seuls les fichiers JPEG et PNG sont acceptés." }
+  )
+  .refine(
+    (file) => file.size <= 5 * 1024 * 1024, // Limite à 5 Mo par fichier
+    { message: "Chaque fichier doit être inférieur à 5 Mo." }
+  );
+
+const fileUpdateSchema = z
+  .instanceof(File)
+  .refine(
+    (file) => file?.size > 0, // Vérifie que le fichier n'est pas vide
+    { message: "Le fichier ne doit pas être vide." }
+  )
+  .refine(
+    (file) => ["image/jpeg", "image/png"].includes(file?.type), // Vérifie le type MIME
+    { message: "Seuls les fichiers JPEG et PNG sont acceptés." }
+  )
+  .refine(
+    (file) => file?.size <= 5 * 1024 * 1024, // Limite à 5 Mo par fichier
+    { message: "Chaque fichier doit être inférieur à 5 Mo." }
+  );
+
+export const InformationPersonnelleSchema = z.object({
+  image_profil: z
+    .any()
+    .optional() // Rend le champ optionnel
+    .refine(
+      (value) => !value || value instanceof FileList, // Vérifie que c'est un FileList (ou undefined)
+      { message: "La photo de profil doit être une image JPEG ou PNG." }
+    ),
+  fullname: z.string().min(1, { message: "Le nom ne doit pas d'etre vide" }),
+  adresse_mail: z.string().email({ message: "L'adresse email est invalide" }),
+  phone: z
+    .string()
+    .regex(/^\+?\d{9,14}$/, { message: "Le numéro de téléphone est invalide" }),
+});
+export type InformationPersonnelle = z.infer<
+  typeof InformationPersonnelleSchema
+>;
+
+export const InformationSurLesEnfantsSchema = z.object({
+  number_of_children: z
     .string()
     .min(1, { message: "Le nombre d'enfants ne doit pas d'etre vide" }),
-  agesOfChildrens: z
-    .string()
-    .min(1, { message: "L'âge des enfants ne doit pas d'etre vide" }),
-  specificNeeds: z.string().min(1, {
-    message: "Les besoins spéciaux des enfants ne doivent pas d'etre vide",
-  }),
+  besions_specifiques: z
+    .array(z.any())
+    .min(1, { message: "Les besoins specifiques ne doit pas d'etre vide" }),
 });
-export type ChidrenInfoProfilSchema = z.infer<typeof ChidrenInfoProfilSchema>;
 
-export const ServicesSoughtParentProfilSchema = z.object({
-  childcares: z
-    .string()
-    .min(1, { message: "Garde d'enfants ne doit pas d'etre vide" }),
-  housekeepers: z.any(),
-  frequencyOfServices: z
-    .string()
+export const ServicesRecherchesSchema = z.object({
+  garde_enfants: z
+    .array(z.any())
+    .min(1, {
+      message: "Les activités de garde d'enfants ne doivent pas d'etre vide",
+    }),
+  aide_menagere: z
+    .array(z.any())
+    .min(1, {
+      message: "Les activités d'aide ménagère ne doivent pas d'etre vide",
+    }),
+  frequence_des_services: z
+    .array(z.any())
     .min(1, { message: "La fréquence des services ne doit pas d'etre vide" }),
-  desiredTimes: z
-    .string()
+  horaire_souhaites: z
+    .array(z.any())
     .min(1, { message: "Les horaires souhaités ne doivent pas d'etre vide" }),
 });
 
-export const LocalizationProfilSchema = z.object({
-  my_address: z
-    .string()
+export const LocalizationsSchema = z.object({
+  adress: z
+    .array(z.any())
     .min(1, { message: "L'adresse ne doit pas d'etre vide" }),
-  prestation_zone: z
-    .string()
-    .min(1, { message: "La zone de prestation ne doit pas d'etre vide" }),
+  zone_geographique_prestataire: z
+    .array(z.any())
+    .min(1, {
+      message: "La zone géographique du prestataire ne doit pas d'etre vide",
+    }),
 });
 
-export const PricingParentProfilSchema = z.object({
-  price_min: z
+export const TarificationsSchema = z.object({
+  budget_estimated: z
     .string()
-    .min(1, { message: "Le budget minimum ne doit pas d'etre vide" }),
-  price_max: z
-    .string()
-    .min(1, { message: "Le budget maximum ne doit pas d'etre vide" }),
+    .min(1, { message: "Le budget estimé ne doit pas d'etre vide" }),
 });
 
-export const PreferenceParentProfilSchema = z.object({
-  specificSkills: z
-    .string()
-    .min(1, { message: "Conpetences specifique ne doivent pas d'etre vide" }),
-  languages: z
-    .string()
-    .min(1, { message: "La langue ne doivent pas d'etre vide" }),
-  availabilityServiceProvider: z
-    .string()
-    .min(1, { message: "Disponibilité du prestataire ne doit pas d'etre vide" }),
+export const PreferencePourLesSpecifiquesSchema = z.object({
+  competance_specifique: z
+    .array(z.any())
+    .min(1, {
+      message: "Les compétences spécifiques ne doivent pas être vides",
+    }),
+  langue_parler: z
+    .array(z.any())
+    .min(1, { message: "Les langues parlées ne doivent pas être vides" }),
+  disponibility_du_prestataire: z
+    .array(z.any())
+    .min(1, {
+      message: "La disponibilité du prestataire ne doit pas être vide",
+    }),
 });
 
-export const PaymentTermsParentProfilSchema = z.object({
-  payment_terms: z
-    .string()
+export const ModalitesDePaiementSchema = z.object({
+  mode_de_paiement: z
+    .array(z.any())
     .min(1, { message: "Le mode de paiement ne doivent pas d'etre vide" }),
 });
 
-export const AutreParentProfilSchema = z.object({
-  autre_infos: z.string().min(1,  { message: "Le mode de paiement ne doivent pas d'etre vide" }),
+export const AutreInformationsSchema = z.object({
+  informations_complementaires: z
+    .string()
+    .min(1, {
+      message: "Les informations complémentaires ne doivent pas être vides",
+    }),
 });

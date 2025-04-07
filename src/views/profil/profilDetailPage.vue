@@ -3,7 +3,19 @@
     <IonContent class="font-love fixed" slot="fixed">
       <!-- Banner -->
       <PageLoader v-if="LoadingNounu" />
-      <ContentProfil :DataNounu="DataNounu" :isOwner="false" v-else />
+      <ContentProfil
+        :DataNounu="DataNounu"
+        v-else-if="DataNounu && !LoadingNounu"
+      />
+      <!-- Gestion des erreurs -->
+      <div v-else-if="ISErrorNounu" class="text-center mt-8">
+        <E404Error />
+      </div>
+
+      <!-- Aucun contenu disponible -->
+      <div v-else class="text-center mt-8">
+        <E404Error />
+      </div>
     </IonContent>
   </IonPage>
 </template>
@@ -14,7 +26,7 @@ import ActionProfilButton from "@/components/buttons/actionProfilButton.vue";
 import IcIcons from "@/components/icons/IcIcons.vue";
 import { GetGreetingUtils } from "@/utils/greeting.utils";
 import { IonContent, IonPage } from "@ionic/vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import PropositionJobParentProfil from "./_partials/propositionJobParentProfil.vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useQuery } from "@tanstack/vue-query";
@@ -24,7 +36,7 @@ import CardInfoProfil from "./_partials/cardInfoProfil.vue";
 import { StorageUtils } from "@/utils/store.utils";
 import ContentProfil from "./_partials/contentProfil.vue";
 import PageLoader from "@/components/loaders/pageLoader.vue";
-import AbonnementProfilModal from "./abonnementProfilModal.vue";
+import E404Error from "@/components/errors/e404.error.vue";
 
 //   import IcIcons from "@/components/icons/IcIcons.vue";
 const route = useRoute();
@@ -36,75 +48,19 @@ const ListProfilNounu = async () => {
   );
 };
 
+
+
 const {
   data: DataNounu,
   error: ErrorNounu,
   isLoading: LoadingNounu,
   isError: ISErrorNounu,
 } = useQuery({
-  queryKey: ["ListProfilNounu"],
+  queryKey: ["ListProfilNounu", route.params.id],
   queryFn: ListProfilNounu,
 });
 
 const Greeting = ref("Hello");
-const Experiences = ref([
-  {
-    name: "Missons",
-    count: 0,
-    color: " bg-primary",
-    icon: "RiServiceFill",
-  },
-  {
-    name: "Visites",
-    count: 0,
-    color: " bg-secondary",
-    icon: "RiEye2Fill",
-  },
-]);
-
-const Functionality = ref([
-  {
-    name: "Missons",
-    icon: "RiServiceFill",
-  },
-  {
-    name: "Visites",
-    icon: "RiEye2Fill",
-  },
-  {
-    name: "Missons",
-    icon: "RiAlarmWarningFill",
-  },
-  {
-    name: "Visites",
-    icon: "RiAwardFill",
-  },
-  {
-    name: "Missons",
-    icon: "RiParentFill",
-  },
-  {
-    name: "Visites",
-    icon: "RiEye2Fill",
-  },
-  {
-    name: "Missons",
-    icon: "RiServiceFill",
-  },
-  {
-    name: "Visites",
-    icon: "RiEye2Fill",
-  },
-]);
-
-const categorieExperiences = [
-  "Soins aux enfants",
-  "Surveillance et sécurité",
-  "Communication",
-  "Éveil et éducation",
-  "Qualités personnelles",
-  "Connaissances supplémentaires",
-];
 
 onMounted(() => {
   Greeting.value = GetGreetingUtils();

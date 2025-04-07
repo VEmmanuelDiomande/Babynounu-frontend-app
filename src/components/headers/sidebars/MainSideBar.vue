@@ -1,18 +1,21 @@
 <template>
   
+  
   <ion-menu contentId="main-content"  >
-    <ion-content class="ion-padding bg-white" v-if="USER_PROFIL.value" >
+    
+    <ion-content class="ion-padding bg-white"  >
       <div
         class="flex flex-col justify-between h-full w-10/12 m-auto font-love"
         
       >
+
         <div class="h-[25%] border-b-[1px] flex flex-col gap-4 py-4">
-          <ProfileAvatar :img-profile="BASE_URL_CENTER + USER_PROFIL.value?.photo" className="size-14" />
+          <ProfileAvatar :img-profile="USER_PROFIL.value?.image?.originalUrl" className="size-14" />
 
           <div class="flex flex-col gap-[2px]">
-            <span class="font-bold text-ng"> {{ USER_PROFIL.value?.fullname }} </span>
-            <span class="font-semibold text-sm "> {{ USER_PROFIL.value?.adresse }} </span>
-            <span class="font-meduim text-sm " v-if="USER_PROFIL.value?.old"> {{ USER_PROFIL.value?.old }} ans | {{ USER_PROFIL.value?.year_experience }} Expérience </span>
+            <span class="font-bold text-lg"> {{ USER_PROFIL.value?.fullname }} </span>
+            <span class="font-semibold text-sm "> {{ USER_PROFIL.value?.preferences?.adress[0]?.name }} </span>
+            <span class="font-meduim text-sm " v-if="USER_PROFIL.value?.age"> {{ USER_PROFIL.value?.age }} ans | {{ USER_PROFIL.value?.annees_experience }} Expérience </span>
           </div>
 
           <div class="flex gap-2 hidden">

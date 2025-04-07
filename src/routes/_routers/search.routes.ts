@@ -1,10 +1,11 @@
 // import BasicPage from "@/views/BasicPage.vue";
-import SearchNounuPage from "@/views/search/searchNounuPage.vue";
+import SearchJobsPage from "@/views/search/searchJobsPage.vue";
 import Search from "@/views/search/searchPage.vue";
 import TabsPage from "@/views/TabsPage.vue";
+import TabsParentPage from "@/views/TabAdminPage.vue";
 
-export const SearchRoutes = {
-  path: "/search",
+export const SearchJobsRoutes = {
+  path: "/search/jobs",
   component: TabsPage,
 
   children: [
@@ -18,11 +19,19 @@ export const SearchRoutes = {
         "og:description": "",
         keywords: `reseau social`,
       },
-      name: "SEARCH",
-      component: Search,
+      name: "SEARCH_JOBS",
+      component: SearchJobsPage,
     },
+  ],
+};
+
+export const SearchNounusRoutes = {
+  path: "/search/nounus",
+  component: TabsPage,
+
+  children: [
     {
-      path: "nounu",
+      path: "",
       meta: {
         requiresAuth: false,
         title: `Search`,
@@ -32,7 +41,7 @@ export const SearchRoutes = {
         keywords: `reseau social`,
       },
       name: "SEARCH_NOUNU_PAGE",
-      component: SearchNounuPage,
+      component:  Search,
     },
   ],
 };

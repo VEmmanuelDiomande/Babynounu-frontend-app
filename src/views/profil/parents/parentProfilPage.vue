@@ -21,6 +21,8 @@
         :nameIcons="'RiUserLine'"
         :heading="'Une erreur est survenue'"
       />
+
+      <!-- {{ onActivated }} -->
     </IonContent>
   </IonPage>
 </template>
@@ -52,12 +54,20 @@ const route = useRoute();
 onMounted(async () => {
   const storedProfil = await StorageUtils().getStore("nProfil_1_Id");
   GetProfil.value = storedProfil?.value || null;
-
-  if (!GetProfil.value) {
+  if (!GetProfil.value  && !route.path.includes("profil/detail")) {
     // Rediriger vers la page d'authentification si aucun profil n'est trouvé
     router.push({ name: "SignAuth" });
   }
 });
+
+// const onActivated = computed( () => {
+//   if (!GetProfil.value && route.path.includes("profil") && !route.path.includes("profil/detail")) {
+//     console.log(GetProfil.value);
+//     // Rediriger vers la page de connexion si aucun profil n'est trouvé
+//     router.push({ name: "SignAuth" });
+//   }
+// })
+
 
 // Fonction pour récupérer les données du profil parent
 const fetchProfilParent = async () => {

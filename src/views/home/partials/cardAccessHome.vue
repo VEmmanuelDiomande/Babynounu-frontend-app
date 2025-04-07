@@ -2,7 +2,7 @@
   <RouterLink
     v-if="data"
     :to="{ name: RouteName || 'PROFIL_DETAIL', params: { id: data.id } }"
-    class="bg-gradient-to-r h-full rounded-lg active:opacity-80 relative"
+    class="bg-gradient-to-r h-full rounded-lg active:opacity-80 relative font-love"
   >
     <!-- Badge expérience -->
     <div
@@ -14,7 +14,7 @@
         class="text-white flex-shrink-0"
       />
       <span class="text-white font-love text-xs  font-extrabold ml-1">
-        {{ data.year_experience }} ans
+        {{ data.annees_experience }} ans
       </span>
     </div>
 
@@ -30,7 +30,7 @@
 
     <!-- Image de profil -->
     <img
-      v-lazy="BASE_URL_CENTER + data.photo"
+      v-lazy="data.image?.originalUrl"
       alt="Profil photo"
       class="w-full h-[220px] rounded-lg object-cover"
     />
@@ -45,7 +45,7 @@
           {{ data.fullname }}
         </span>
         <span class="text-sm font-love font-bold text-white min-w-max flex">
-          ({{ data.old }} ans)
+          ({{ data.age }} ans)
         </span>
       </div>
 
@@ -53,7 +53,7 @@
       <div class="flex items-center gap-1">
         <IcIcons name="RiMapPin2Line" :size="12" class="text-white" />
         <span class="text-sm font-love text-white">
-          {{ data.adresse }}
+          {{ data.preferences?.adress[0]?.name }}
         </span>
       </div>
 
@@ -62,7 +62,7 @@
         <IcIcons name="RiPaypalLine" :size="12" class="text-white" />
         <div class="flex items-center gap-1">
           <span class="font-bold text-white">
-            {{ data.hourly_rate }}
+            {{ data.tarif_horaire }}
           </span>
           <span class="text-sm font-love text-white italic">
             CFA/Heure
@@ -74,7 +74,7 @@
       <div class="flex items-center gap-1">
         <IcIcons name="RiBriefcaseLine" :size="12" class="text-white" />
         <span class="text-sm font-love text-white font-bold">
-          {{ data.settingDesiredTimes[0]?.time.name || 'Non spécifié' }}
+          {{ data.preferences?.horaire_disponible[0]?.name || 'Non spécifié' }}
         </span>
       </div>
     </div>

@@ -5,7 +5,7 @@
         shadow ? 'shadow' : ''
       }`"
       class="inline-block object-cover rounded-full ring-2 ring-white "
-     v-lazy="BASE_URL_CENTER+src"
+     v-lazy="src"
       alt=""
     />
   </div>

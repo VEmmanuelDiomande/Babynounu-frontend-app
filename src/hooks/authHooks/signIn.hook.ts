@@ -3,6 +3,7 @@ import { INPUT_ERROR, SIGN_IN } from "@/types/auth.types";
 import { signInSchema } from "@/validations/auth/signInAuth.validate";
 import authService from "@/services/auth.services";
 import { useAuthStore } from "@/stores/auth.store";
+import { useProfilStore } from "@/stores/authProfilStore";
 
 export const useAuthSignInHook = () => {
   const state = reactive({
@@ -22,7 +23,10 @@ export const useAuthSignInHook = () => {
   const Login = (data: SIGN_IN) => {
     state.loading = true;
     state.in_login = data;
+    state.in_login.email = useAuthStore().state.email;
+    console.log(state)
     const validate = signInSchema.safeParse(state.in_login);
+    useAuthStore().isUpdateProfil = false
   
     if (!validate.success) {
       useAuthStore().state.in_error_login = {

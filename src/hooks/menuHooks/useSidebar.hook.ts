@@ -12,7 +12,7 @@ export const useSidebarHook = () => {
       {
         icon: "RiSearchLine",
         name: "Rechercher",
-        link: "SEARCH",
+        link: "SEARCH_NOUNU_PAGE",
         actived: true,
       },
       {
@@ -62,7 +62,7 @@ export const useSidebarHook = () => {
   const GetUserConnect = async () => {
     const UserId = (await StorageUtils().getStore('nUser_Id')).value
     const response = await globalFetch(URL_API_ROUTE.USER_IS_LOGGED + '/' + UserId);
-    USER_PROFIL.value = response?.nounu ? response?.nounu : response?.parent ? response?.parent : null;
+    USER_PROFIL.value = response?.profil
   }
 
   return {

@@ -5,31 +5,27 @@
     </div>
 
     <div class="flex flex-col gap-4">
-      <InputForm
+      <InputBoxForm
         label="Horaires disponibles  "
         type="text"
-        name="schedulesAvailable"
+        name="horaire_disponible"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        v-model="useProfiNounulStore().state.AvailabeValue.schedulesAvailable"
+        v-model="useProfiNounulStore().state.Disponibilites.horaire_disponible"
         :error="useProfiNounulStore().state.in_error"
-        :data="DataSchedulesAvailable"
-        dataName="name"
+        :options="DataSchedulesAvailable?.parameter"
+        option-name="name"
       />
-
       <SelectForm
-        :options="DataEMERGENCIES"
+        :options="useProfiNounulStore().DataEMERGENCIES"
         optionName="name" 
         label="Urgences"
         LabelSub="Spécifiez si vous êtes disponible pour des missions de dernière minute ou d'urgence."
         type="text"
-        name="emergencie"
-        placeholder="Matin, après-midi, soir, week-end, en urgence"
-        :modelValue="useProfiNounulStore().state.AvailabeValue.emergencie"
-        @update:modelValue="
-          useProfiNounulStore().state.AvailabeValue.emergencie =
-            $event.target.value
-        "
+        name="urgences"
+        placeholder="Oui, je suis disponible pour des missions urgentes."
+        v-model="useProfiNounulStore().state.Disponibilites.urgences"
         :error="useProfiNounulStore().state.in_error"
+        
       >
       </SelectForm>
     </div>
@@ -37,6 +33,7 @@
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import SelectForm from "@/components/forms/selectForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
@@ -62,12 +59,5 @@ const {
 });
 
 
-const DataEMERGENCIES = [
-  {
-    name: "Oui, je suis disponible pour des missions urgentes.",
-  },
-  {
-    name: "Non, je ne suis pas disponible pour des missions urgentes.",
-  }
-]
+
 </script>

@@ -1,7 +1,7 @@
 // import BasicPage from "@/views/BasicPage.vue";
 import BasicPage from "@/views/BasicPage.vue";
 import DestinationToStart from "@/views/destinationToStart.vue";
-import HomeNounuPage from "@/views/home/homeNounuPage.vue";
+import HomeParentPage from "@/views/home/homeParentPage.vue";
 import Home from "@/views/home/homePage.vue";
 import StarterPage from "@/views/starterPage.vue";
 import TabsPage from "@/views/TabsPage.vue";
@@ -12,7 +12,7 @@ export const HomeRoutes = {
 
   children: [
     {
-      path: "",
+      path: "nounus",
       meta: {
         requiresAuth: false,
         title: `Accueil`,
@@ -23,9 +23,18 @@ export const HomeRoutes = {
       },
       name: "HOME",
       component: Home,
-    },
+    }
+  ],
+};
+
+
+export const HomeParentRoutes = {
+  path: "/home",
+  component: TabsPage,
+
+  children: [
     {
-      path: "nounu",
+      path: "jobs",
       meta: {
         requiresAuth: false,
         title: `Accueil`,
@@ -34,11 +43,12 @@ export const HomeRoutes = {
         "og:description": "",
         keywords: `reseau social`,
       },
-      name: "HOME_NOUNU",
-      component: HomeNounuPage,
+      name: "HOME_JOBS",
+      component: HomeParentPage,
     }
   ],
 };
+
 
 export const _HomeRoutes = {
   path: "/",

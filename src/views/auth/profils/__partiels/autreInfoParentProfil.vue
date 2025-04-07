@@ -5,27 +5,23 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <textarea
+      <TextareaAjustForm
+      label="Autres informations"
         class="resize-none w-full p-2 rounded-lg border-[1px]"
         placeholder="Tapez votre texte ici..."
-        v-model="useProfilStore().state.AutreInfoParentProfilValue.autre_infos"
-        cols="30"
-        rows="10"
+        name="informations_complementaires"
+        v-model="useProfilStore().state.AutreInformations.informations_complementaires"
+        :error="useProfilStore().state.in_error?.message"
       >
-      <!-- Message d'erreur -->
-      <span
-          class="text-sm text-red-500"
-          v-if="useProfilStore().state.in_error?.path == 'image_profil'"
-        >
-          {{ useProfilStore().state.in_error?.message }}
-        </span>
-      </textarea>
+      
+      </TextareaAjustForm>
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
 import InputForm from "@/components/forms/inputForm.vue";
+import TextareaAjustForm from "@/components/forms/textareaAjustForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
 import HeadingText from "@/components/texts/headingText.vue";
 import { useProfiNounulStore } from "@/stores/authProfilNounuStore";

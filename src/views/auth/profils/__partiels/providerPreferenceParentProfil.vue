@@ -5,51 +5,51 @@
     </div>
 
     <div class="flex flex-col gap-4">
-      <InputForm
+      <InputBoxForm
         label="Compétences spécifiques "
         type="text"
-        name="specificSkills"
+        name="competance_specifique"
         placeholder="Abidjan, Bouaké, Marcory, Bingerville"
-        v-model="useProfilStore().state.PreferenceParentProfilValue.specificSkills"
+        v-model="
+          useProfilStore().state.PreferencePourLesSpecifiques.competance_specifique
+        "
         :error="useProfilStore().state.in_error"
-        :data="DataSpecificSkills"
-        dataName="name"
+        :options="DataSpecificSkills?.parameter"
+        option-name="name"
       />
 
-     
-
-      <InputForm
+      <InputBoxForm
         label="Langues parlées par le prestataire "
         type="text"
-        name="languages"
+        name="langue_parler"
         placeholder="Abidjan, Bouaké, Marcory, Bingerville"
-        v-model="useProfilStore().state.PreferenceParentProfilValue.languages"
+        v-model="useProfilStore().state.PreferencePourLesSpecifiques.langue_parler"
         :error="useProfilStore().state.in_error"
-        :data="DataLanguages"
-        dataName="name"
+        :options="DataLanguages?.parameter"
+        optionName="name"
       />
 
       <SelectForm
-          :options="ListAvailabilityServiceProvider"
-          optionName="name"
-          label="disponibilité du prestataire "
-          LabelSub="Indiquez si vous préférez des prestataires disponibles pour des gardes de dernière minute ou en cas d'urgence."
-          type="text"
-          name="availabilityServiceProvider"
-          placeholder="Carte bancaire"
-          :modelValue="useProfilStore().state.PreferenceParentProfilValue.availabilityServiceProvider"
-          @update:modelValue="
-            useProfilStore().state.PreferenceParentProfilValue.availabilityServiceProvider =
-              $event.target.value
-          "
-          :error="useProfilStore().state.in_error"
-        >
-        </SelectForm>
+        :options="DataAvailabilityServiceProvider?.parameter"
+        optionName="name"
+        label="disponibilité du prestataire "
+        LabelSub="Indiquez si vous préférez des prestataires disponibles pour des gardes de dernière minute ou en cas d'urgence."
+        type="text"
+        name="disponibility_du_prestataire"
+        placeholder="En urgence"
+        v-model="
+          useProfilStore().state.PreferencePourLesSpecifiques
+            .disponibility_du_prestataire
+        "
+        :error="useProfilStore().state.in_error"
+      >
+      </SelectForm>
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import SelectForm from "@/components/forms/selectForm.vue";
 import HeadingText from "@/components/texts/headingText.vue";
@@ -72,7 +72,6 @@ const {
   queryFn: ListSpecificSkills,
 });
 
-
 const ListLanguages = async () =>
   await SettingServices().listSetting(URL_API_ROUTE.SETTING_LANGUAGE);
 const {
@@ -85,13 +84,17 @@ const {
   queryFn: ListLanguages,
 });
 
+const ListAvailabilityServiceProvider = async () =>
+  await SettingServices().listSetting(URL_API_ROUTE.SETTING_AVAILABILITY_OF_SERVICE_PROVIDER);
+const {
+  data: DataAvailabilityServiceProvider,
+  error: ErrorAvailabilityServiceProvider,
+  isLoading: LoadingAvailabilityServiceProvider,
+  isError: ISErrorAvailabilityServiceProvider,
+} = useQuery({
+  queryKey: ["ListAvailabilityServiceProvider"],
+  queryFn: ListAvailabilityServiceProvider,
+});
 
-const ListAvailabilityServiceProvider = [
-  {
-    name: "Gardes de dernière minute "
-  },
-  {
-    name: "En cas d'urgence"
-  }
-]
+
 </script>

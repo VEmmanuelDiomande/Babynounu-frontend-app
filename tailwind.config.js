@@ -103,6 +103,7 @@ export default {
         },
         primary: "#e0a1aa",
         secondary: "#55c4bd",
+        indigos: "#6574cd",
       },
     },
   },

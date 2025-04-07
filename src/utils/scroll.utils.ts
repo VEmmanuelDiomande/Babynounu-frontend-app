@@ -1,14 +1,13 @@
+import { useScrollStore } from "@/stores/scrollStore";
 import { ref } from "vue";
 
 export const ScrollUtils = () => {
-  const countScroll = ref(0);
+  const { countScroll } = useScrollStore();
 
-  const onScroll = (event: CustomEvent) => {
-    countScroll.value = event.detail.scrollTop;
-    console.log(event.detail.scrollTop);
+  const onScroll = (event: any) => {
+    // countScroll = event.target.scrollTop;
   };
   return {
-    countScroll,
     onScroll,
   };
 };

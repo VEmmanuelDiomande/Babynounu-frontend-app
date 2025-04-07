@@ -45,6 +45,13 @@ import { authentificateApp } from "./routes/authenticate/authorization.authentic
 import dayjs from "dayjs";
 import "dayjs/locale/fr"; // Import de la locale française
 import relativeTime from "dayjs/plugin/relativeTime";
+import { StorageUtils } from "./utils/store.utils";
+import { SocketService } from "./services/socket.services";
+import { useNotificationStore } from "./stores/notificationStore";
+import { defineCustomElements } from '@ionic/pwa-elements/loader';
+defineCustomElements(window);
+
+const socketService = new SocketService();
 
 // Initialisation de dayjs avec la locale et le plugin
 dayjs.extend(relativeTime);
@@ -73,7 +80,9 @@ const app = createApp(App)
   .use(VueQueryPlugin, { queryClient }); // Vue Query pour les requêtes côté client
 
 // Attente de la disponibilité du routeur avant le montage
-router.isReady().then(() => {
-  app.mount("#app"); // Montage de l'application sur l'élément DOM avec l'ID "app"
+router.isReady().then(async() => {
+  app.mount("#app");
   authentificateApp(); // Appel de la fonction d'authentification après le montage
+  // await useNotificationStore().NCountChats();
+  // await useNotificationStore().NCountNotification();
 });

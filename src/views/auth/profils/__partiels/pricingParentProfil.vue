@@ -1,48 +1,38 @@
 <template>
-    <IonContent class="ion-padding h-full">
-      <div class="flex justify-center mb-8">
-        <HeadingText text="Tarification : Budget estimé" size="medium" />
-      </div>
-  
-      <div class="flex flex-col gap-4">
-        <InputForm
-        label="Prix minimum"
-        type="number"
-        LabelSub="Indiquez le budget minimum que vous souhaitez pour une prestataire."
-        name="price_min"
-        placeholder="25.000 Fcfa"
-        :modelValue="useProfilStore().state.PricingParentProfilValue.price_min"
-        @update:modelValue="
-          useProfilStore().state.PricingParentProfilValue.price_min =
-            $event.target.value
-        "
-        :error="useProfilStore().state.in_error"
-      />
+  <IonContent class="ion-padding h-full">
+    <div class="flex justify-center mb-8">
+      <HeadingText text="Tarification : Budget estimé" size="medium" />
+    </div>
 
-      <InputForm
-        label="Prix maximum"
-        LabelSub="Indiquez le budget maximum que vous souhaitez pour une prestataire."
-        type="number"
-        name="price_max"
-        placeholder="125.000 Fcfa"
-        :modelValue="useProfilStore().state.PricingParentProfilValue.price_max"
-        @update:modelValue="
-          useProfilStore().state.PricingParentProfilValue.price_max =
-            $event.target.value
-        "
+    <div class="flex flex-col gap-4">
+      <InputCurrencyForm
+      label="Budget estimé"
+        LabelSub="Indiquez le budget que vous souhaitez pour une prestataire."
+        v-model="useProfilStore().state.Tarifications.budget_estimated"
         :error="useProfilStore().state.in_error"
+        name="budget_estimated"
+        currency="XOF"
+        id="amount"
+        placeholder="Entrez un montant"
       />
-      </div>
-    </IonContent>
-  </template>
-  
-  <script setup lang="ts">
-  import InputForm from "@/components/forms/inputForm.vue";
-  import HeadingText from "@/components/texts/headingText.vue";
+      <!-- <InputForm
+        label="Budget estimé"
+        type="number"
+        LabelSub="Indiquez le budget que vous souhaitez pour une prestataire."
+        name="budget_estimated"
+        placeholder="25.000 Fcfa"
+        v-model="useProfilStore().state.Tarifications.budget_estimated"
+        :error="useProfilStore().state.in_error"
+      /> -->
+    </div>
+  </IonContent>
+</template>
+
+<script setup lang="ts">
+import InputCurrencyForm from "@/components/forms/inputCurrencyForm.vue";
+import InputForm from "@/components/forms/inputForm.vue";
+import HeadingText from "@/components/texts/headingText.vue";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { IonContent } from "@ionic/vue";
-  import { reactive } from "vue";
-  
- 
-  </script>
-  
+import { reactive } from "vue";
+</script>

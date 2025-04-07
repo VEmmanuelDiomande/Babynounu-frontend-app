@@ -10,8 +10,30 @@ import { IonContent, IonPage } from "@ionic/vue";
 import CreateProfilModal from "./profils/createProfilModal.vue";
 import ParentProfilAuth from "./profils/parentProfilAuth.vue";
 import NounuProfilAuth from "./profils/nounuProfilAuth.vue";
+import SelectForm from "@/components/forms/selectForm.vue";
+import { useQuery } from "@tanstack/vue-query";
+import { SettingServices } from "@/services/setting.services";
+import { URL_API_ROUTE } from "@/routes/_requests/index.request";
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
+import { ref } from "vue";
+import TextareaAjustForm from "@/components/forms/textareaAjustForm.vue";
 
 const { state, Login } = useAuthSignInHook();
+const selectedOptions = ref<string[]>([]);
+const selectedValues = ref<string>("");
+const textValue = ref<string>("");
+
+const ListLocalizations = async () =>
+  await SettingServices().listSetting(URL_API_ROUTE.SETTING_LOCALIZATION);
+const {
+  data: DataLocalizations,
+  error: ErrorLocalizations,
+  isLoading: LoadingLocalizations,
+  isError: ISErrorLocalizations,
+} = useQuery({
+  queryKey: ["ListLocalizations"],
+  queryFn: ListLocalizations,
+});
 </script>
 
 <template>
@@ -24,13 +46,14 @@ const { state, Login } = useAuthSignInHook();
         bgColor="bg-gradient-to-r to-yellow-400 from-yellow-500"
       >
         <template v-slot:content>
-          <InputForm
+          
+          <div class="flex flex-col gap-4">
+            <InputForm
             label="Adresse email"
             type="email"
             name="email"
             placeholder="chap@gmail.com"
-            :modelValue="state.in_login.email"
-            @update:modelValue="state.in_login.email = $event.target.value"
+            v-model="useAuthStore().state.email"
             :error="useAuthStore().state.in_error_login"
           />
           <InputForm
@@ -38,10 +61,40 @@ const { state, Login } = useAuthSignInHook();
             type="password"
             name="password"
             placeholder="Mot de passe"
-            :modelValue="state.in_login.password"
-            @update:modelValue="state.in_login.password = $event.target.value"
+            v-model="state.in_login.password"
             :error="useAuthStore().state.in_error_login"
           />
+
+          <!-- {{ selectedValues }}
+      <SelectForm
+        :options="DataLocalizations"
+        optionName="name"
+        label="Votre Localisation"
+        LabelSub="Indiquez votre localisation pour permettre aux prestataires de vous trouver plus facilement."
+        type="text"
+        name="address"
+        placeholder="Matin, après-midi, soir, week-end, en urgence"
+        v-model="selectedValues"
+        :error="useProfiNounulStore().state.in_error"
+      />
+
+      {{ selectedOptions }}
+      <InputBoxForm
+        :options="DataLocalizations"
+        label="Langues parlées"
+        placeholder="Francais, Anglais, autres"
+        v-model="selectedOptions"
+        :error="useProfiNounulStore().state.in_error"
+        option-name="name"
+        name="languages"
+      />
+
+      <TextareaAjustForm
+        v-model="textValue"
+      label="Saisissez votre texte :"
+        /> -->
+          </div>
+
         </template>
 
         <template v-slot:ContentTerms>
@@ -54,43 +107,7 @@ const { state, Login } = useAuthSignInHook();
         </template>
       </SignInLayout>
 
-      <ion-button id="open-modal-auth-profil" class="hidden" expand="block"
-        >Open</ion-button
-      >
-
-      <CreateProfilModal
-        v-if="
-          useProfilStore().state.ChildrenInfoProfilValue &&
-          useProfiNounulStore().state
-        "
-        :StepProfil="
-          useProfilStore().state.activeMenu_typeOfProfil ==
-          'open-modal-auth-profil-parent'
-            ? useProfilStore().state.stepProfil
-            : useProfiNounulStore().state.StepProfil
-        "
-        :LessStepProfil="
-          useProfilStore().state.activeMenu_typeOfProfil ==
-          'open-modal-auth-profil-parent'
-            ? useProfilStore().state.LessStepProfil
-            : useProfiNounulStore().LessStepProfil
-        "
-      >
-        <template v-slot:content>
-          <ParentProfilAuth
-            v-if="
-              useProfilStore().state.activeMenu_typeOfProfil ==
-              'open-modal-auth-profil-parent'
-            "
-          />
-          <NounuProfilAuth
-            v-if="
-              useProfilStore().state.activeMenu_typeOfProfil ==
-              'open-modal-auth-profil-nounu'
-            "
-          />
-        </template>
-      </CreateProfilModal>
+     
     </IonContent>
   </IonPage>
 </template>

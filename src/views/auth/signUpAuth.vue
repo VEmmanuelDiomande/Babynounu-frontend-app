@@ -12,6 +12,7 @@ import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import { useAuthStore } from "@/stores/auth.store";
 
 const { Register, state, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
+const { state: authState } = useAuthStore();
 </script>
 
 <template>
@@ -22,25 +23,13 @@ const { Register, state, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
         subHeading="Inscrivez-vous maintenant et trouvez la nounou idéale pour votre enfant en quelques minutes."
       >
         <template v-slot:content>
-          <div class="flex flex-col gap-1">
-            <!-- <InputForm
-              label="Nom complete"
-              type="text"
-              name="fullname"
-              placeholder="Nom complete"
-              :modelValue="state.in_register.fullname"
-              @update:modelValue="
-                state.in_register.fullname = $event.target.value
-              "
-              :error="useAuthStore().state.in_error"
-            /> -->
+          <div class="flex flex-col gap-4">
             <InputForm
               label="Adresse email"
-              type="email"
               name="email"
+              type="text"
               placeholder="Adresse email"
-              :modelValue="state.in_register.email"
-              @update:modelValue="state.in_register.email = $event.target.value"
+              v-model="authState.email"
               :error="useAuthStore().state.in_error"
             />
             <InputForm
@@ -48,10 +37,7 @@ const { Register, state, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
               type="password"
               name="password"
               placeholder="Mot de passe"
-              :modelValue="state.in_register.password"
-              @update:modelValue="
-                state.in_register.password = $event.target.value
-              "
+              v-model="authState.in_register.password"
               :error="useAuthStore().state.in_error"
             />
 
@@ -92,7 +78,7 @@ const { Register, state, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
           <AuthButton
             title="S'inscrire"
             setcolor="bg-primary"
-            @click="Register(state.in_register)"
+            @click="Register(authState.in_register)"
             :loading="state.loading"
           />
 
@@ -127,37 +113,7 @@ const { Register, state, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
         </template>
       </SignInLayout>
 
-      <ion-button id="open-modal-auth-profil" class="hidden" expand="block">Open</ion-button>
-
-      <CreateProfilModal
-        v-if="
-          useProfilStore().state.ChildrenInfoProfilValue &&
-          useProfiNounulStore().state
-        "
-        :StepProfil="
-          useProfilStore().state.activeMenu_typeOfProfil == 'open-modal-auth-profil-parent'
-            ? useProfilStore().state.stepProfil
-            : useProfiNounulStore().state.StepProfil
-        "
-        :LessStepProfil="
-          useProfilStore().state.activeMenu_typeOfProfil == 'open-modal-auth-profil-parent'
-            ? useProfilStore().state.LessStepProfil
-            : useProfiNounulStore().LessStepProfil
-        "
-      >
-        <template v-slot:content>
-          <ParentProfilAuth
-            v-if="
-              useProfilStore().state.activeMenu_typeOfProfil == 'open-modal-auth-profil-parent'
-            "
-          />
-          <NounuProfilAuth
-            v-if="
-              useProfilStore().state.activeMenu_typeOfProfil == 'open-modal-auth-profil-nounu'
-            "
-          />
-        </template>
-      </CreateProfilModal>
+    
     </IonContent>
   </IonPage>
 </template>

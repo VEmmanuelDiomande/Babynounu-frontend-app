@@ -4,108 +4,59 @@
       <HeadingText text="Vérifications et Références" size="medium" />
     </div>
 
-    <div class="flex flex-col gap-4">
-      <!-- <InputForm
-        label="Vérification des confirmés "
+    <div class="flex flex-col gap-2 mt-2">
+      <InputFilesForm v-if="!useAuthStore().isUpdateProfil"
+        label="Documents"
+        name="verification_confirmer"
         LabelSub="Fournissez des documents prouvant votre identité (pièce d'identité, casier judiciaire vierge si disponible)."
-        type="file"
-        name="verificationOfConfirmed"
-        placeholder="Matin, après-midi, soir, week-end, en urgence"
-        :modelValue="useProfiNounulStore().state.VerificationValue.verificationOfConfirmed"
-        @update:modelValue="
-          useProfiNounulStore().state.VerificationValue.verificationOfConfirmed =
-            $event.target.value
+        v-model="
+          useProfiNounulStore().state.VerificationEtReferences
+            .verification_confirmer
         "
-        :error="useProfiNounulStore().state.in_error"
-      /> -->
+      />
 
-      <div class="flex flex-col font-love gap-1">
-        <label for="id_input_verificationOfConfirmed" class="text-label font-love font-semibold text-zinc-800 rounded-md z-50 py-1"> Documents</label>
-        <span class="text-sm font-love font-normal text-zinc-500 mb-2" >Fournissez des documents prouvant votre identité (pièce d'identité, casier judiciaire vierge si disponible).</span>
-        <input accept="image/*" type="file" id="id_input_verificationOfConfirmed" @change="onFileChange" />
-        <span
-          class="text-sm text-red-500"
-          v-if="useProfiNounulStore().state.in_error?.path == 'verificationOfConfirmed'"
-        >
-          {{ useProfiNounulStore().state.in_error?.message }}
-        </span>
-      </div>
+      <InputContactReferencesForm
+        label="Références"
+        LabelSub="Indiquez les contacts des familles ou employeurs précédents qui peuvent attester de la qualité de vos services."
+        name="references"
+        v-model="
+          useProfiNounulStore().state.VerificationEtReferences.references
+        "
+        :errors="useProfiNounulStore().state.in_error"
+      />
 
-      <div class="flex flex-col gap-2 mt-2">
-        <div class="flex flex-col gap-2">
-          <HeadingText text="Services recherchés" size="small" />
-          <span class=" text-sm font-love text-zinc-500 "
-            >Indiquez les contacts des familles ou employeurs précédents qui
-            peuvent attester de la qualité de vos services.</span
-          >
-        </div>
-
-        <InputForm
-          label="Contact 1"
-          type="number"
-          name="refrence_1"
-          placeholder="+225 06 00 00 00 00"
-          :modelValue="useProfiNounulStore().state.VerificationValue.refrence_1"
-          @update:modelValue="
-            useProfiNounulStore().state.VerificationValue.refrence_1 =
-              $event.target.value
-          "
-          :error="useProfiNounulStore().state.in_error"
-        />
-
-        <InputForm
-          label="Contact 2"
-          type="number"
-          name="refrence_2"
-          placeholder="+25 06 00 00 00 00"
-          :modelValue="useProfiNounulStore().state.VerificationValue.refrence_2"
-          @update:modelValue="
-            useProfiNounulStore().state.VerificationValue.refrence_2 =
-              $event.target.value
-          "
-          :error="useProfiNounulStore().state.in_error"
-        />
-
-        <InputForm
-          label="Contact 3"
-          type="number"
-          name="refrence_3"
-          placeholder="+225 06 00 00 00 00"
-          :modelValue="useProfiNounulStore().state.VerificationValue.reference_3"
-          @update:modelValue="
-            useProfiNounulStore().state.VerificationValue.reference_3 =
-              $event.target.value
-          "
-          :error="useProfiNounulStore().state.in_error"
-        />
-      </div>
-
-      <InputForm
+      <InputBoxForm
         label="Certifications"
         LabelSub="Si vous avez des certifications spécifiques (formation en premiers secours, diplôme en petite enfance), assurez-vous de les identifier."
-        type="text"
         name="certifications"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        v-model="useProfiNounulStore().state.VerificationValue.certifications"
+        v-model="
+          useProfiNounulStore().state.VerificationEtReferences.certifications
+        "
         :error="useProfiNounulStore().state.in_error"
-        :data="DataCertification"
-        dataName="name"
+        :options="DataCertification?.parameter"
+        optionName="name"
       />
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
+import InputContactReferencesForm from "@/components/forms/inputContactReferencesForm.vue";
+import InputFilesForm from "@/components/forms/inputFilesForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import SelectForm from "@/components/forms/selectForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
 import HeadingText from "@/components/texts/headingText.vue";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { SettingServices } from "@/services/setting.services";
+import { useAuthStore } from "@/stores/auth.store";
 import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { IonContent } from "@ionic/vue";
 import { useQuery } from "@tanstack/vue-query";
+import { Input } from "postcss";
 // data, error, isLoading, isError
 
 const ListSchedulesAvailables = async () =>
@@ -143,7 +94,10 @@ const DataFlexiblePrice = [
 
 const onFileChange = (event: any) => {
   const file = event.target.files[0];
-  useProfiNounulStore().state.VerificationValue.verificationOfConfirmed = file;
-  console.log(useProfiNounulStore().state.VerificationValue.verificationOfConfirmed);
+  useProfiNounulStore().state.VerificationEtReferences.verificationOfConfirmed =
+    file;
+  console.log(
+    useProfiNounulStore().state.VerificationEtReferences.verificationOfConfirmed
+  );
 };
 </script>

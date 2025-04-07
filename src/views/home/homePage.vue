@@ -10,13 +10,15 @@
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <PageLoader size="large" v-if="LoadingNounus" />
+      <PageLoader classCustom="h-[100vh] fixed inset-0" size="large" v-if="LoadingNounus" />
+      <EmptyError
+        v-else-if="!LoadingNounus && dataNounus?.length == 0"
+        nameIcons="RiServiceLine"
+        heading="Aucune nounou disponible"
+        subHeading="Aucune nounou disponible. Si vous être une nounou, soyez la première à vous inscrire !"
+      />
 
-      <ion-list lines="none">
-        <!-- Loader -->
-        <!-- <PageLoader v-if="" /> -->
-
-        <!-- Grid of Cards -->
+   
         <div
           v-if="!LoadingNounus && !isRefreshing"
           class="grid grid-cols-2 gap-1 w-full"
@@ -27,7 +29,7 @@
             </div>
           </div>
         </div>
-      </ion-list>
+   
     </IonContent>
   </ion-page>
 </template>
@@ -51,6 +53,8 @@ import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { SettingServices } from "@/services/setting.services";
 import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
 import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
+import { StorageUtils } from "@/utils/store.utils";
+import EmptyError from "@/components/errors/empty.error.vue";
 
 // State variables
 const isRefreshing = ref(false);
@@ -58,7 +62,8 @@ const isRefreshing = ref(false);
 // Function to fetch the list of nounus
 const fetchNounus = async () => {
   try {
-    return await SettingServices().listSetting(URL_API_ROUTE.NOUNU_ALL);
+    const userId = await StorageUtils().getStore("nUser_Id");
+    return await SettingServices().listSetting(URL_API_ROUTE.NOUNU_ALL+'/?userId='+ userId.value);
   } catch (error) {
     console.error("Error fetching nounus:", error);
     throw error; // Ensure the error is propagated to `useQuery`

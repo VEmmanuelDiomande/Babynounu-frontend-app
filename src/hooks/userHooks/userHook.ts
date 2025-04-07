@@ -16,15 +16,31 @@ export const useUserHook = () => {
         (await StorageUtils().getStore("nProfil_1_Id")).value != null)
     ) {
       useUserStore().isLogged = true;
-    } else {
-      useUserStore().isLogged = false;
-      StorageUtils().removeStore("nToken");
-      StorageUtils().removeStore("nProfil_1_Id");
-      StorageUtils().removeStore("user");
     }
   };
+
+
+  const isAdminLogged = async () => {
+    await authentificateApp();
+    if (
+      useUserStore().isAdmin == false &&
+      ((await StorageUtils().getStore("nToken")).value != null &&
+        (await StorageUtils().getStore("nAdmin_Id")).value != null)
+    ) {
+      useUserStore().isAdmin = true;
+    }
+  };
+
+
+  const isVerifyUserConnected = async () => {
+    return (await StorageUtils().getStore("nUser_Id")).value
+  }
+
+
   return {
     state,
     isUserLogged,
+    isVerifyUserConnected,
+    isAdminLogged
   };
 };

@@ -4,7 +4,7 @@
       <section class="h-screen">
         <!-- Header -->
         <div
-          class="h-[45%] flex flex-col gap-2 items-center text-center w-10/12 pt-8 m-auto"
+          class="h-[38vh] flex flex-col gap-2 items-center text-center w-10/12 pt-8 m-auto"
         >
           <img src="/images/logos/bn_logo.png" class="h-24 w-24" alt="" />
           <div class="flex flex-col font-love gap-1">
@@ -25,11 +25,11 @@
             >
           </div>
 
-          <div class="flex flex-col gap-4 font-love">
+          <div class="flex flex-col gap-2 font-love">
             <div v-for="(item, index) in DestionationToStart" :key="index">
               <div
                 @click="Redirect(item.path)"
-                class="border-2 flex gap-4 p-4 rounded-xl text-zinc-700"
+                class="border-[1px] border-primary/50 bg-primary/5 flex gap-4 p-4 rounded-xl text-zinc-700"
               >
                 <div class="w-14 h-14">
                   <img v-lazy="item.icon" alt="" />
@@ -52,33 +52,55 @@
 
 <script lang="ts" setup>
 import MainSideBar from "@/components/headers/sidebars/MainSideBar.vue";
+import { useTabHook } from "@/hooks/menuHooks/useTab.hook";
 import HeaderMenuLayout from "@/layouts/HeaderMenuLayout.vue";
+import { useAuthStore } from "@/stores/auth.store";
+import { useUserStore } from "@/stores/user.store";
 import { StorageUtils } from "@/utils/store.utils";
 import { IonContent, IonPage } from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 
 const DestionationToStart = [
-{
+  {
     name: "Parents",
 
-    path: "/home",
+    path: "/home/nounus",
     icon: "/images/starter/icon_job_start.png",
-    description:
-      "Vous êtes parent et recherchez une nounou ou une ménagère ?",
+    description: "Vous êtes parent et recherchez une nounou ou une ménagère ?",
   },
   {
     name: "Nounu/Ménagère",
-    path: "/home/nounu",
+    path: "/home/jobs",
     icon: "/images/starter/icon_famille_start.png",
-    description: "Vous êtes une nounou ou une ménagère à la recherche d'un emploi ? ",
+    description:
+      "Vous êtes une nounou ou une ménagère à la recherche d'un emploi ? ",
   },
-  
+  {
+    name: "Operateurs",
+    path: "/admin/chats",
+    icon: "/images/starter/icon_admin_start.png",
+    description: "Gestionnaires, services clients et opérateurs de Baby Nounus",
+  },
 ];
 
 const router = useRouter();
+const { state } = useTabHook();
 const Redirect = async (path: string) => {
-  await Promise.all([StorageUtils().removeStore("nPageType"), StorageUtils().setStore("nPageType", path)]);
-  location.assign(path);
+  console.log((await StorageUtils().getStore("nAdmin_Id")).value, path);
+  if (
+    (await StorageUtils().getStore("nAdmin_Id")).value == null &&
+    path == "/admin/chats"
+  )
+    router.push({ name: "SignAuth" });
+  else {
+    await Promise.all([
+      StorageUtils().removeStore("nPageType"),
+      StorageUtils().setStore("nPageType", path),
+    ]);
+    useUserStore().pageType = path;
+
+    router.push(path);
+  }
 };
 </script>
 <style scoped></style>

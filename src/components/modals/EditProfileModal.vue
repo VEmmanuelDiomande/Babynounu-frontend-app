@@ -6,13 +6,13 @@
       :modal="modal"
     />
     <ion-content class="ion-padding">
-      <TextareaAjustForm
+      <!-- <TextareaAjustForm
         :modelValue="text"
         @update:modelValue="text = $event.target.value"
         :content="content"
         :info="info"
         :sizeText="sizeText"
-      />
+      /> -->
     </ion-content>
     {{ TextCache }} {{ text }}
     <ion-footer class="shadow-none p-4">

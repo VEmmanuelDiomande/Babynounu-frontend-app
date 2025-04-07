@@ -4,15 +4,19 @@
   <ServicesSoughtParentProfil v-show="useProfilStore().state.stepProfil == 3" />
   <LocalizationPrarentProfil v-show="useProfilStore().state.stepProfil == 4" />
   <PricingParentProfil v-show="useProfilStore().state.stepProfil == 5" />
-  <ProviderPreferenceParentProfil v-show="useProfilStore().state.stepProfil == 6" />
+  <ProviderPreferenceParentProfil
+    v-show="useProfilStore().state.stepProfil == 6"
+  />
   <PaymentTermsParentProfil v-show="useProfilStore().state.stepProfil == 7" />
   <AutreInfoParentProfil v-show="useProfilStore().state.stepProfil == 8" />
 
-  <ion-footer class="ion-no-border py-4 px-4">
+  <ion-footer class="ion-no-border py-4 px-4 font-love">
     <AuthButton
-      :title="useProfilStore().state.stepProfil == 8 ? 'Enregistré' : 'Continuer'"
+      :title="
+        useProfilStore().state.stepProfil == 8 ? 'Enregistré' : 'Continuer'
+      "
       setcolor="bg-primary"
-       :loading="useNounuStore().loading"
+      :loading="useNounuStore().loading"
       @click="
         [
           useProfilStore().state.stepProfil == 1
@@ -67,7 +71,7 @@ import { useNounuStore } from "@/stores/nounu.store";
 
 const modal = ref();
 
-const { createParentProfile } = useParentHook()
+const { createParentProfile } = useParentHook();
 
 function dismiss() {
   modal.value.$el.dismiss();

@@ -1,275 +1,161 @@
+// hooks/nounu.hook.ts
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { useProfiNounulStore } from "./../../stores/authProfilNounuStore";
-import type { SEARCH_VERTICAL_MENU } from "./../../types/menu.types";
-import { reactive, ref } from "vue";
+import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import { StorageUtils } from "@/utils/store.utils";
 import { useRouter } from "vue-router";
+import axios from "axios";
+import { reactive } from "vue";
 import { useNounuStore } from "@/stores/nounu.store";
+import { useAuthStore } from "@/stores/auth.store";
+
+interface CONTACT_REFERENCE {
+  fullname: string;
+  phone: string;
+}
+
+interface EVALUATION_PRECEDANTE {
+  nom: string;
+  phone: string;
+  note: string;
+  commentaire: string;
+}
 
 export const useNounuHook = () => {
+  const router = useRouter();
   const state = reactive({
-    seedDataNounus: reactive(<any>[]),
     loading: false,
+    error: null as string | null,
   });
 
-  state.seedDataNounus = Array.from({ length: 50 }, (_, i) => ({
-    first_name: `${
-      [
-        "Diallo",
-        "Koné",
-        "Coulibaly",
-        "Yao",
-        "Traoré",
-        "Martin",
-        "Kouassi",
-        "Kouamé",
-        "Soupouder",
-        "Rogib",
-      ][Math.floor(Math.random() * 10)]
-    }`,
-    last_name: `${
-      [
-        "Adama",
-        "Aïcha",
-        "Bintou",
-        "Demba",
-        "Fatou",
-        "Issa",
-        "Koffi",
-        "Mariama",
-        "N'guessan",
-        "Yacouba",
-      ][Math.floor(Math.random() * 10)]
-    }`,
-    age: Math.floor(Math.random() * 43) + 18, // Âge entre 18 et 60
-    exp: Math.floor(Math.random() * 20) + 1, // Âge entre 18 et 60
-    commune: [
-      "Bingerville",
-      "Adjamé",
-      "Cocody",
-      "Marcory",
-      "Yopougon",
-      "Koumassi",
-      "Port Bouet",
-    ][Math.floor(Math.random() * 6)],
-    price: `${(Math.floor(Math.random() * 500) + 50) * 10}`, // Prix entre 50 000 et 250 000 FCFA
-    type: ["Temps plein", "Temps partiel", "Freelance"][
-      Math.floor(Math.random() * 3)
-    ],
-  }));
-
-  type ProfileData = {
-    InfoPersonalValue: {
-      fullName: string;
-      age: string;
-      phone: string;
-      address: string;
-      image_profil: any;
-    };
-    ExperienceAndSkillValue: {
-      yearsOfExperience: string;
-      ageGroupOfChildren: string;
-      specificSkills: string;
-      languages: string;
-    };
-    AvailabeValue: {
-      schedulesAvailable: string;
-      emergencie: string;
-    };
-    PricingValue: {
-      monthlyRate: string;
-      hourlyRate: string;
-      flexiblePrice: string;
-    };
-    VerificationValue: {
-      verificationOfConfirmed: string;
-      refrence_1: string;
-      refrence_2: string;
-      reference_3: string;
-      certifications: string;
-    };
-    BiographieValue: {
-      text: string;
-    };
-    AreaWorkValue: {
-      areaWork: string;
-    };
-    GaleryValue: {
-      gallery: any;
-    };
-  };
-
-  // const mapProfileDataToObject = (data: ProfileData): any => {
-  //   const nounu = {
-  //     fullname: data.InfoPersonalValue.fullName,
-  //     old: data.InfoPersonalValue.age,
-  //     phone: data.InfoPersonalValue.phone,
-  //     adresse: data.InfoPersonalValue.address,
-  //     year_experience: data.ExperienceAndSkillValue.yearsOfExperience,
-  //     hourly_rate: data.PricingValue.hourlyRate,
-  //     monthly_rate: data.PricingValue.monthlyRate,
-  //     pricing_flexibility: data.PricingValue.flexiblePrice === "Oui, mes tarifs sont négociables",
-  //     confirmed_verification:
-  //       data.VerificationValue.verificationOfConfirmed === "Oui, mes tarifs sont négociables",
-  //     biographie: data.BiographieValue.text,
-  //     settingAgeOfChildrens: data.ExperienceAndSkillValue.ageGroupOfChildren
-  //       ? data.ExperienceAndSkillValue.ageGroupOfChildren
-  //           .split("|")
-  //           .map((age) => ({
-  //             age,
-  //           }))
-  //       : [],
-  //     settingLanguages: data.ExperienceAndSkillValue.languages
-  //       ? data.ExperienceAndSkillValue.languages.split("|").map((lang) => ({
-  //           language: lang,
-  //         }))
-  //       : [],
-  //     settingCertifications: data.ExperienceAndSkillValue.specificSkills
-  //       ? data.ExperienceAndSkillValue.specificSkills
-  //           .split("|")
-  //           .map((skill) => ({
-  //             certification: skill,
-  //           }))
-  //       : [],
-  //     settingDesiredTimes: data.AvailabeValue.schedulesAvailable
-  //       ? data.AvailabeValue.schedulesAvailable.split("|").map((time) => ({
-  //           schedule: time,
-  //         }))
-  //       : [],
-  //     settingAreaWorks: data.AreaWorkValue.areaWork
-  //       ? data.AreaWorkValue.areaWork.split("|").map((area) => ({
-  //           area,
-  //         }))
-  //       : [],
-  //   };
-
-  //   return nounu;
-  // };
-
-  const USER = ref<any>(null);
-  const userStorage = async () => USER.value = (await StorageUtils().getStore('nUser_Id')).value || null;
-
-  const mapProfileDataToFormData = (data: ProfileData): FormData => {
+  const mapProfileDataToFormData = (): FormData => {
+    const nounuStore = useProfiNounulStore();
     const formData = new FormData();
 
-    // Ajouter les champs de base
-    formData.append("fullname", data.InfoPersonalValue.fullName);
-    formData.append("old", data.InfoPersonalValue.age);
-    formData.append("phone", data.InfoPersonalValue.phone);
-    formData.append("adresse", data.InfoPersonalValue.address);
+    // Informations personnelles
+    const { InformationPersonnelle } = nounuStore.state;
+    formData.append("fullname", InformationPersonnelle.fullname);
+    formData.append("age", InformationPersonnelle.age);
+    formData.append("phone", InformationPersonnelle.phone);
+    formData.append("adress", JSON.stringify(InformationPersonnelle.address));
+    if (InformationPersonnelle.image_profil) {
+      Array.from(InformationPersonnelle.image_profil).forEach((file: any) => {
+        formData.append("imageNounu", file);
+      });
+    }
+
+
+
+
+    // Expérience et compétences
+    const { ExperienceEtCompetences } = nounuStore.state;
     formData.append(
-      "year_experience",
-      data.ExperienceAndSkillValue.yearsOfExperience
-    );
-    formData.append("hourly_rate", data.PricingValue.hourlyRate);
-    formData.append("monthly_rate", data.PricingValue.monthlyRate);
-    formData.append("reference_1", data.VerificationValue.refrence_1);
-    formData.append("reference_2", data.VerificationValue.refrence_2);
-    formData.append("reference_3", data.VerificationValue.reference_3);
-    formData.append(
-      "emergencie",
-      data.AvailabeValue.emergencie === "Oui, mes tarifs sont négociables"
-        ? "1"
-        : "0"
+      "annees_experience",
+      ExperienceEtCompetences.annees_experience
     );
     formData.append(
-      "pricing_flexibility",
-      data.PricingValue.flexiblePrice === "Oui, mes tarifs sont négociables"
-        ? "1"
-        : "0"
+      "tranche_age_enfants",
+      JSON.stringify(ExperienceEtCompetences.tranche_age_enfants)
     );
-    formData.append("document", data.VerificationValue.verificationOfConfirmed);
-    formData.append("biographie", data.BiographieValue.text);
+    formData.append(
+      "competance_specifique",
+      JSON.stringify(ExperienceEtCompetences.competance_specifique)
+    );
+    formData.append(
+      "langue_parler",
+      JSON.stringify(ExperienceEtCompetences.langue_parler)
+    );
 
-    // Ajouter les listes de données
-    if (data.ExperienceAndSkillValue.ageGroupOfChildren) {
-      data.ExperienceAndSkillValue.ageGroupOfChildren
-        .split("|")
-        .forEach((age) => {
-          formData.append("settingAgeOfChildrens[]", age.trim());
-        });
-    }
+    // Disponibilités
+    const { Disponibilites } = nounuStore.state;
+    formData.append(
+      "horaire_disponible",
+      JSON.stringify(Disponibilites.horaire_disponible)
+    );
+    formData.append(
+      "urgences",
+      `${Disponibilites.urgences[0].id == 1 ? true : false}`
+    );
 
-    if (data.ExperienceAndSkillValue.languages) {
-      data.ExperienceAndSkillValue.languages.split("|").forEach((language) => {
-        formData.append("settingLanguages[]", language.trim());
+    // Tarifications
+    const { Tarifications } = nounuStore.state;
+    formData.append("tarif_horaire", Tarifications.tarif_horaire);
+    formData.append("tarif_mensuel", Tarifications.tarif_mensuel);
+    formData.append(
+      "flexibilite_tarifaire",
+      `${Tarifications.flexibilite_tarifaire[0].id == 1 ? true : false}`
+    );
+
+    // Références et certifications
+    const { VerificationEtReferences } = nounuStore.state;
+    if (VerificationEtReferences.verification_confirmer) {
+      VerificationEtReferences.verification_confirmer.forEach((file: any) => {
+        formData.append("documents", file);
       });
     }
+    formData.append(
+      "certifications_criteres",
+      JSON.stringify(VerificationEtReferences.certifications)
+    );
 
-    if (data.ExperienceAndSkillValue.specificSkills) {
-      data.ExperienceAndSkillValue.specificSkills
-        .split("|")
-        .forEach((skill) => {
-          formData.append("settingSpecificSkills[]", skill.trim());
-        });
-    }
+    formData.append(
+      "references",
+      JSON.stringify(VerificationEtReferences.references)
+    );
 
-    if (data.VerificationValue.certifications) {
-      data.VerificationValue.certifications.split("|").forEach((cert) => {
-        formData.append("settingCertifications[]", cert.trim());
-      });
-    }
+    // Disponibilité Geographique
+    const { DisponibiliteGeographique } = nounuStore.state;
+    formData.append(
+      "zone_de_travail",
+      JSON.stringify(DisponibiliteGeographique.zone_de_travail)
+    );
 
-    if (data.AvailabeValue.schedulesAvailable) {
-      data.AvailabeValue.schedulesAvailable.split("|").forEach((time) => {
-        formData.append("settingDesiredTimes[]", time.trim());
-      });
-    }
+    // Evaluation precedante
+    const { EvaluationEtAvis } = nounuStore.state;
+    formData.append(
+      "evaluation_precedentes",
+      JSON.stringify(EvaluationEtAvis.evaluation_precedentes)
+    );
 
-    if (data.AreaWorkValue.areaWork) {
-      data.AreaWorkValue.areaWork.split("|").forEach((area) => {
-        formData.append("settingAreaWorks[]", area.trim());
-      });
-    }
+    // Autres informations
+    const { PresentationDuPersonnel } = nounuStore.state;
+    formData.append("courte_biographie", PresentationDuPersonnel.courte_biographie);
 
-    // Ajouter l'image
-    formData.append("profil_image", data.InfoPersonalValue.image_profil);
-    for (let i = 0; i < data.GaleryValue.gallery.length; i++) {
-      formData.append(`gallery`, data.GaleryValue.gallery[i]);
-    }
-    formData.append("user", `${USER.value}`);
+    // Galerie
+    const { Galery } = nounuStore.state;
+    Galery.gallery.forEach((file: any) => {
+      formData.append(`gallery`, file);
+    });
 
     return formData;
   };
 
-  const router = useRouter();
-  async function createProfile(): Promise<void> {
+  const createProfile = async () => {
     try {
-      // Convertir en FormData
       useNounuStore().loading = true;
+      const userId: any = await StorageUtils().getStore("nUser_Id");
 
-      await userStorage();
-      const formData = mapProfileDataToFormData(useProfiNounulStore().state);
+      const formData = mapProfileDataToFormData();
+      formData.append("userId", userId.value.toString());
 
-      const response = await fetch(URL_API_ROUTE.NOUNU_CREATE, {
-        method: "POST",
-        body: formData,
+      const response = await axios.post( useAuthStore().isUpdateProfil === false ? URL_API_ROUTE.NOUNU_CREATE : URL_API_ROUTE.NOUNU_UPDATE + `/${useAuthStore().isUpdateProfilID}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (!response.ok) {
-        useNounuStore().loading = false;
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      if (!result?.id) throw new Error("Profil non cree");
-
-      if (result) {
-        // Mettre à jour le Storage
-        await Promise.all([StorageUtils().setStore("nProfil_1_Id", result?.id)]);
-
-        useNounuStore().loading = false;
-        let OpenModal: any = document.querySelector(`#closeModelAuthProfil`);
-        OpenModal.click();
-
-        // Rediriger vers la page de profil
-        router.push({ name: "STARTER_DESTINATION" });
+      if (response.data?.id) {
+        await StorageUtils().setStore("nProfil_1_Id", response.data.id.toString());
+        const closeModal: any = document.querySelector("#closeModelAuthProfil");
+        closeModal?.click();
+        location.assign("/choose-destination-to-start");
       }
     } catch (error) {
+      state.error = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Erreur serveur"
+        : "Erreur inconnue";
+      console.error("Erreur création profil:", error);
+    } finally {
       useNounuStore().loading = false;
-      console.error("Erreur lors de la création du profil :", error);
     }
-  }
+  };
 
   return {
     state,

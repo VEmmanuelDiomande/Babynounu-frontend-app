@@ -13,6 +13,7 @@ import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "vue-router";
 import { useProfilStore } from "@/stores/authProfilStore";
+import { useParentHook } from "@/hooks/parentHooks/parent.hooks";
 
 const { CreateService } = ApiServices();
 
@@ -22,22 +23,29 @@ const TypeProfil = computed(() => {
   return useAuthSignUpHook().state.activeMenu_typeOfProfil;
 });
 
+const { createParentProfile } = useParentHook();
+
 const register = async (signBody: SIGN_UP) => {
+
+//   createParentProfile();
+
+// return 
+
   try {
     let OpenModal: any = document.querySelector(`#open-modal-auth-profil`);
 
     const { data } = await CreateService(URL_API_ROUTE.AUTH_REGISTER, {
       email: signBody.email,
       password: signBody.password,
-      role: 2,
-      type_profil: signBody.type == "open-modal-auth-profil-nounu" ? 2 : 1,
+      role: 'user',
+      type_profil: signBody.type == "open-modal-auth-profil-parent" ? 'parent' : 'nounu',
     });
     if (data.user.access_token) {
       // here you can redirect
       await Promise.all([
         StorageUtils().setStore("nUser_Id", data.user.id),
         StorageUtils().setStore("nToken", data.user.access_token),
-        StorageUtils().setStore("nType_Profil", data.user.type_profil.id),
+        StorageUtils().setStore("nType_Profil", data.user.type_profil.slug),
       ]);
       useProfilStore().state.activeMenu_typeOfProfil =
         data.user.type_profil.description;
@@ -73,13 +81,16 @@ const login = async (signInBody: SIGN_IN) => {
 
       StorageUtils().setStore("nUser_Id", data.user?.id);
       StorageUtils().setStore("nToken", data.user?.access_token);
-      StorageUtils().setStore("nType_Profil", data.user?.type_profil?.id.toString());
+      StorageUtils().setStore("nType_Profil", data.user?.type_profil?.slug);
+      StorageUtils().setStore("nRole", data.user?.role?.slug);
     
       
       
 
-      if (data.user.profil) {
-        await StorageUtils().setStore("nProfil_1_Id", data.user?.profil?.id);
+      if (data.user?.role?.slug == "admin" || data.user.profil.length != 0) {
+        data.user?.role?.slug == "admin" ? 
+        await StorageUtils().setStore("nAdmin_Id",  data.user?.id ) :
+        await StorageUtils().setStore("nProfil_1_Id", data.user?.profil[0]?.id.toString());
         location.assign("/choose-destination-to-start");
       } else {
         useProfilStore().state.activeMenu_typeOfProfil =
@@ -90,10 +101,6 @@ const login = async (signInBody: SIGN_IN) => {
     }
     return data;
   } catch (error: any) {
-    console.log(
-      error?.response.data.message,
-      Array.isArray(error?.response.data.message)
-    );
     if (Array.isArray(error?.response.data.message)) {
       useAuthStore().state.in_error_login.path = "email";
       useAuthStore().state.in_error_login.message =

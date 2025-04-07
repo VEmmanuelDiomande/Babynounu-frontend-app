@@ -14,36 +14,17 @@
         Title="Notifications"
         PlaceholderSearch="Rechercher dans messageries"
         :has-search="true"
-        :countScroll="countScroll"
+        :countScroll="0"
       >
-        <template v-slot:ContentSearch>
-          <div
-            class="grid grid-cols-3 gap-1 w-11/12 m-auto mt-2 mb-1 overflow-x-auto no-scrollbar"
-          >
-            <div v-for="(menu, index) in state.verticalMenu" :key="index">
-              <div
-                @click="toggleActiveMenu(index)"
-                class="h-8 flex items-center px-4 justify-center rounded-xl"
-                :class="
-                  menu.actived ? 'border-b-1  bg-primary' : ' border-[1px]'
-                "
-              >
-                <span
-                  class="text-sm font-bold"
-                  :class="menu.actived ? 'text-white' : 'text-zinc-800'"
-                  >{{ menu.name }}</span
-                >
-              </div>
-            </div>
-          </div>
-        </template></HeaderMenuLayout
-      >
+      </HeaderMenuLayout>
 
-      
-
-      <PageLoader size="large" v-if="isLoadingNotifications" />
+      <PageLoader
+        class-custom="h-[100vh] fixed inset-0"
+        size="large"
+        v-if="isLoadingNotifications"
+      />
       <div v-else-if="DataNotifications && DataNotifications?.length != 0">
-        is
+        <CardNotification :DataNotifications="DataNotifications" />
       </div>
       <EmptyError
         v-else-if="DataNotifications && DataNotifications?.length == 0"
@@ -52,7 +33,6 @@
         subHeading="Aucune notification disponible. Interagissez avec les autres utilisateurs !"
       />
       <E404Error v-else="isErrorNotifications" />
-      
     </IonContent>
   </IonPage>
 </template>
@@ -66,7 +46,7 @@ import {
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/vue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ScrollUtils } from "@/utils/scroll.utils";
 import { useNotificationHook } from "@/hooks/notificationHooks/notification.hook";
 import E404Error from "@/components/errors/e404.error.vue";
@@ -77,11 +57,15 @@ import { useQuery } from "@tanstack/vue-query";
 import { StorageUtils } from "@/utils/store.utils";
 import PageLoader from "@/components/loaders/pageLoader.vue";
 import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
+import CardNotification from "./CardNotification.vue";
+import { SocketService } from "@/services/socket.services";
+import { useNotificationStore } from "@/stores/notificationStore";
 
 const { state, toggleActiveMenu } = useNotificationHook();
 const GetUser = ref<string | null>(null);
+const socketService = new SocketService();
 
-const { countScroll, onScroll } = ScrollUtils();
+const { onScroll } = ScrollUtils();
 
 const fetchNotifications = async () => {
   const storedUser = await StorageUtils().getStore("nUser_Id");
@@ -91,10 +75,20 @@ const fetchNotifications = async () => {
     return [];
   }
 
-  console.log(GetUser.value)
-  return await SettingServices().listSetting(
-    `${URL_API_ROUTE.NOTIFICATION_USER}/${GetUser.value}`
-  );
+  return await SettingServices()
+    .listSetting(`${URL_API_ROUTE.NOTIFICATION_USER}/${GetUser.value}`)
+    .then((res) => {
+      if (res) {
+        useNotificationStore().state.countNotification = res.count;
+        return res.notifications;
+      }
+    });
+};
+
+const updateViewByUserId = async () => {
+  socketService.emit("updateViewByUserId", {
+    userId: (await StorageUtils().getStore("nUser_Id")).value,
+  });
 };
 
 // Ecrire une query qui permet de charger les notifications
@@ -105,13 +99,25 @@ const {
   error: ErrorNotifications,
   refetch,
 } = useQuery({
-  queryKey: ["ListNotifications0"],
+  queryKey: ["ListNotifications", GetUser],
   queryFn: fetchNotifications,
   retry: 2, // Réessayer en cas d'échec
   refetchOnWindowFocus: false, // Ne pas recharger les données lors du focus de la fenêtre
 });
 
-const { handleRefresh } = useRefetchHook()
-const _handleRefresh = (event:any) => handleRefresh(event, refetch)
+onMounted(() => {
+  updateViewByUserId();
+  // Mise jour de l'abonnement
+  socketService.on("notifications", (data: any) => {
+    if (GetUser.value == data.userId) {
+      // Mise à jour des notifications
+      DataNotifications.value = data.notifications;
+      useNotificationStore().state.countNotification = data.count;
+    }
+  });
+});
+
+const { handleRefresh } = useRefetchHook();
+const _handleRefresh = (event: any) => handleRefresh(event, refetch);
 </script>
 <style scoped></style>

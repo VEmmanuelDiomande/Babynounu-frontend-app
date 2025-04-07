@@ -11,11 +11,6 @@ export const useSearchHook = () => {
       },
       {
         link: "",
-        name: "Ménagères",
-        actived: false,
-      },
-      {
-        link: "",
         name: "Parents",
         actived: false,
       },

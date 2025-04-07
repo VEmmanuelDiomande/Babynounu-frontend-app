@@ -1,5 +1,5 @@
 <template>
-  <IonContent class="ion-padding h-full flex flex-col gap-8">
+  <IonContent class="ion-padding h-full flex flex-col gap-8 font-love">
     <div class="flex justify-center">
       <HeadingText text="Expérience et Compétences" size="medium" />
     </div>
@@ -8,49 +8,45 @@
       <InputForm
         label="Années d'expérience "
         type="number"
-        name="yearsOfExperience"
+        name="annees_experience"
         placeholder="6 ans Experiences"
-        :modelValue="useProfiNounulStore().state.ExperienceAndSkillValue?.yearsOfExperience"
-        @update:modelValue="
-          useProfiNounulStore().state.ExperienceAndSkillValue.yearsOfExperience =
-            $event.target.value
-        "
+        v-model="useProfiNounulStore().state.ExperienceEtCompetences.annees_experience"
         :error="useProfiNounulStore().state.in_error"
       />
 
-      <InputForm
+      <InputBoxForm
         label="Tranche d'âge d'enfants"
         type="text"
-        name="ageGroupOfChildren"
+        name="tranche_age_enfants"
         placeholder="Nourrissons, petite enfance, Présclaire"
-        v-model="useProfiNounulStore().state.ExperienceAndSkillValue.ageGroupOfChildren"
+        v-model="useProfiNounulStore().state.ExperienceEtCompetences.tranche_age_enfants"
         :error="useProfiNounulStore().state.in_error"
-        :data="DataAgeOfChildren"
-        dataName="name"
+        :options="DataAgeOfChildren?.parameter"
+        optionName="name"
       />
 
       
-      <InputForm
+      <InputBoxForm
         label="Compétences spécifiques "
         type="text"
-        name="specificSkills"
+        name="competance_specifique"
         placeholder="Aide aux devoirs, Activités éducatives et ludiques"
-        v-model="useProfiNounulStore().state.ExperienceAndSkillValue.specificSkills"
+        v-model="useProfiNounulStore().state.ExperienceEtCompetences.competance_specifique"
         :error="useProfiNounulStore().state.in_error"
-        :data="DataSpecificSkills"
-        dataName="name"
+        :options="DataSpecificSkills?.parameter"
+        optionName="name"
       />
 
 
-      <InputForm
+      <InputBoxForm
         label="Langues parlées"
         type="text"
-        name="languages"
+        name="langue_parler"
         placeholder="Francais, Anglais, autres"
-        v-model="useProfiNounulStore().state.ExperienceAndSkillValue.languages"
+        v-model="useProfiNounulStore().state.ExperienceEtCompetences.langue_parler"
         :error="useProfiNounulStore().state.in_error"
-        :data="DataLanguages"
-        dataName="name"
+        :options="DataLanguages?.parameter"
+        optionName="name"
       />
     </div>
   </IonContent>
@@ -58,6 +54,7 @@
 
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
 import HeadingText from "@/components/texts/headingText.vue";

@@ -1,24 +1,15 @@
-import { useAuthStore } from './../../stores/auth.store';
+import { useAuthStore } from "./../../stores/auth.store";
 import { reactive, ref } from "vue";
 import { INPUT_ERROR, SIGN_UP } from "@/types/auth.types";
 import { signInSchema } from "@/validations/auth/signInAuth.validate";
 
 import authService from "@/services/auth.services";
 import { signUpSchema } from "@/validations/auth/signUpAuth.validate";
-import { useProfilStore } from '@/stores/authProfilStore';
+import { useProfilStore } from "@/stores/authProfilStore";
 
 export const useAuthSignUpHook = () => {
   const state = reactive({
     loading: false,
-    in_register: reactive(<SIGN_UP>{
-      email: "",
-      password: "",
-      type: "",
-    }),
-    in_error: reactive(<INPUT_ERROR>{
-      path: "",
-      message: "",
-    }),
     type_of_profil: [
       {
         name: "Nounu",
@@ -36,13 +27,16 @@ export const useAuthSignUpHook = () => {
     OpenModalParentID: "open-modal-auth-profil-parent",
   });
 
-  const authStore = () => useAuthStore().state;
+  const { state: authState } = useAuthStore();
 
   const Register = (data: SIGN_UP) => {
     state.loading = true;
-    state.in_register = data;
-    state.in_register.type = useProfilStore().state.activeMenu_typeOfProfil
-    const validate = signUpSchema.safeParse(state.in_register);
+    authState.in_register = data;
+    authState.in_register.email = useAuthStore().state.email;
+    console.log(authState.in_register);
+    authState.in_register.type = useProfilStore().state.activeMenu_typeOfProfil;
+    const validate = signUpSchema.safeParse(authState.in_register);
+    useAuthStore().isUpdateProfil = false
 
     if (!validate.success) {
       useAuthStore().state.in_error = {
@@ -53,9 +47,12 @@ export const useAuthSignUpHook = () => {
       return;
     }
 
-    authService.register(data).then(() => { }).finally(() => {
-      state.loading = false;
-    })
+    authService
+      .register(authState.in_register)
+      .then(() => {})
+      .finally(() => {
+        state.loading = false;
+      });
 
     useAuthStore().state.in_error = {
       path: "",
@@ -68,8 +65,11 @@ export const useAuthSignUpHook = () => {
       menu.actived = i === index;
 
       if (menu.actived) {
-        state.in_register.type =  menu?.openModalID ;
-        useProfilStore().state.activeMenu_typeOfProfil = i == 0 ? 'open-modal-auth-profil-nounu' : 'open-modal-auth-profil-parent';
+        useAuthStore().state.in_register.type = menu?.openModalID;
+        useProfilStore().state.activeMenu_typeOfProfil =
+          i == 0
+            ? "open-modal-auth-profil-nounu"
+            : "open-modal-auth-profil-parent";
       }
     });
   };

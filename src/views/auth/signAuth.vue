@@ -5,8 +5,10 @@ import { IonContent, IonImg, IonPage } from "@ionic/vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import AuthButton from "@/components/buttons/authButton.vue";
 import { useSignRedirectHook } from "@/hooks/authHooks/signRedirect.hook";
+import { useAuthStore } from '@/stores/auth.store';
 
 const { GlobalRedirect } = useSignRedirectHook();
+const { state: authState } = useAuthStore();
 </script>
 
 <template>
@@ -48,9 +50,9 @@ const { GlobalRedirect } = useSignRedirectHook();
         </div>
 
         <!-- Buttons -->
-        <div class="flex flex-col w-full max-w-xs mt-8 gap-2 z-40">
+        <div class="flex flex-col w-full mt-8 gap-2 z-40">
           <div class="flex flex-col gap-1">
-            <InputForm label="Email" placeholder="infos@chay.com" />
+            <InputForm label="Email" name="email" type="email" v-model="authState.email"  placeholder="infos@chay.com"  />
             <AuthButton
               title="S'inscrire"
               setcolor=" bg-primary"

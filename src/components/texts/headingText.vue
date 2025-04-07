@@ -3,7 +3,7 @@ defineProps(['text', 'size', 'font', 'custom']);
 </script>
 
 <template>
-   <p
+   <p class="mb-8"
       :class="[
          'font-anton',
          size == 'small'

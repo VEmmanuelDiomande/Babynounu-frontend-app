@@ -5,47 +5,37 @@
     </div>
 
     <div class="flex flex-col gap-4">
-      <InputForm
+      <InputCurrencyForm
         label="Tarif Horaire "
+        currency="XOF"
         LabelSub="Indiquez combien vous facturez par heure pour vos services."
         type="number"
-        name="hourlyRate"
+        name="tarif_horaire"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        :modelValue="useProfiNounulStore().state.PricingValue.hourlyRate"
-        @update:modelValue="
-          useProfiNounulStore().state.PricingValue.hourlyRate =
-            $event.target.value
-        "
+        v-model="useProfiNounulStore().state.Tarifications.tarif_horaire"
         :error="useProfiNounulStore().state.in_error"
       />
 
-      <InputForm
+      <InputCurrencyForm
         label="Tarif Mensuel "
+        currency="XOF"
         LabelSub="Si vous offrez des services de garde à temps plein, indiquez un tarif mensuel."
         type="number"
-        name="monthlyRate"
+        name="tarif_mensuel"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        :modelValue="useProfiNounulStore().state.PricingValue.monthlyRate"
-        @update:modelValue="
-          useProfiNounulStore().state.PricingValue.monthlyRate =
-            $event.target.value
-        "
+        v-model="useProfiNounulStore().state.Tarifications.tarif_mensuel"
         :error="useProfiNounulStore().state.in_error"
       />
 
       <SelectForm
-        :options="DataFlexiblePrice"
+        :options="useProfiNounulStore().DataFlexiblePrice"
         optionName="name"
         label="Flexible Tarifaire"
         LabelSub="Précisez si vos tarifs sont négociables."
         type="text"
         name="flexiblePrice"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        :modelValue="useProfiNounulStore().state.PricingValue.flexiblePrice"
-        @update:modelValue="
-          useProfiNounulStore().state.PricingValue.flexiblePrice =
-            $event.target.value
-        "
+        v-model="useProfiNounulStore().state.Tarifications.flexibilite_tarifaire"
         :error="useProfiNounulStore().state.in_error"
       >
       </SelectForm>
@@ -54,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import InputCurrencyForm from "@/components/forms/inputCurrencyForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import SelectForm from "@/components/forms/selectForm.vue";
 // import IcIcons from "@/components/icons/IcIcons.vue";
@@ -78,12 +69,5 @@ const {
   queryFn: ListSchedulesAvailables,
 });
 
-const DataFlexiblePrice = [
-  {
-    name: "Oui, mes tarifs sont négociables",
-  },
-  {
-    name: "Non, mes tarifs ne sont pas négociables",
-  },
-];
+
 </script>

@@ -27,7 +27,6 @@
               :size="18"
               class="text-primary"
             />
-            
           </div>
         </RouterLink>
       </ion-buttons>

@@ -1,188 +1,307 @@
-import { Preferences } from "@capacitor/preferences";
-import router from "@/routes";
-import { chidrenInfoProfilSchema } from "@/validations/auth/profils/childrenInfoProfil.valide";
-import { infoPersonalParentProfilSchema } from "@/validations/auth/profils/InfoPersonalParentProfil.validate";
-import {
-  ChidrenInfoProfilSchema,
-  LocalizationProfilSchema,
-  PreferenceParentProfilSchema,
-  PricingParentProfilSchema,
-  ServicesSoughtParentProfilSchema,
-} from "@/validations/auth/profils/profil.validate";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import { useProfilStore } from "./authProfilStore";
+import { ZodSchema } from "zod";
+import { useNounuHook } from "@/hooks/nounuHooks/nounu.hooks"; // À créer
 import {
-  AreaWorkProfilSchema,
-  AvailabeProfilSchema,
-  BiographieProfilSchema,
-  ExperienceAndSkillProfilSchema,
-  GaleryProfilSchema,
-  InfoPersonalProfilSchema,
-  PricingProfilSchema,
-  VerificationProfilSchema,
+  DisponibiliteGeographiqueSchema,
+  DisponibilitesSchema,
+  EvaluationEtAvisSchema,
+  ExperienceEtCompetencesSchema,
+  GalerySchema,
+  GaleryUpdateSchema,
+  InformationPersonnelleSchema,
+  InformationPersonnelleUpdateSchema,
+  PresentationDuPersonnelSchema,
+  TarificationsSchema,
+  VerificationEtReferencesSchema,
+  VerificationEtReferencesUpdateSchema,
 } from "@/validations/auth/profils/profilNounu.validate";
-import { useNounuHook } from "@/hooks/nounuHooks/nounu.hooks";
-import { StorageUtils } from "@/utils/store.utils";
+import { useAuthStore } from "./auth.store";
 
+// Types ------------------------------------------------------------------------
+interface NounuProfileState {
+  StepProfil: number;
+  InformationPersonnelle: {
+    fullname: string;
+    age: string;
+    phone: string;
+    address: any[];
+    image_profil: FileList | null;
+  };
+  ExperienceEtCompetences: {
+    annees_experience: string;
+    tranche_age_enfants: any[];
+    competance_specifique: any[];
+    langue_parler: any[];
+  };
+  Disponibilites: {
+    horaire_disponible: any[];
+    urgences: any[];
+  };
+  Tarifications: {
+    tarif_horaire: string;
+    tarif_mensuel: string;
+    flexibilite_tarifaire: any[];
+  };
+  VerificationEtReferences: {
+    verification_confirmer: any[];
+    references: CONTACT_REFERENCE[];
+    certifications: any[];
+  };
+  PresentationDuPersonnel: {
+    courte_biographie: string;
+  };
+  EvaluationEtAvis: {
+    evaluation_precedentes: EVALUATION_PRECEDANTE[];
+  };
+  DisponibiliteGeographique: {
+    zone_de_travail: any[];
+  };
+  Galery: {
+    gallery: File[];
+  };
+  in_error: {
+    path?: string;
+    message?: string;
+  };
+}
+
+interface EVALUATION_PRECEDANTE {
+  nom: string;
+  phone: string;
+  note: string;
+  commentaire: string;
+}
+
+interface CONTACT_REFERENCE {
+  fullname: string;
+  phone: string;
+}
+
+type ValidationStepKey = keyof Omit<
+  NounuProfileState,
+  "StepProfil" | "in_error"
+>;
+
+// Store ------------------------------------------------------------------------
 export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
-  const state = reactive({
+  const { createProfile } = useNounuHook(); // À implémenter
+
+  // État réactif typé
+  const GALLERY_PREVIEW = ref<any[]>([]);
+  const IMAGE_PREVIEW = ref(<any>{})
+  const state = reactive<NounuProfileState>({
     StepProfil: 1,
-    InfoPersonalValue: {
-      fullName: "",
+    InformationPersonnelle: {
+      fullname: "",
       age: "",
       phone: "",
-      address: "",
-      image_profil: ref<any>(null),
+      address: [],
+      image_profil: null,
     },
-    ExperienceAndSkillValue: {
-      yearsOfExperience: "",
-      ageGroupOfChildren: "",
-      specificSkills: "",
-      languages: ""
+    ExperienceEtCompetences: {
+      annees_experience: "",
+      tranche_age_enfants: [],
+      competance_specifique: [],
+      langue_parler: [],
     },
-    AvailabeValue: {
-      schedulesAvailable: "",
-      emergencie: "",
+    Disponibilites: {
+      horaire_disponible: [],
+      urgences: [],
     },
-    PricingValue: {
-      monthlyRate: "",
-      hourlyRate: "",
-      flexiblePrice: ""
+    Tarifications: {
+      tarif_horaire: "",
+      tarif_mensuel: "",
+      flexibilite_tarifaire: [],
     },
-    VerificationValue: {
-      verificationOfConfirmed: "",
-      refrence_1: "",
-      refrence_2: "",
-      reference_3: "",
-      certifications: ""
+    VerificationEtReferences: {
+      verification_confirmer: [],
+      references: [],
+      certifications: [],
     },
-    BiographieValue: {
-      text: ""
+    PresentationDuPersonnel: {
+      courte_biographie: "",
     },
-    AreaWorkValue: {
-      areaWork: "",
+    EvaluationEtAvis: {
+      evaluation_precedentes: [],
     },
-    GaleryValue: {
-      gallery: ref<any>([]) as unknown as Array<File>
+    DisponibiliteGeographique: {
+      zone_de_travail: [],
+    },
+    Galery: {
+      gallery: [],
     },
     in_error: {
-      path: '',
-      message: ''
-    }
+      path: "",
+      message: "",
+    },
   });
 
+  // Validation générique
+  const validateStep = (data: unknown, schema: ZodSchema) => {
+    const result = schema.safeParse(data);
 
-  const { createProfile } = useNounuHook();
-
-  const VALIDATE = (data: any, Schema: any) => {
-    const validate = Schema.safeParse(data);
-    console.log(validate)
-    if (!validate.success) {
+    if (!result.success) {
+      const firstError = result.error.issues[0];
       state.in_error = {
-        path: validate.error.issues[0].path[0].toString(),
-        message: validate.error.issues[0].message,
+        path: firstError.path.join("."),
+        message: firstError.message,
       };
-      return { err: true };
+      return false;
     }
-    return { err: false };
-  };
-  const LessStepProfil = () => {
-    if (state.StepProfil <= 1) return (state.StepProfil = 1);
-    return (state.StepProfil = state.StepProfil - 1);
-  }
 
-  /**
-   * @function InfoPersonal - fonction qui permet de valider les informations personnelles d'un nounou
-   * @returns {void}
-   */
-  const InfoPersonal = () => {
-    const { err } = VALIDATE(state.InfoPersonalValue, InfoPersonalProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
+    state.in_error = {};
+    return true;
   };
 
-  /**
-   * @function ExperienceAndSkill - fonction qui permet de valider les experiences et competences d'un nounou
-   * @returns {void}
-   */
-  const ExperienceAndSkill = () => {
-    const { err } = VALIDATE(
-      state.ExperienceAndSkillValue,
-      ExperienceAndSkillProfilSchema
+  // Gestion des étapes
+  const handleStepValidation = async (
+    key: ValidationStepKey,
+    schema: ZodSchema,
+    isFinalStep = false
+  ) => {
+    console.log(state[key]);
+    if (!validateStep(state[key], schema)) return;
+
+    if (isFinalStep) {
+      try {
+        await createProfile();
+      } catch (error) {
+        state.in_error = {
+          message: "Erreur lors de la création du profil",
+        };
+      }
+    } else {
+      state.StepProfil = Math.min(state.StepProfil + 1, 9);
+    }
+  };
+
+  // Navigation entre les étapes
+  const previousStep = () => {
+    state.StepProfil = Math.max(state.StepProfil - 1, 1);
+  };
+
+  const DataEMERGENCIES = [
+    {
+      id: 1,
+      name: "Oui, je suis disponible pour des missions urgentes.",
+    },
+    {
+      id: 2,
+      name: "Non, je ne suis pas disponible pour des missions urgentes.",
+    },
+  ];
+
+  const DataFlexiblePrice = [
+    {
+      id: 1,
+      name: "Oui, mes tarifs sont négociables",
+    },
+    {
+      id: 2,
+      name: "Non, mes tarifs ne sont pas négociables",
+    },
+  ];
+
+  const ChangeInputToEdit = (Data: any) => {
+
+
+    useAuthStore().isUpdateProfilID = Data.id;
+    state.InformationPersonnelle.address = Data.preferences.adress;
+    state.InformationPersonnelle.fullname = Data.fullname;
+    state.InformationPersonnelle.age = Data.age;
+    state.InformationPersonnelle.phone = Data.phone;
+    IMAGE_PREVIEW.value = Data.image
+
+    state.ExperienceEtCompetences.annees_experience = Data.annees_experience;
+    state.ExperienceEtCompetences.tranche_age_enfants =
+      Data.preferences.tranche_age_enfants;
+    state.ExperienceEtCompetences.competance_specifique =
+      Data.preferences.competance_specifique;
+    state.ExperienceEtCompetences.langue_parler =
+      Data.preferences.langue_parler;
+
+    state.Disponibilites.horaire_disponible =
+      Data.preferences.horaire_disponible;
+    state.Disponibilites.urgences = DataEMERGENCIES.filter((item) =>
+      item.id == Data.urgences ? 1 : 2
     );
-    if (err) return;
-    state.StepProfil += 1;
-  };
 
-  /**
-   * @function Availabe - fonction qui permet de valider la disponibilite d'un nounou
-   * @returns {void}
-   */
-  const Availabe = () => {
-    const { err } = VALIDATE(state.AvailabeValue, AvailabeProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
-  };
+    state.Tarifications.tarif_horaire = Data.tarif_horaire;
+    state.Tarifications.tarif_mensuel = Data.tarif_mensuel;
+    state.Tarifications.flexibilite_tarifaire = DataFlexiblePrice.filter(
+      (item) => (item.id == Data.flexibilite_tarifaire ? 1 : 2)
+    );
 
-  /**
-   * @function Pricing - fonction qui permet de valider les tarifs d'un nounou
-   * @returns {void}
-   */
-  const Pricing = () => {
-    const { err } = VALIDATE(state.PricingValue, PricingProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
-  };
+    state.VerificationEtReferences.verification_confirmer =
+      Data.verification_confirmer;
+    state.VerificationEtReferences.references = JSON.parse(Data.references);
+    state.VerificationEtReferences.certifications =
+      Data.preferences.certifications_criteres;
 
-  /**
-   * @function Verification - fonction qui permet de valider les informations de verification d'un nounou
-   * @returns {void}
-   */
-  const Verification = () => {
-    const { err } = VALIDATE(state.VerificationValue, VerificationProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
-  };
+    state.PresentationDuPersonnel.courte_biographie = Data.courte_biographie;
 
+    state.EvaluationEtAvis.evaluation_precedentes = JSON.parse(
+      Data.evaluation_precedentes
+    );
 
-  /**
-   * @function Biographie - fonction qui permet de valider les informations de verification d'un nounou
-   * @returns {void}
-   */
-  const Biographie = () => {
-    const { err } = VALIDATE(state.BiographieValue, BiographieProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
-  };
+    state.DisponibiliteGeographique.zone_de_travail =
+      Data.preferences.zone_de_travail;
 
-  /**
-   * @function AreaWork - fonction qui permet de valider les zones de travail d'un nounou
-   * @returns {void}
-   */
-  const AreaWork = () => {
-    const { err } = VALIDATE(state.AreaWorkValue, AreaWorkProfilSchema);
-    if (err) return;
-    state.StepProfil += 1;
-    
-  };
-
-  const Galery = () => {
-    const { err } = VALIDATE(state.GaleryValue, GaleryProfilSchema);
-    if (err) return;
-    createProfile()
+      
+    GALLERY_PREVIEW.value = Data.gallery;
   };
 
   return {
     state,
-    LessStepProfil,
-    InfoPersonal,
-    ExperienceAndSkill,
-    Availabe,
-    Pricing,
-    Verification,
-    Biographie,
-    AreaWork,
-    Galery
+    previousStep,
+    handleStepValidation,
+    InfoPersonalNounuProfil: () =>
+      handleStepValidation(
+        "InformationPersonnelle",
+        useAuthStore().isUpdateProfil
+          ? InformationPersonnelleUpdateSchema
+          : InformationPersonnelleSchema
+      ),
+    ExperienceEtCompetencesProfil: () =>
+      handleStepValidation(
+        "ExperienceEtCompetences",
+        ExperienceEtCompetencesSchema
+      ),
+    DisponibilitesProfil: () =>
+      handleStepValidation("Disponibilites", DisponibilitesSchema),
+    TarificationsProfil: () =>
+      handleStepValidation("Tarifications", TarificationsSchema),
+    VerificationEtReferencesProfil: () =>
+      handleStepValidation(
+        "VerificationEtReferences",
+        useAuthStore().isUpdateProfil
+          ? VerificationEtReferencesUpdateSchema
+          : VerificationEtReferencesSchema
+      ),
+    PresentationDuPersonnelProfil: () =>
+      handleStepValidation(
+        "PresentationDuPersonnel",
+        PresentationDuPersonnelSchema
+      ),
+    DisponibiliteGeographiqueProfil: () =>
+      handleStepValidation(
+        "DisponibiliteGeographique",
+        DisponibiliteGeographiqueSchema
+      ),
+    EvaluationEtAvisProfil: () =>
+      handleStepValidation("EvaluationEtAvis", EvaluationEtAvisSchema),
+
+    Galery: () =>
+      handleStepValidation(
+        "Galery",
+        useAuthStore().isUpdateProfil ? GaleryUpdateSchema : GalerySchema,
+        true
+      ),
+    ChangeInputToEdit,
+    DataEMERGENCIES,
+    DataFlexiblePrice,
+    GALLERY_PREVIEW,
+    IMAGE_PREVIEW
   };
 });

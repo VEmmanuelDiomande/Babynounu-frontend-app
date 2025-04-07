@@ -5,22 +5,22 @@
     </div>
 
     <div class="flex flex-col gap-4">
-      <InputForm
+      <InputBoxForm
         label="Zone de travail"
         LabelSub="Indiquez la zone géographique où vous êtes prêt à travailler."
-        type="text"
-        name="areaWork"
+        name="zone_de_travail"
         placeholder="Abidjan, Bouaké, Marcory, Bingerville"
-        v-model="useProfiNounulStore().state.AreaWorkValue.areaWork"
-        :error="useProfilStore().state.in_error"
-        :data="DataLocalizations"
-        dataName="name"
+        v-model="useProfiNounulStore().state.DisponibiliteGeographique.zone_de_travail"
+        :error="useProfiNounulStore().state.in_error"
+        :options="DataLocalizations?.parameter"
+        optionName="name"
       />
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import SelectForm from "@/components/forms/selectForm.vue";
 import HeadingText from "@/components/texts/headingText.vue";

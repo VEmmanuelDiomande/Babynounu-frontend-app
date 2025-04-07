@@ -11,11 +11,7 @@
         LabelSub="Indiquez le budget minimum que vous souhaitez pour une prestataire."
         name="price_min"
         placeholder="25.000 Fcfa"
-        :modelValue="useProfilStore().state.PricingParentProfilValue.price_min"
-        @update:modelValue="
-          useProfilStore().state.PricingParentProfilValue.price_min =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.PricingParentProfilValue.price_min"
         :error="useProfilStore().state.in_error"
       />
 
@@ -25,11 +21,7 @@
         type="number"
         name="price_max"
         placeholder="125.000 Fcfa"
-        :modelValue="useProfilStore().state.PricingParentProfilValue.price_max"
-        @update:modelValue="
-          useProfilStore().state.PricingParentProfilValue.price_max =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.PricingParentProfilValue.price_max"
         :error="useProfilStore().state.in_error"
       />
       </div>

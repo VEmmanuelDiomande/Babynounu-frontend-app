@@ -5,82 +5,37 @@
     </div>
 
     <div class="flex flex-col gap-4">
-      <div class="flex flex-col font-love gap-1">
-        <!-- Étiquette de champ -->
-        <label
-          for="id_input_image_profil"
-          class="text-label font-love font-semibold text-zinc-800 rounded-md z-50 py-1"
-        >
-          Photo de profil
-        </label>
+      <InputFileForm
+        class="mt-4"
+        name="image_profil"
+        v-model="useProfilStore().state.InformationPersonnelle.image_profil"
+        :error="useProfilStore().state.in_error"
+      />
 
-        <!-- Champ de fichier -->
-        <input
-          accept="image/*"
-          type="file"
-          id="id_input_image_profil"
-          name="image_profil"
-          @change="onFileChange"
-          class="cursor-pointer"
-        />
-
-        <!-- Aperçu de l'image -->
-        <div
-          v-if="selectedImage"
-          class="mt-2 size-16 bg-gray-100 border border-gray-300 rounded-md overflow-hidden"
-        >
-          <img
-            :src="selectedImage"
-            alt="Aperçu de l'image"
-            class="object-contain w-full h-full"
-          />
-        </div>
-
-        <!-- Message d'erreur -->
-        <span
-          class="text-sm text-red-500"
-          v-if="useProfilStore().state.in_error?.path == 'image_profil'"
-        >
-          {{ useProfilStore().state.in_error?.message }}
-        </span>
-      </div>
       <InputForm
         label="Nom complete"
         type="text"
-        name="fullName"
+        name="fullname"
         placeholder="Fatou Koné Binaté"
-        :modelValue="useProfilStore().state.InfoPersonalParentProfilValue?.fullName"
-        @update:modelValue="
-          useProfilStore().state.InfoPersonalParentProfilValue.fullName =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.InformationPersonnelle.fullname"
         :error="useProfilStore().state.in_error"
       />
 
       <InputForm
         label="Adresse e-mail"
         type="email"
-        name="emailAdress"
+        name="adresse_mail"
         placeholder="bin@gmail.com"
-        :modelValue="useProfilStore().state.InfoPersonalParentProfilValue?.emailAdress"
-        @update:modelValue="
-          useProfilStore().state.InfoPersonalParentProfilValue.emailAdress =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.InformationPersonnelle.adresse_mail"
         :error="useProfilStore().state.in_error"
       />
 
-      <InputForm
+      <PhoneForm
+        id="phone"
         label="Numéro de téléphone"
-        type="number"
         name="phone"
-        placeholder="+225 00 00 00 00"
-        info="Ajoutez l'indicatif du pays"
-        :modelValue="useProfilStore().state.InfoPersonalParentProfilValue?.phone"
-        @update:modelValue="
-          useProfilStore().state.InfoPersonalParentProfilValue.phone =
-            $event.target.value
-        "
+        v-model="useProfilStore().state.InformationPersonnelle.phone"
+        placeholder="Entrez votre numéro de téléphone"
         :error="useProfilStore().state.in_error"
       />
     </div>
@@ -88,7 +43,9 @@
 </template>
 
 <script setup lang="ts">
+import InputFileForm from "@/components/forms/inputFileForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
+import PhoneForm from "@/components/forms/phoneForm.vue";
 import HeadingText from "@/components/texts/headingText.vue";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { IonContent } from "@ionic/vue";
@@ -116,7 +73,7 @@ const onFileChange = (event: Event) => {
   if (file) {
     // Créer un objet URL pour afficher l'image sélectionnée
     selectedImage.value = URL.createObjectURL(file);
-    useProfilStore().state.InfoPersonalParentProfilValue.image_profil = file;
+    useProfilStore().state.InformationPersonnelle.image_profil = file;
   }
 };
 </script>

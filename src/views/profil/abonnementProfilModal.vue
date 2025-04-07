@@ -9,7 +9,9 @@
   >
     <ion-header class="ion-no-border border-b-[1px] border-gray-200 p-2 mb-4">
       <ion-toolbar>
-        <ion-title class="text-ng font-love">Choisir votre abonnement</ion-title>
+        <ion-title class="text-ng font-love"
+          >Choisir votre abonnement</ion-title
+        >
         <ion-buttons slot="end">
           <ion-button
             @click="dismiss()"
@@ -68,11 +70,16 @@
 
             <div class="w-full mt-4">
               <button
+              :disabled="item.disable"
                 @click="initierPaiement(item)"
                 :class="item.name == 'Nounou' ? 'bg-primary' : 'bg-secondary'"
                 class="border-2 text-white rounded-lg py-4 w-full text-lg font-bold"
               >
-                <SpinnerLoader size="medium" classCustom="text-white" v-show="item.loading" />
+                <SpinnerLoader
+                  size="medium"
+                  classCustom="text-white"
+                  v-show="item.loading"
+                />
                 <span v-show="!item.loading">Commencer</span>
               </button>
             </div>
@@ -96,20 +103,25 @@ import {
   IonContent,
 } from "@ionic/vue";
 
-import { onMounted, ref } from "vue";
-import { HOST_URL, URL_API_ROUTE } from "@/routes/_requests/index.request";
+import { onMounted, reactive, ref } from "vue";
+import {
+  HOST_URL,
+  URL_API_ROUTE,
+  URL_PROVIDER_APP,
+} from "@/routes/_requests/index.request";
 import { StorageUtils } from "@/utils/store.utils";
 import { useRouter } from "vue-router";
 import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
-import { Browser } from '@capacitor/browser';
+import { Browser } from "@capacitor/browser";
 
-const PlanPricing = [
+const PlanPricing = reactive([
   {
     name: "Nounou",
-    price: "2000 Fcfa",
+    price: "100 Fcfa",
     description:
       "Pour les nounous qui souhaitent se connecter avec les parents",
-      loading: false,
+    loading: false,
+    disable: false,
     features: [
       "Accès aux demandes des parents",
       "Visibilité du profil",
@@ -121,8 +133,9 @@ const PlanPricing = [
   },
   {
     name: "Parent",
-    price: "5000 Fcfa",
+    price: "100 Fcfa",
     loading: false,
+    disable: false,
     description: "Pour les parents à la recherche de nounous de confiance",
     features: [
       "Recherche illimitée de nounous",
@@ -133,7 +146,7 @@ const PlanPricing = [
       "Support dédié",
     ],
   },
-];
+]);
 
 const page = ref();
 const modal = ref();
@@ -149,45 +162,33 @@ async function canDismiss(data?: any, role?: string) {
   return role !== "gesture";
 }
 
+const payLoading = ref(false)
+
 // Données de la transaction
 const transactionData = ref(<any>{
   userId: null,
   amount: 1000, // Montant en XOF
   transaction_id: new Date().getTime().toString(), //
   currency: "XOF",
-  // alternative_currency: "",
   description: "TEST INTEGRATION ",
-  // customer_id: "172",
-  // customer_name: "KOUADIO",
-  // customer_surname: "Francisse",
-  // customer_email: "harrissylver@gmail.com",
-  // customer_phone_number: "+225004315545",
-  // customer_address: "Antananarivo",
-  // customer_city: "Antananarivo",
-  // customer_country: "CM",
-  // customer_state: "CM",
-  // customer_zip_code: "065100",
-  notify_url: "http://app.babynounu.com/",
   return_url: HOST_URL,
+  notify_url: HOST_URL,
   channels: "ALL",
   metadata: "user1",
   status: "PENDING",
   paymentMethod: "ALL",
-  // lang: "FR",
-  // invoice_data: {
-  //   Donnee1: "",
-  //   Donnee2: "",
-  //   Donnee3: "",
-  // },
 });
 
 // Fonction pour initier le paiement
 const initierPaiement = async (items: any) => {
+
+
   try {
+    payLoading.value = true;
     const [nToken, nUser_Id] = await Promise.all([
-      StorageUtils().getStore("nToken"),
-      StorageUtils().getStore("nUser_Id"),
-    ]);
+  StorageUtils().getStore("nToken"),
+  StorageUtils().getStore("nUser_Id"),
+]);
     if (!nToken.value) {
       dismiss();
       router.push({ name: "SignAuth" });
@@ -197,15 +198,17 @@ const initierPaiement = async (items: any) => {
     PlanPricing.find((item) => {
       if (item.name == items.name) {
         item.loading = true;
+      }else{
+        item.disable = true
       }
-    })
+    });
 
     transactionData.value.amount = parseInt(items.price.replace(" Fcfa", ""));
     transactionData.value.description = items.description;
     transactionData.value.metadata = items.name;
-    transactionData.value.status = "PENDING";
     transactionData.value.userId = nUser_Id.value;
-
+    transactionData.value.notify_url= "https://provider.babynounu.com/?userId=" + nUser_Id.value + "&transactionId=" + transactionData.value.transaction_id ;
+    transactionData.value.return_url = transactionData.value.notify_url
     const response = await axios.post(
       URL_API_ROUTE.PAYMENTS_INITIER,
       transactionData.value
@@ -213,17 +216,13 @@ const initierPaiement = async (items: any) => {
 
     if (response.data.code === "201") {
       // Rediriger l'utilisateur vers la page de paiement CinetPay
-      // window.location.href = response.data.data.payment_url;
+      const closeModal = document.getElementById("closeModelAuthProfil");
+      closeModal?.click();
+      payLoading.value = false;
 
       
-      const url = 'https://www.example.com'; // Remplacez par l'URL souhaitée
-      await Browser.open({ url });
-    
-
-      // await InAppBrowser.openInWebView({
-      //   url: "https://www.google.com",
-      //   options: DefaultWebViewOptions,
-      // });
+      StorageUtils().setStore("nTransactionId", transactionData.value.transaction_id);
+      await Browser.open({ url: response.data.data.payment_url });
     } else {
       console.error("Erreur lors de l'initiation du paiement :", response.data);
     }

@@ -6,8 +6,7 @@
 
     <div class="flex flex-col gap-4">
       <div class="w-full flex flex-col gap-2">
-        <HeadingText text="Services recherchés" size="small" />
-        <div class="grid grid-cols-2 gap-2 w-full">
+        <div class="grid grid-cols-2 gap-2 w-full mb-8 hidden">
           <div
             v-for="(item, index) in Date_type_of_service_sought"
             :key="index"
@@ -22,65 +21,59 @@
             </div>
           </div>
         </div>
-        <div class="">
-          <InputForm
-            label="Garde d'enfants"
-            type="text"
-            name="childcares"
-            placeholder="Nounou à temps plein, partiel, baby-sitting occasionnel"
-            v-model="
-              useProfilStore().state.ServicesSoughtParentProfilValue.childcares
-            "
-            :error="useProfilStore().state.in_error"
-            :data="DataChildCares"
-            dataName="name"
-            v-if="activeMenu_type_of_service_sought === 0"
-          />
-
-          <InputForm
-            label="Aide ménagère"
-            type="text"
-            name="housekeepers"
-            placeholder="Femmes de ménage pour entretien de la maison, repassage"
-            v-model="
-              useProfilStore().state.ServicesSoughtParentProfilValue.housekeepers
-            "
-            :error="useProfilStore().state.in_error"
-            :data="DataHousekeepers"
-            dataName="name"
-            v-if="activeMenu_type_of_service_sought === 1"
-          />
-        </div>
       </div>
 
-      <InputForm
-        label="Fréquence des services "
+      <InputBoxForm
+        label="Garde d'enfants"
         type="text"
-        name="frequencyOfServices"
-        placeholder="Toutes (Nounou à temps plein, partiel) ou ponctuels."
-        v-model="
-          useProfilStore().state.ServicesSoughtParentProfilValue.frequencyOfServices
-        "
+        name="garde_enfants"
+        placeholder="Nounou à temps plein, partiel, baby-sitting occasionnel"
+        v-model="useProfilStore().state.ServicesRecherches.garde_enfants"
         :error="useProfilStore().state.in_error"
-        :data="DataServiceFrequency"
-        dataName="name"
+        :options="DataChildCares?.parameter"
+        optionName="name"
       />
 
-      <InputForm
+      <InputBoxForm
+        label="Aide ménagère"
+        type="text"
+        name="aide_menagere"
+        placeholder="Femmes de ménage pour entretien de la maison, repassage"
+        v-model="useProfilStore().state.ServicesRecherches.aide_menagere"
+        :error="useProfilStore().state.in_error"
+        :options="DataHousekeepers?.parameter"
+        optionName="name"
+      />
+
+      <InputBoxForm
+        label="Fréquence des services "
+        type="text"
+        name="frequence_des_services"
+        placeholder="Toutes (Nounou à temps plein, partiel) ou ponctuels."
+        v-model="
+          useProfilStore().state.ServicesRecherches.frequence_des_services
+        "
+        :error="useProfilStore().state.in_error"
+        :options="DataServiceFrequency?.parameter"
+        optionName="name"
+      />
+
+      <InputBoxForm
         label="Horaires souhaités "
         type="text"
-        name="desiredTimes"
+        name="horaire_souhaites"
         placeholder="Matin, après-midi, soir, week-end, en urgence"
-        v-model="useProfilStore().state.ServicesSoughtParentProfilValue.desiredTimes"
+        v-model="useProfilStore().state.ServicesRecherches.horaire_souhaites"
         :error="useProfilStore().state.in_error"
-        :data="DataDesiredTimes"
-        dataName="name"
+        :options="DataDesiredTimes?.parameter"
+        optionName="name"
       />
     </div>
   </IonContent>
 </template>
 
 <script setup lang="ts">
+import InputBoxForm from "@/components/forms/inputBoxForm.vue";
 import InputForm from "@/components/forms/inputForm.vue";
 import HeadingText from "@/components/texts/headingText.vue";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";

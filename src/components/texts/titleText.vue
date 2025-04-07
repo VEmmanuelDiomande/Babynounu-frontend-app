@@ -4,7 +4,7 @@ defineProps(['text', 'size', 'font', 'custom']);
 
 <template>
    <p
-   class="flex items-center"
+   class="flex items-center font-love"
       :class="[
          size == 'small'
             ? 'text-xs'
