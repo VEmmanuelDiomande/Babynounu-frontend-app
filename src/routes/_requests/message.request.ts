@@ -1,5 +1,8 @@
 export const apiMessageRoutes = {
     MESSAGE_ALL: '/messages',
+    PROPOSAL_STATUS: '/messages/proposal-status',
+    
+
     MESSAGE_USER: '/chat/list',
     MESSAGE_ROOM: '/chat/messages',
     MESSAGE_CREATE: '/messages/create',

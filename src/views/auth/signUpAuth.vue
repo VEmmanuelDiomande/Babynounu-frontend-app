@@ -78,7 +78,7 @@ const { state: authState } = useAuthStore();
           <AuthButton
             title="S'inscrire"
             setcolor="bg-primary"
-            @click="Register(authState.in_register)"
+            :actions="() => Register(authState.in_register)"
             :loading="state.loading"
           />
 

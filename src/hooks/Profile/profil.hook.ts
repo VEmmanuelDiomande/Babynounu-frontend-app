@@ -12,6 +12,7 @@ import { SocketService } from "@/services/socket.services";
 import { StorageUtils } from "@/utils/store.utils";
 import { Toast } from "@capacitor/toast";
 import { SettingServices } from "@/services/setting.services";
+import router from "@/routes";
 
 const socketService = new SocketService();
 
@@ -26,31 +27,16 @@ export const useProfilHook = () => {
     }
   };
 
-  const showAbonnementToast = async () => {
-    await Toast.show({
-      text: "Votre abonnement à été renouvelé. Merci !",
-    });
-  };
+
 
   const OpenModelAbonnement = async () => {
+    if ((await StorageUtils().getStore("nToken")).value == null)
+      return router.replace("/auth/sign");
+
+    router.push({ name: "PackSubscrible" });
     socketService.emit("checkIsAbonnement", {
       userId: (await StorageUtils().getStore("nUser_Id")).value,
       transactionId: (await StorageUtils().getStore("nTransactionId")).value,
-    });
-    socketService.on("isAbonnement", async (isAbonnement) => {
-      const userId = (await StorageUtils().getStore("nUser_Id")).value;
-      console.log("isAbonnement, ", isAbonnement);
-      if (!isAbonnement.hasActiveSubscription) {
-        const Modal = document.getElementById("open-modal-abonnement");
-        Modal?.click();
-      }
-      if (
-        isAbonnement.hasActiveSubscription &&
-        userId == isAbonnement?.user.id
-      ) {
-        useAbonnementStore().isAbonnement = true;
-        showAbonnementToast();
-      }
     });
   };
 
@@ -58,7 +44,7 @@ export const useProfilHook = () => {
     return useAbonnementStore().isAbonnement;
   };
 
-  const OpenEchange = (router: any, NounuId: string, parentId: any) => {
+  const OpenEchange = (router: any, NounuId: any, parentId: any) => {
     if (useAbonnementStore().isAbonnement == false) {
       OpenModelAbonnement();
     } else {
@@ -139,11 +125,9 @@ export const useProfilHook = () => {
       : (isMainProfil.value = !isMainProfil.value);
   };
 
-
   const Available = () => {
     if (useAbonnementStore().isAbonnement == false) {
       OpenModelAbonnement();
-    
     }
   };
 
@@ -157,6 +141,6 @@ export const useProfilHook = () => {
     OpenToggleProfil,
     GetIcon,
     GetName,
-    Available
+    Available,
   };
 };

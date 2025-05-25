@@ -1,7 +1,7 @@
 <template>
   <IonPage>
     <IonContent class="font-love">
-      <IonRefresher slot="fixed" @ionRefresh="handleRefresh">
+      <IonRefresher slot="fixed" @ionRefresh="_handleRefresh">
         <IonRefresherContent />
       </IonRefresher>
 
@@ -26,14 +26,14 @@
         size="large"
         v-if="isLoadingAdminChats"
       />
-      <div v-else-if="dataAdminChats && dataAdminChats?.length != 0">
-       <CardAdminMessage  :Messages="dataAdminChats" />
+      <div v-else-if="filteredConversations  && filteredConversations?.length != 0">
+        <CardAdminMessage :Messages="filteredConversations " sender="admin" />
       </div>
       <EmptyError
-        v-else-if="dataAdminChats && dataAdminChats?.length == 0"
-        nameIcons="RiNotificationLine"
-        heading="Aucune notification"
-        subHeading="Aucune notification disponible. Interagissez avec les autres utilisateurs !"
+        v-else-if="filteredConversations  && filteredConversations ?.length == 0"
+        nameIcons="RiChat1Line"
+        heading=" Messagerie"
+        subHeading="Aucune conversation disponible. Les parents vous contacteront  très bientôt!"
       />
       <E404Error v-else="isErrorAdminChats" />
     </IonContent>
@@ -59,6 +59,7 @@ import PageLoader from "@/components/loaders/pageLoader.vue";
 import EmptyError from "@/components/errors/empty.error.vue";
 import E404Error from "@/components/errors/e404.error.vue";
 import CardAdminMessage from "./_partials/cardAdminMessage.vue";
+import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
 
 const socketService = new SocketService();
 interface Room {
@@ -91,12 +92,7 @@ const isOpenDetailMessage = ref(false);
 const currentUserId = ref<string | null>(null);
 
 const searchMessages = () => {
-  // useMessageStore.setSearchValue(searchQuery.value);
   refetch();
-};
-
-const handleRefresh = (event: CustomEvent) => {
-  refetch().finally(() => event.detail.complete());
 };
 
 const fetchConversations = async () => {
@@ -119,6 +115,21 @@ const fetchConversations = async () => {
     });
 };
 
+const filteredConversations = computed(() => {
+  if (!dataAdminChats.value) return [];
+  
+  return dataAdminChats.value.filter((room:any) => {
+    const searchTerm = searchQuery.value.toLowerCase();
+    if(searchTerm.length != 0){
+      return (
+        room.room.parent?.fullname.toLowerCase().includes(searchTerm) ||
+        room.room.nounou?.fullname.toLowerCase().includes(searchTerm)
+      );
+    }
+    return room;
+  });
+});
+
 // Configuration de la requête
 const {
   refetch,
@@ -129,17 +140,19 @@ const {
   queryKey: ["Rooms_Admin"],
   queryFn: fetchConversations,
   retry: 2,
-  refetchOnWindowFocus: false,
 });
 
-onMounted(() => {
-  socketService.on("updateConversationList", () => {
+const UpdateConversations = async () => {
+  socketService.on("conversationsUpdated", () => {
+    console.log("conversationsUpdated");
     refetch();
   });
+};
+
+onMounted(async () => {
+  await UpdateConversations();
 });
 
-function getUnreadCount(conversation: Room): number {
-  console.log(conversation);
-  return conversation.administrateurUnreadCount;
-}
+const { handleRefresh } = useRefetchHook();
+const _handleRefresh = (event: any) => handleRefresh(event, refetch);
 </script>

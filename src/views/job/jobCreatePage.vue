@@ -1,129 +1,203 @@
 <template>
-  <IonPage >
-    <DetailHeader title="Publier une offre" :isBack="() =>  $route.query.id ? $router.push('/job/' + $route.query.id): $router.go(-1)" />
+  <IonPage>
+    <DetailHeader 
+      :title="`Publier une offre (${currentStep}/${Object.keys(stepComponents).length} Etapes)`" 
+      :isBack="handleBackNavigation" 
+    />
 
-    <InformationsGeneralesJob v-show="useJobStore().state.stepJob == 1" />
-    <TypeServiceJob v-show="useJobStore().state.stepJob == 2" />
-    <DetailsMissionJob v-show="useJobStore().state.stepJob == 3" />
-    <NounouJob v-show="useJobStore().state.stepJob == 4" />
-    <FemmeDeMenageJob v-show="useJobStore().state.stepJob == 5" />
-    <CriteresJob v-show="useJobStore().state.stepJob == 6" />
-    <RemunerationJob v-show="useJobStore().state.stepJob == 7" />
-    <DateDebutJob v-show="useJobStore().state.stepJob == 8" />
-    <AutresInfosJob v-show="useJobStore().state.stepJob == 9" />
+    <!-- Étapes du formulaire avec composants conditionnels -->
+    <component 
+      :is="currentStepComponent" 
+      v-bind="stepProps"
+    />
 
+
+    <!-- Barre de navigation inférieure -->
     <ion-footer class="ion-no-border flex items-center py-4 px-4 gap-2">
+      <!-- Bouton précédent -->
       <div
-        class="rounded-md w-16 h-full flex items-center justify-center"
-        :class="
-          useJobStore().state.stepJob == 1
-            ? ' bg-gray-200 opacity-45'
-            : 'bg-primary'
-        "
-        @click="useJobStore().previousStep()"
+        class="rounded-md w-16 h-full flex items-center justify-center transition-all duration-200"
+        :class="[
+          isFirstStep ? 'bg-gray-200 opacity-45 cursor-not-allowed' : 'bg-primary hover:bg-primary-dark cursor-pointer'
+        ]"
+        @click="handlePreviousStep"
       >
-        <button>
+        <button :disabled="isFirstStep">
           <IcIcons
             name="RiArrowLeftLine"
-            :class="
-              useJobStore().state.stepJob > 1 ? 'text-white' : 'opacity-100'
-            "
+            :class="isFirstStep ? 'opacity-100' : 'text-white'"
             :size="30"
           />
         </button>
       </div>
+
+      <!-- Bouton continuer/enregistrer -->
       <AuthButton
-        :title="useJobStore().state.stepJob == 9 ? 'Enregistré' : 'Continuer'"
+        :title="isLastStep ? 'Enregistrer' : 'Continuer'"
         setcolor="bg-primary"
-        :loading="useJobStore().loading"
-        @click="
-          useJobStore().state.stepJob == 1
-            ? useJobStore().InfoGeneralJob()
-            : useJobStore().state.stepJob == 2
-            ? useJobStore().TypeServiceJob()
-            : useJobStore().state.stepJob == 3
-            ? useJobStore().DetailsMissionJob()
-            : useJobStore().state.stepJob == 4
-            ? useJobStore().NounouJob()
-            : useJobStore().state.stepJob == 5
-            ? useJobStore().FemmeDeMenageJob()
-            : useJobStore().state.stepJob == 6
-            ? useJobStore().CriteresJob()
-            : useJobStore().state.stepJob == 7
-            ? useJobStore().RemunerationJob()
-            : useJobStore().state.stepJob == 8
-            ? useJobStore().DateDebutJob()
-            : useJobStore().state.stepJob == 9
-            ? useJobStore().AutresInfosJob()
-            : createJob()
-        "
+        :loading="jobStore.loading"
+        :actions="handleStepAction"
       />
     </ion-footer>
-    
   </IonPage>
 </template>
 
 <script setup lang="ts">
-import {
-  IonButtons,
-  IonButton,
-  IonModal,
-  IonHeader,
-  IonContent,
-  IonToolbar,
-  IonTitle,
-  IonFooter,
-  IonPage,
-} from "@ionic/vue";
+import { IonFooter, IonPage } from "@ionic/vue";
+import { computed, onMounted, ref, defineAsyncComponent } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useQuery } from "@tanstack/vue-query";
 
-import { computed, onMounted, ref } from "vue";
+// Composants
 import AuthButton from "@/components/buttons/authButton.vue";
+import DetailHeader from "@/components/headers/DetailHeader.vue";
+import IcIcons from "@/components/icons/IcIcons.vue";
+
+// Composants d'étapes avec chargement asynchrone
+const InformationsGeneralesJob = defineAsyncComponent(() => import("./_compoments/informationsGeneralesJob.vue"));
+const TypeServiceJob = defineAsyncComponent(() => import("./_compoments/typeServiceJob.vue"));
+const DetailsMissionJob = defineAsyncComponent(() => import("./_compoments/detailsMissionJob.vue"));
+const NounouJob = defineAsyncComponent(() => import("./_compoments/nounouJob.vue"));
+const FemmeDeMenageJob = defineAsyncComponent(() => import("./_compoments/femmeDeMenageJob.vue"));
+const CriteresJob = defineAsyncComponent(() => import("./_compoments/criteresJob.vue"));
+const RemunerationJob = defineAsyncComponent(() => import("./_compoments/remunerationJob.vue"));
+const DateDebutJob = defineAsyncComponent(() => import("./_compoments/dateDebutJob.vue"));
+const AutresInfosJob = defineAsyncComponent(() => import("./_compoments/autresInfosJob.vue"));
+
+// Stores et hooks
 import { useJobStore } from "@/stores/jobStore";
 import { useJobHook } from "@/hooks/jobHooks/job.hooks";
-import { useNounuStore } from "@/stores/nounu.store";
-import InfoGeneralJob from "./_partiels/InfoGeneralJob.vue";
-import InformationsGeneralesJob from "./_compoments/informationsGeneralesJob.vue";
-import TypeServiceJob from "./_compoments/typeServiceJob.vue";
-import DetailsMissionJob from "./_compoments/detailsMissionJob.vue";
-import NounouJob from "./_compoments/nounouJob.vue";
-import FemmeDeMenageJob from "./_compoments/femmeDeMenageJob.vue";
-import DetailHeader from "@/components/headers/DetailHeader.vue";
-import CriteresJob from "./_compoments/criteresJob.vue";
-import RemunerationJob from "./_compoments/remunerationJob.vue";
-import DateDebutJob from "./_compoments/dateDebutJob.vue";
-import AutresInfosJob from "./_compoments/autresInfosJob.vue";
-import IcIcons from "@/components/icons/IcIcons.vue";
 import { SettingServices } from "@/services/setting.services";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { useRoute } from "vue-router";
-import { useQuery } from "@tanstack/vue-query";
-import { an } from "vitest/dist/reporters-5f784f42";
 
+// Initialisation des hooks et stores
 const { createJob, state } = useJobHook();
+const jobStore = useJobStore();
 const route = useRoute();
+const router = useRouter();
 
-onMounted(() => {
-})
+// Mapping des composants d'étape
+const stepComponents = {
+  1: InformationsGeneralesJob,
+  2: TypeServiceJob,
+  3: DetailsMissionJob,
+  4: NounouJob,
+  5: FemmeDeMenageJob,
+  6: CriteresJob,
+  7: RemunerationJob,
+  8: DateDebutJob,
+  9: AutresInfosJob
+};
 
-const DetailJobs = async () =>
-  await SettingServices().listSetting(
-    URL_API_ROUTE.JOB_ONLY + `/${route.query.id}`
-  ).then((res) => {
-    if (res) {
-      console.log(res, dataDetailJobs.value);
-    useJobStore().ChangeInputToEdit(res);
+// Computed properties
+const currentStep = computed(() => jobStore.state.stepJob);
+const isFirstStep = computed(() => currentStep.value === 1);
+const isLastStep = computed(() => currentStep.value === 9);
+
+const currentStepComponent = computed(() => {
+  return stepComponents[currentStep.value as keyof typeof stepComponents];
+});
+
+const stepProps = computed(() => {
+  // Vous pouvez ajouter ici des props spécifiques à chaque étape si nécessaire
+  return {};
+});
+
+// Gestionnaires d'événements
+const handleBackNavigation = () => {
+  if (route.query.id) {
+
+    router.go(-1);
+  }
+};
+
+const handlePreviousStep = () => {
+  if (!isFirstStep.value) {
+    jobStore.previousStep();
+  }
+};
+
+const handleStepAction = () => {
+  const stepActions = {
+    1: jobStore.InfoGeneralJob,
+    2: jobStore.TypeServiceJob,
+    3: jobStore.DetailsMissionJob,
+    4: jobStore.NounouJob,
+    5: jobStore.FemmeDeMenageJob,
+    6: jobStore.CriteresJob,
+    7: jobStore.RemunerationJob,
+    8: jobStore.DateDebutJob,
+    9: jobStore.AutresInfosJob
+  };
+
+  const currentStepAction = stepActions[currentStep.value as keyof typeof stepActions];
+  
+  if (currentStepAction) {
+    currentStepAction();
+  } else if (isLastStep.value) {
+    createJob();
+  }
+};
+
+// Fonction pour charger les détails d'un job existant
+const fetchJobDetails = async () => {
+  if (!route.query.id) return null;
+  
+  try {
+    const response = await SettingServices().listSetting(
+      URL_API_ROUTE.JOB_ONLY + `/${route.query.id}`
+    );
+    
+    if (response) {
+      jobStore.ChangeInputToEdit(response);
+      return response;
     }
-  });
-  const {
-  data: dataDetailJobs,
-  error: errorDetailJobs,
-  isLoading: isLoadingDetailJobs,
-  isError: isErrorDetailJobs,
+    return null;
+  } catch (error) {
+    console.error("Erreur lors du chargement des détails du job:", error);
+    return null;
+  }
+};
+
+// Requête pour charger les détails du job si un ID est présent
+const {
+  data: jobDetails,
+  isLoading: isLoadingJobDetails,
+  isError: isErrorJobDetails
 } = useQuery({
   queryKey: ["DetailJobs", route.query.id],
-  enabled: route.query.id !== undefined, // Activer uniquement si l'ID existe
-  queryFn: async() => await DetailJobs(), // Passer l'ID à la fonction DetailJobs
- 
-});;
+  queryFn: fetchJobDetails,
+  enabled: !!route.query.id,
+});
 
+// Initialisation au montage du composant
+onMounted(() => {
+  // Vous pouvez ajouter ici des actions d'initialisation si nécessaire
+});
 </script>
+
+<style scoped>
+/* Transitions pour les boutons */
+.transition-all {
+  transition-property: all;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
+}
+
+/* Styles pour le bouton précédent */
+.hover\:bg-primary-dark:hover {
+  background-color: var(--ion-color-primary-shade);
+}
+
+/* Animation pour les changements d'étape */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.component-enter-active {
+  animation: fadeIn 0.3s ease-out;
+}
+</style>

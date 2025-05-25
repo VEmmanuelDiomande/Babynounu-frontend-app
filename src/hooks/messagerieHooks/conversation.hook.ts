@@ -12,7 +12,7 @@ export const useConversationHook = () => {
     parentId: string,
     router: any
   ) => {
-    if (createSetting) {
+    if (listSetting) {
       const data = await listSetting(
         `${URL_API_ROUTE.CONVERSATION_CREATE}?nounouId=${nounouId}&parentId=${parentId}`
       );

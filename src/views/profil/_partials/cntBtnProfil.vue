@@ -1,26 +1,38 @@
 <template>
-  <section class="grid grid-cols-2 gap-1 w-11/12 m-auto mt-2 mb-4">
-    <div @click="OpenEchange" v-if="isOwner == false">
+  <section class="grid grid-cols-2 gap-2 w-11/12 mx-auto my-4">
+    <!-- Bouton Échanger (visible uniquement pour les parents visitant un profil) -->
+    <div 
+      v-if="!isOwner && userStore.typeProfil === 'parent'"
+      @click="handleExchange"
+      class="transition-transform duration-200 hover:scale-[1.02]"
+    >
       <ActionProfilButton
         sizeText="medium"
         icon="RiMessage3Line"
         setcolor="bg-zinc-800 text-lg"
-        title="Echanger"
+        title="Échanger"
       />
     </div>
 
-    <div v-if="isOwner != false" @click="OpenEditProfil">
+    <!-- Bouton Éditer (visible uniquement pour le propriétaire du profil) -->
+    <div 
+      v-if="isOwner"
+      @click="handleEditProfile"
+      class="transition-transform duration-200 hover:scale-[1.02]"
+    >
       <ActionProfilButton
         sizeText="medium"
         icon="RiEditLine"
         setcolor="bg-zinc-800 text-lg"
-        title="Editer"
+        title="Éditer"
       />
     </div>
 
+    <!-- Bouton Poster (visible uniquement pour les parents sur leur propre profil) -->
     <div
-      v-if="isOwner != false && useUserStore().typeProfil == 'parent'"
-      @click="OpenCreatePost"
+      v-if="isOwner && userStore.typeProfil === 'parent'"
+      @click="handleCreatePost"
+      class="transition-transform duration-200 hover:scale-[1.02]"
     >
       <ActionProfilButton
         sizeText="medium"
@@ -30,47 +42,107 @@
       />
     </div>
 
-    <button :disabled="isOwner == false"
-      v-if="useUserStore().typeProfil == 'nounu'"
-      @click="Available"
+    <!-- Bouton de disponibilité (visible uniquement pour les nounous) -->
+    <div
+      v-if="userStore.typeProfil === 'nounu'"
+      class="transition-transform duration-200 hover:scale-[1.02]"
     >
-      <CntAvailableProfil :status="Data.status" :isOwner="isOwner" />
-    </button>
+      <CntAvailableProfil 
+        :data="profileData" 
+        :status="profileData.status" 
+        :isOwner="isOwner" 
+        @status-updated="handleStatusUpdate"
+      />
+    </div>
   </section>
 </template>
-<script lang="ts" setup>
-import ActionProfilButton from "@/components/buttons/actionProfilButton.vue";
-import { useProfilHook } from "@/hooks/Profile/profil.hook";
-import { useUserStore } from "@/stores/user.store";
-import { StorageUtils } from "@/utils/store.utils";
-import { ref } from "vue";
+
+<script setup lang="ts">
+import { computed, defineProps, defineEmits } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user.store";
+import { useProfilHook } from "@/hooks/Profile/profil.hook";
+import { StorageUtils } from "@/utils/store.utils";
+import ActionProfilButton from "@/components/buttons/actionProfilButton.vue";
 import CntAvailableProfil from "./cntAvailableProfil.vue";
 
-const props = defineProps(["Data", "isOwner", "type"]);
+// Interface pour les données du profil
+interface ProfileData {
+  id: number;
+  status: string;
+  [key: string]: any;
+}
 
+// Props avec typage
+const props = defineProps({
+  Data: {
+    type: Object as () => any,
+    required: true
+  },
+  isOwner: {
+    type: Boolean,
+    default: false
+  },
+  type: {
+    type: String,
+    default: 'nounu'
+  }
+});
+
+// Émissions d'événements
+const emit = defineEmits(['status-updated']);
+
+// Stores et hooks
 const router = useRouter();
-
+const userStore = useUserStore();
 const {
-  isAbonnement: _isAbonnement,
-  OpenEditProfil: _OpenEditProfil,
-  OpenEchange: _OpenEchange,
-  OpenToggleProfil: _OpenToggleProfil,
-  Available: _Available,
+  OpenEditProfil,
+  OpenEchange,
+  Available
 } = useProfilHook();
 
-const OpenEditProfil = () => _OpenEditProfil(props.Data, props.type);
-const OpenEchange = async () =>
-  _OpenEchange(
-    router,
-    props.Data.id,
-    (await StorageUtils().getStore("nProfil_1_Id")).value
-  );
+// Données calculées
+const profileData = computed(() => props.Data);
 
-  const Available = () => _Available();
+// Gestionnaires d'événements
+const handleEditProfile = () => {
+  OpenEditProfil(profileData.value, props.type);
+};
 
-const OpenCreatePost = () => {
-  // Logic to open create post
+const handleExchange = async () => {
+  try {
+    const profileId = await StorageUtils().getStore("nProfil_1_Id");
+    if (profileId?.value) {
+      OpenEchange(router, profileData.value.id, profileId.value);
+    } else {
+      console.error("ID de profil non disponible");
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'échange:", error);
+  }
+};
+
+const handleCreatePost = () => {
   router.push({ name: "JOB_CREATE" });
 };
+
+const handleStatusUpdate = (newStatus: string) => {
+  emit('status-updated', newStatus);
+};
 </script>
+
+<style scoped>
+/* Animation au survol des boutons */
+.hover\:scale-\[1\.02\]:hover {
+  transform: scale(1.02);
+}
+
+/* Transition fluide */
+.transition-transform {
+  transition-property: transform;
+}
+
+.duration-200 {
+  transition-duration: 200ms;
+}
+</style>

@@ -35,15 +35,15 @@ const { state: authState } = useAuthStore();
 
         <!-- Title -->
         <div class="flex flex-col text-center justify-center gap-2">
-          <h1
-            class="text-4xl font-bold mb-4 font-anton uppercase text-primary"
-          >
-            Baby Nounu
-          </h1>
+          
+          <div class="flex justify-center w-full h-full">
+            <img v-lazy="'/images/logos/logo_babynounu_2.png'" class="h-[150px]" alt="" />
+          </div>
+
           <span class="text-3xl  font-bold"
             >Trouver la Nounou / Ménagère idéale
           </span>
-          <span class="text-base font-normal"
+          <span class="text-base font-normal w-11/12 mx-auto"
             >Avec BabyNounu, accédez à des professionnelles de confiance pour le bien-être de votre enfant et votre maison.
             </span
           >
@@ -56,7 +56,7 @@ const { state: authState } = useAuthStore();
             <AuthButton
               title="S'inscrire"
               setcolor=" bg-primary"
-              @click="GlobalRedirect($router, 'SignUpAuth')"
+              :actions="() => GlobalRedirect($router, 'SignUpAuth')"
             />
           </div>
 
@@ -72,7 +72,7 @@ const { state: authState } = useAuthStore();
           <AuthButton
             title="Se connecter"
             setcolor=" bg-secondary"
-            @click="GlobalRedirect($router, 'SginInAuth')"
+            :actions="() => GlobalRedirect($router, 'SginInAuth')"
           />
 
           <RouterLink

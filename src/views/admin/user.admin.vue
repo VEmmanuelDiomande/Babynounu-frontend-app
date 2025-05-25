@@ -35,9 +35,9 @@
         </div>
         <EmptyError
           v-else-if="dataAdminUser && dataAdminUser?.length == 0"
-          nameIcons="RiPassValidLine"
-          heading="Pas de Nounou, inscrite."
-          subHeading="Aucune nounou inscrite. Ici vous validez les identités des nounou."
+          nameIcons="RiUser3Line"
+          heading="Pas de Nounou, à contacter."
+          subHeading="Aucune nounou inscrite. Ici vous contactezez les nounous."
         />
         <E404Error v-else="isErrorAdminUser" />
       </IonContent>

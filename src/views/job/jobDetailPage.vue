@@ -1,15 +1,16 @@
 <template>
   <IonPage>
     <!-- Header -->
-    <DetailHeader title="Details de l'offre" />
+    <DetailHeader title="Details de l'offre" :isBack="() => $router.go(-1)" />
 
     <!-- Content -->
     <IonContent class="bg-gray-50 font-love" v-if="DataJobs?.id">
       <!-- Refresher -->
-      <ion-refresher slot="fixed" @ionRefresh="_handleRefresh">
+      <ion-refresher slot="fixed" @ionRefresh="handleRefresh">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
+      <!-- Loader -->
       <PageLoader
         classCustom="h-[100vh] fixed inset-0"
         size="large"
@@ -17,312 +18,204 @@
       />
 
       <!-- Section Principale -->
-      <div class="px-4 py-6" v-if="!LoadingJobs">
+      <div class="px-4 py-6" v-else>
         <!-- Titre et Infos -->
-        <div class="bg-white px-4 pb-6 animate-fade-in">
-          <span class="text-2xl font-bold text-gray-900 mb-2">
-            {{ DataJobs.titre }}
-          </span>
-          <div class="flex items-center gap-2 text-gray-600 mt-8 mb-4">
-            <IcIcons name="RiBriefcaseFill" class="text-primary" />
-            <span>{{
-              DataJobs.preferences?.frequence_des_services[0]?.name
-            }}</span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600 mb-4">
-            <IcIcons name="RiMapPinLine" class="text-primary" />
-            <span>{{ DataJobs.preferences?.adress[0]?.name }}</span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600 mb-4">
-            <IcIcons name="RiMoneyEuroCircleLine" class="text-primary" />
-            <span>{{ DataJobs.tarifPropose }} Fcfa</span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-600">
-            <IcIcons name="RiTimeLine" class="text-primary" />
-            <span>{{ DataJobs.preferences?.horaire_souhaites[0]?.name }}</span>
-          </div>
-        </div>
+        <JobHeader :job="DataJobs" />
 
         <!-- Description -->
-        <div
-          class="mt-6 bg-white rounded-xl border-[1px] p-6 animate-fade-in-up"
-        >
-          <Heading2Text title="Description" />
-          <p class="text-gray-700 leading-relaxed text-sm">
-            {{ DataJobs.description }}
-          </p>
-        </div>
+        <JobDescription :description="DataJobs.description" />
 
-        <section class="divide-y divide-gray-200">
-          <div v-for="pref in DataPreferences()">
-            <div
-              class="mt-2 bg-white rounded-xl p-6 flex flex-col gap-2 animate-fade-in-up"
-              v-if="pref.isActive"
-            >
-              <Heading2Text :title="pref.title" :icon="pref.icon" />
-              <ul
-                class="list-disc list-inside text-gray-700 flex flex-col gap-1"
-              >
-                <li
-                  v-for="(avantage, index) in pref.list"
-                  :key="index"
-                  class="text-sm"
-                >
-                  {{ avantage.name }}
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
+        <!-- Préférences -->
+        <JobPreferences :preferences="DataJobs.preferences" />
 
-        <!-- Description -->
-        <div
-          class="mt-6 bg-white rounded-xl border-[1px] p-6 animate-fade-in-up"
-          v-if="DataJobs.descriptionComplementaire.length > 0"
-        >
-          <Heading2Text title="Description complementaire" />
-          <p class="text-gray-700 text-sm leading-relaxed">
-            {{ DataJobs.descriptionComplementaire }}
-          </p>
-        </div>
+        <!-- Description complémentaire -->
+        <JobComplementaryDescription 
+          v-if="hasComplementaryDescription" 
+          :description="DataJobs.descriptionComplementaire" 
+        />
 
-        <!-- Bouton Postuler -->
-        <div
-          class="mt-6 grid grid-cols-2 gap-1 animate-fade-in-up"
-          v-if="useUserStore().userId == DataJobs?.user?.id"
-        >
-          <AuthButton
-            :loading="isPendingDelete"
-            :title="'Editer'"
-            icon="RiPencilLine"
-            setcolor="bg-white border-[1px] border-primary"
-            :textcolor="'text-primary'"
-            @click="OpenEditJob()"
-          />
-          <AuthButton
-            @click="mutateDelete"
-            :loading="isPendingDelete"
-            icon="RiDeleteBinLine"
-            :title="'Supprimer'"
-            :setcolor="'bg-red-500'"
-          />
-        </div>
-        <div class="mt-6 animate-fade-in-up" v-else>
-          <AuthButton
-            @click="mutate()"
-            :disabled="useUserStore().typeProfil != 'nounu'"
-            :loading="isPending"
-            :title="
-              DataJobs?.jobApplications?.length > 0 &&
-              DataJobs?.jobApplications[0]?.is_apply
-                ? 'Rétirer ma condidature'
-                : 'Postuler maintenant'
-            "
-            :setcolor="[
-              DataJobs?.jobApplications?.length > 0 &&
-              DataJobs?.jobApplications[0]?.is_apply
-                ? 'bg-gray-400 border-[1px] border-gray-400'
-                : 'bg-primary',
-              useUserStore().typeProfil != 'nounu' ? 'bg-gray-400/50' : '',
-            ]"
-          />
-        </div>
+        <!-- Boutons d'action -->
+        <JobActions 
+          :job="DataJobs" 
+          :is-owner="isJobOwner" 
+          :is-nounu="isNounuProfile"
+          :is-pending="isPending"
+          :is-pending-delete="isPendingDelete"
+          @apply="mutate"
+          @delete="mutateDelete"
+          @edit="OpenEditJob"
+        />
       </div>
     </IonContent>
   </IonPage>
 </template>
 
 <script setup lang="ts">
+import { computed, ref, defineAsyncComponent, onMounted } from "vue";
 import {
   IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
-  IonButton,
-  IonBackButton,
-  IonButtons,
+  IonRefresher,
+  IonRefresherContent
 } from "@ionic/vue";
-import { ref, onMounted } from "vue";
-import IcIcons from "@/components/icons/IcIcons.vue";
+
+// Services et utilitaires
 import { SettingServices } from "@/services/setting.services";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { useQueryClient, useMutation, useQuery } from "@tanstack/vue-query";
-import { useRoute } from "vue-router";
-import DetailHeader from "@/components/headers/DetailHeader.vue";
-import AuthButton from "@/components/buttons/authButton.vue";
 import { StorageUtils } from "@/utils/store.utils";
-import { useUserHook } from "@/hooks/userHooks/userHook";
-import { useUserStore } from "@/stores/user.store";
-import { useRouter } from "vue-router";
-import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
-import PageLoader from "@/components/loaders/pageLoader.vue";
-import Heading2Text from "@/components/texts/heading2Text.vue";
-import { useJobStore } from "@/stores/jobStore";
 import { SocketService } from "@/services/socket.services";
 
+// Hooks et stores
+import { useUserStore } from "@/stores/user.store";
+import { useJobStore } from "@/stores/jobStore";
+import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/vue-query";
+import { useRoute, useRouter } from "vue-router";
+
+// Composants
+import DetailHeader from "@/components/headers/DetailHeader.vue";
+import PageLoader from "@/components/loaders/pageLoader.vue";
+
+// Composants asynchrones
+const JobHeader = defineAsyncComponent(() => import('./_partials/JobHeader.vue'));
+const JobDescription = defineAsyncComponent(() => import('./_partials/JobDescription.vue'));
+const JobPreferences = defineAsyncComponent(() => import('./_partials/JobPreferences.vue'));
+const JobComplementaryDescription = defineAsyncComponent(() => import('./_partials/JobComplementaryDescription.vue'));
+const JobActions = defineAsyncComponent(() => import('./_partials/JobActions.vue'));
+
+// Initialisation
 const route = useRoute();
-const queryClient = useQueryClient(); // Accès au cache global
-const Pref = ref();
 const router = useRouter();
+const queryClient = useQueryClient();
+const userStore = useUserStore();
+const jobStore = useJobStore();
+const { handleRefresh: refreshHandler } = useRefetchHook();
+const socketService = new SocketService();
 
-const DetailJobs = async () =>
-  await SettingServices().listSetting(
-    URL_API_ROUTE.JOB_ONLY + `/${route.params.id}`
-  );
-const {
-  data: DataJobs,
-  error: ErrorJobs,
-  isLoading: LoadingJobs,
-  isError: ISErrorJobs,
-  refetch,
-} = useQuery({
-  queryKey: ["DetailJobs", route.params.id],
-  queryFn: DetailJobs,
+// État local
+const Pref = ref();
 
-  complete: (data: any) => {},
-});
-const { handleRefresh } = useRefetchHook();
-const _handleRefresh = (event: any) => handleRefresh(event, refetch);
+// Computed properties
+const isJobOwner = computed(() => userStore.userId === DataJobs.value?.user?.id);
+const isNounuProfile = computed(() => userStore.typeProfil === 'nounu');
+const hasComplementaryDescription = computed(() => 
+  DataJobs.value?.descriptionComplementaire?.length > 0
+);
 
-// Requête pour récupérer le détail d'un job
-// Utilisation de TanStack Query pour gérer les requêtes
-// et les erreurs
-const CreateJobApplications = async () => {
-  const settingServices = SettingServices();
-  if (settingServices && settingServices.createSetting) {
-    await settingServices
-      .createSetting(URL_API_ROUTE.JOB_APPLICATION_CREATE, {
-        is_apply: true,
-        userId: DataJobs.value?.user?.id,
-        jobId: route.params.id,
-      })
-      .then(async (res:any) => {
-        if (res) {
-          new SocketService().emit("getAllCountNotificationsByReceiverId", {
-            receiverId: DataJobs.value?.user?.id,
-          });
-        }
-      });
+// Fonction pour récupérer les détails du job
+const fetchJobDetails = async () => {
+  try {
+    return await SettingServices().listSetting(
+      URL_API_ROUTE.JOB_ONLY + `/${route.params.id}`
+    );
+  } catch (error) {
+    console.error("Erreur lors de la récupération des détails du job:", error);
+    return null;
   }
 };
-const { mutate, isPending, isError, error, isSuccess } = useMutation({
+
+// Requête pour récupérer le détail d'un job
+const {
+  data: DataJobs,
+  isLoading: LoadingJobs,
+  refetch
+} = useQuery({
+  queryKey: ["DetailJobs", route.params.id],
+  queryFn: fetchJobDetails,
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  cacheTime: 10 * 60 * 1000, // 10 minutes
+  retry: 2
+});
+
+// Fonction pour gérer le rafraîchissement
+const handleRefresh = (event: CustomEvent) => {
+  refreshHandler(event, refetch);
+};
+
+// Fonction pour postuler à un job
+const applyForJob = async () => {
+  const settingServices = SettingServices();
+  if (!settingServices || !settingServices.createSetting) return;
+
+  const response = await settingServices.createSetting(
+    URL_API_ROUTE.JOB_APPLICATION_CREATE, 
+    {
+      is_apply: true,
+      userId: DataJobs.value?.user?.id,
+      jobId: route.params.id,
+    }
+  );
+
+  if (response) {
+    socketService.emit("getNotifications", {
+      userId: DataJobs.value?.user?.id,
+    });
+  }
+
+  return response;
+};
+
+// Mutation pour postuler
+const {
+  mutate,
+  isPending
+} = useMutation({
   mutationKey: ["create-job-applications"],
-  mutationFn: CreateJobApplications,
+  mutationFn: applyForJob,
   onSuccess: () => {
     queryClient.invalidateQueries({
       queryKey: ["DetailJobs", route.params.id],
     });
-  },
+  }
 });
 
-const DeleteJobApplications = async () => {
+// Fonction pour supprimer un job
+const deleteJob = async () => {
   const settingServices = SettingServices();
-  if (settingServices && settingServices.createSetting) {
-    await settingServices.createSetting(
-      `${URL_API_ROUTE.JOB_DELETE}/${route.params.id}`,
-      {
-        userId: (await StorageUtils().getStore("nUser_Id")).value,
-        jobId: route.params.id,
-      }
-    );
-  }
+  if (!settingServices || !settingServices.createSetting) return;
+
+  const userId = (await StorageUtils().getStore("nUser_Id")).value;
+  
+  return await settingServices.createSetting(
+    `${URL_API_ROUTE.JOB_DELETE}/${route.params.id}`,
+    {
+      userId,
+      jobId: route.params.id,
+    }
+  );
 };
+
+// Mutation pour supprimer
 const {
   mutate: mutateDelete,
-  isPending: isPendingDelete,
-  isError: isErrorDelete,
-  error: errorDelete,
-  isSuccess: isSuccessDelete,
+  isPending: isPendingDelete
 } = useMutation({
   mutationKey: ["delete-job-applications"],
-  mutationFn: DeleteJobApplications,
+  mutationFn: deleteJob,
   onSuccess: () => {
     queryClient.invalidateQueries({
       queryKey: ["DetailJobs", route.params.id],
     });
     router.push({ name: "HOME_JOBS" });
-  },
+  }
 });
 
-const DataPreferences = () => {
-  Pref.value = DataJobs.value?.preferences;
-  console.log(DataJobs.value?.preferences);
-  return [
-    {
-      title: "Besoin spécifique",
-      list: Pref.value?.besions_specifiques,
-      isActive: Pref.value?.besions_specifiques?.length > 0,
-      icon: "RiUserHeartLine",
-    },
-    {
-      title: "Certifications",
-      list: Pref.value?.certifications_criteres,
-      isActive: Pref.value?.certifications_criteres?.length > 0,
-      icon: "RiMedalFill",
-    },
-    {
-      title: "Compétences spécifiques",
-      list: Pref.value?.competance_specifique,
-      isActive: Pref.value?.competance_specifique?.length > 0,
-      icon: "RiLightbulbFlashLine",
-    },
-    {
-      title: "Critères de sélection",
-      list: Pref.value?.criteres_selections,
-      isActive: Pref.value?.criteres_selections?.length > 0,
-      icon: "RiCheckLine",
-    },
-    {
-      title: "Equipement ménager",
-      list: Pref.value?.equipement_menager,
-      isActive: Pref.value?.equipement_menager?.length > 0,
-      icon: "RiHomeLine",
-    },
-    {
-      title: "Fréquence des services",
-      list: Pref.value?.frequence_des_services,
-      isActive: Pref.value?.frequence_des_services?.length > 0,
-      icon: "RiCalendarLine",
-    },
-    {
-      title: "Garde des enfants",
-      list: Pref.value?.garde_enfants,
-      isActive: Pref.value?.garde_enfants?.length > 0,
-      icon: "RiParentLine",
-    },
-    {
-      title: "Horaire souhaités",
-      list: Pref.value?.horaire_souhaites,
-      isActive: Pref.value?.horaire_souhaites?.length > 0,
-      icon: "RiTimeLine",
-    },
-    {
-      title: "Langue parlée",
-      list: Pref.value?.langue_parler,
-      isActive: Pref.value?.langue_parler?.length > 0,
-      icon: "RiSpeakLine",
-    },
-    {
-      title: "Type de services",
-      list: Pref.value?.type_services,
-      isActive: Pref.value?.type_services?.length > 0,
-      icon: "RiBriefcaseLine",
-    },
-    {
-      title: "Zone de travail",
-      list: Pref.value?.zone_de_travail,
-      isActive: Pref.value?.zone_de_travail?.length > 0,
-      icon: "RiMapPinLine",
-    },
-  ];
-};
-
+// Fonction pour éditer un job
 const OpenEditJob = () => {
-  useJobStore().isUpdateJob = true;
-  useJobStore().state.stepJob = 1;
+  jobStore.isUpdateJob = true;
+  jobStore.state.stepJob = 1;
   router.replace({ name: "JOB_CREATE", query: { id: route.params.id } });
 };
+
+// Initialisation au montage du composant
+onMounted(() => {
+  // Précharger les composants asynchrones
+  JobHeader;
+  JobDescription;
+  JobPreferences;
+  JobComplementaryDescription;
+  JobActions;
+});
 </script>
 
 <style scoped>
@@ -336,12 +229,8 @@ const OpenEditJob = () => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
@@ -352,6 +241,14 @@ const OpenEditJob = () => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Optimisation pour les appareils mobiles */
+@media (max-width: 768px) {
+  .px-4 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
 </style>

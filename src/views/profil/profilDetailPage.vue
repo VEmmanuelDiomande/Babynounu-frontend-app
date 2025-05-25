@@ -5,6 +5,7 @@
       <PageLoader v-if="LoadingNounu" />
       <ContentProfil
         :DataNounu="DataNounu"
+        :id_profil="route.params.id"
         v-else-if="DataNounu && !LoadingNounu"
       />
       <!-- Gestion des erreurs -->

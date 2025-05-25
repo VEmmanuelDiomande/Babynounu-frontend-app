@@ -13,6 +13,7 @@ import { SettingServices } from "@/services/setting.services";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { useRoute } from "vue-router";
 import { useQuery } from "@tanstack/vue-query";
+import { socketService } from "@/services/socket.services";
 
 const activeConversation = ref<any | null>(null);
 
@@ -41,7 +42,9 @@ const {
   refetchOnWindowFocus: false,
 });
 
+
 onMounted(() => {
   activeConversation.value = route.params.id;
+
 });
 </script>

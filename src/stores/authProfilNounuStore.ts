@@ -89,7 +89,7 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
 
   // État réactif typé
   const GALLERY_PREVIEW = ref<any[]>([]);
-  const IMAGE_PREVIEW = ref(<any>{})
+  const IMAGE_PREVIEW = ref(<any>{});
   const state = reactive<NounuProfileState>({
     StepProfil: 1,
     InformationPersonnelle: {
@@ -204,14 +204,12 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
   ];
 
   const ChangeInputToEdit = (Data: any) => {
-
-
     useAuthStore().isUpdateProfilID = Data.id;
     state.InformationPersonnelle.address = Data.preferences.adress;
     state.InformationPersonnelle.fullname = Data.fullname;
     state.InformationPersonnelle.age = Data.age;
     state.InformationPersonnelle.phone = Data.phone;
-    IMAGE_PREVIEW.value = Data.image
+    IMAGE_PREVIEW.value = Data.image;
 
     state.ExperienceEtCompetences.annees_experience = Data.annees_experience;
     state.ExperienceEtCompetences.tranche_age_enfants =
@@ -248,7 +246,6 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
     state.DisponibiliteGeographique.zone_de_travail =
       Data.preferences.zone_de_travail;
 
-      
     GALLERY_PREVIEW.value = Data.gallery;
   };
 
@@ -302,6 +299,6 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
     DataEMERGENCIES,
     DataFlexiblePrice,
     GALLERY_PREVIEW,
-    IMAGE_PREVIEW
+    IMAGE_PREVIEW,
   };
 });

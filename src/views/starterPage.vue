@@ -25,7 +25,7 @@
       <swiper-slide>
         <CardSlider
           heading="Proposition d'offre et discutions"
-          subHeading="Faite des proposition d'offre et discutez avec les nounus"
+          subHeading="Faites des propositions d'offre et discutez avec les nounus"
           img="/images/sliders/dlx_babysitter_2.png"
         />
       </swiper-slide>

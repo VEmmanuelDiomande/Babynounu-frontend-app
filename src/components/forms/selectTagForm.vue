@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-2 font-love relative" ref="container">
     <div class="flex flex-col gap-1 w-full">
       <label
-        class="text-label font-love font-semibold text-zinc-800 rounded-md "
+        class="text-label font-love font-semibold text-zinc-800 rounded-md"
         :for="'id_input_' + name"
       >
         {{ label }}
@@ -14,7 +14,7 @@
 
     <!-- Champ personnalisé pour les tags -->
     <div
-      class="w-full border border-zinc-300  rounded-lg px-4 py-2 text-zinc-700 focus-within:border-primary focus-within:ring-primary outline-none text-sm font-semibold flex flex-wrap gap-2"
+      class="w-full border border-zinc-300 rounded-lg px-4 py-2 text-zinc-700 focus-within:border-primary focus-within:ring-primary outline-none text-sm font-semibold flex flex-wrap gap-2"
       @click="toggleDropdown"
     >
       <!-- Tags sélectionnés -->
@@ -40,7 +40,7 @@
         placeholder="Sélectionnez une option"
         v-model="searchQuery"
         @input="onInput"
-        @keydown.enter="addTag"
+        @keydown.enter.prevent="addTag"
         @keydown.backspace="handleBackspace"
         ref="input"
       />
@@ -48,14 +48,14 @@
 
     <!-- Liste déroulante des options (flottante) -->
     <div
-  v-if="isOpen && filteredOptions?.length > 0"
-  class="absolute left-0 mt-1 w-full border border-zinc-300 bg-white rounded-lg shadow-lg max-h-52 overflow-y-auto z-50"
-  :style="dropdownStyle"
->
+      v-if="isOpen && filteredOptions && filteredOptions.length > 0"
+      class="absolute left-0 mt-1 w-full border border-zinc-300 bg-white rounded-lg shadow-lg max-h-52 overflow-y-auto z-50"
+      :style="dropdownStyle"
+    >
       <div
         v-for="option in filteredOptions"
         :key="option[optionName]"
-        class="px-4 py-2 hover:bg-zinc-100 cursor-pointer bg-white z-50"
+        class="px-4 py-2 hover:bg-zinc-100 cursor-pointer bg-white font-love z-50"
         @click="selectOption(option)"
       >
         {{ option[optionName] }}
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, computed, onMounted, onUnmounted } from "vue";
+import { defineProps, defineEmits, ref, computed, onMounted, onUnmounted, watch } from "vue";
 
 interface Option {
   [key: string]: any;
@@ -88,7 +88,7 @@ const props = defineProps({
   error: { type: Object as () => { path: string; message: string } | null, default: null },
   options: {
     type: Array as () => Option[],
-    required: true,
+    default: () => [],
   },
 });
 
@@ -100,12 +100,16 @@ const isOpen = ref(false); // État de la liste déroulante
 const container = ref<HTMLElement | null>(null); // Référence au conteneur du composant
 
 // Tags sélectionnés
-const selectedTags = computed(() => props.modelValue);
+const selectedTags = computed(() => props.modelValue || []);
 
 // Options filtrées en fonction de la recherche
 const filteredOptions = computed(() => {
-  return props.options?.filter(
+  if (!props.options) return [];
+  
+  return props.options.filter(
     (option) =>
+      option && 
+      option[props.optionName] &&
       !selectedTags.value.some((tag) => tag[props.optionName] === option[props.optionName]) &&
       option[props.optionName].toLowerCase().includes(searchQuery.value.toLowerCase())
   );
@@ -125,6 +129,9 @@ const dropdownStyle = computed(() => {
 // Ouvrir/fermer la liste déroulante
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value;
+  if (isOpen.value) {
+    focusInput();
+  }
 };
 
 // Fermer la liste déroulante lors d'un clic à l'extérieur
@@ -136,13 +143,17 @@ const handleClickOutside = (event: MouseEvent) => {
 
 // Ajouter un tag
 const addTag = () => {
-  const option = filteredOptions.value?.find(
+  if (!searchQuery.value.trim()) return;
+  
+  const option = filteredOptions.value.find(
     (opt) => opt[props.optionName].toLowerCase() === searchQuery.value.toLowerCase()
   );
+  
   if (option) {
     const newTags = [...selectedTags.value, option];
     emit("update:modelValue", newTags);
     searchQuery.value = "";
+    isOpen.value = false;
   }
 };
 
@@ -154,6 +165,8 @@ const removeTag = (index: number) => {
 
 // Sélectionner une option dans la liste déroulante
 const selectOption = (option: Option) => {
+  if (!option) return;
+  
   const newTags = [...selectedTags.value, option];
   emit("update:modelValue", newTags);
   searchQuery.value = "";
@@ -170,13 +183,23 @@ const handleBackspace = () => {
 
 // Focus sur le champ de saisie
 const focusInput = () => {
-  input.value?.focus();
+  setTimeout(() => {
+    input.value?.focus();
+  }, 0);
 };
 
 // Gérer l'input
 const onInput = () => {
   isOpen.value = true; // Ouvrir la liste déroulante lors de la saisie
 };
+
+// Observer les changements dans les options
+watch(() => props.options, () => {
+  // Réinitialiser l'état si nécessaire
+  if (isOpen.value && (!props.options || props.options.length === 0)) {
+    isOpen.value = false;
+  }
+}, { deep: true });
 
 // Ajouter un écouteur d'événements pour les clics à l'extérieur
 onMounted(() => {

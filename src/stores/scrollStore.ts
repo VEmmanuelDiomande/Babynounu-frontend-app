@@ -12,7 +12,6 @@ export const useScrollStore = defineStore("SCROLL", () => {
   let countScrollSearchParent = ref(0);
 
   const onScroll = (event: any) => {
-    console.log(event.target.scrollTop);
     countScroll.value = event.target.scrollTop;
   };
 

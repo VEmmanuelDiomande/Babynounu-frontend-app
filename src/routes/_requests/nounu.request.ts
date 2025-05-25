@@ -8,6 +8,8 @@ export const apiNounuRoutes = {
     NOUNU_SEARCH: '/nounu/search',
     NOUNU_CERTIFICATE_NOT_ALL: '/nounu/non-certified',
     NOUNU_APPROVE_CERTIFICATION: '/nounu/approve-certification',
+    NOUNU_PENDING_CERTIFICATION: '/nounu/pending-certification/:id',
+    NOUNU_REJECT_CERTIFICATION: '/nounu/reject-certification',
     NOUNU_UPDATE_STATUS: '/nounu/update-status',
     
 }

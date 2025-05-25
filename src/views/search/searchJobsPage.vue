@@ -7,34 +7,56 @@
       :countScroll="isCountScroll"
       :hasFilter="false"
     >
-    <template v-slot:ContentSearchUp>
-      <input
+      <template v-slot:ContentSearchUp>
+        <input
           type="text"
           :placeholder="'Rechercher...'"
           class="h-11 outline-none font-love text-base w-full bg-transparent border-5 active:outline-none"
           v-model="useJobStore().state.searchValueData"
           @keyup.enter="searchJob(useJobStore().state.searchValueData)"
         />
-    </template>
+      </template>
     </HeaderMenuLayout>
 
     <IonContent :scroll-events="true" @ionScroll="onScrollJobs($event)">
-      <template v-if="LoadingJobs">
-        <PageLoader classCustom="h-[100vh] fixed inset-0"  />
+      <template v-if="LoadingJobs && currentPage === 1">
+        <PageLoader classCustom="h-[100vh] fixed inset-0" />
       </template>
       <template v-else-if="ISErrorJobs">
         <E404Error />
       </template>
       <EmptyError
-        v-else-if="filteredJobs && filteredJobs?.length == 0"
+        v-else-if="accumulatedJobs.length === 0"
         nameIcons="RiBriefcaseLine"
         heading="Aucune offre d'emploi"
         subHeading="Aucune offre d'emploi disponible. si vous être un parent, poser une offre d'emploi !"
       />
       <template v-else>
-        <!-- <div v-for="(job, index) in filteredJobs" :key="index"> -->
-        <CardJob :JobData="filteredJobs" />
-        <!-- </div> -->
+        <!-- Liste des propositions -->
+        <section class="flex w-full mx-auto flex-col mt-4 mb-8 gap-4 font-love">
+          <CardJob :JobData="accumulatedJobs" />
+        </section>
+
+        <!-- Pagination avec un seul bouton -->
+        <div class="flex flex-col items-center font-love my-4 gap-2">
+          <span class="text-sm text-gray-600">
+            {{ accumulatedJobs.length }} sur
+            {{ DataJobs?.pagination?.total || 0 }} offres affichées
+          </span>
+
+          <div
+            v-if="DataJobs?.pagination?.hasNextPage"
+            fill="outline"
+            size="default"
+            class="max-w-xs ring-2 ring-primary text-primary p-2 rounded-xl cursor-pointer"
+            :class="{ 'opacity-50': isLoadingMore }"
+            :disabled="LoadingJobs || isLoadingMore"
+            @click="loadMore"
+          >
+            <span v-if="!isLoadingMore" class="font-love">Voir plus</span>
+            <span v-else class="font-love">Chargement...</span>
+          </div>
+        </div>
       </template>
     </IonContent>
   </IonPage>
@@ -62,17 +84,49 @@ import { useScrollStore } from "@/stores/scrollStore";
 const { state } = useSearchHook();
 const { state: stateJob } = useJobHook();
 
-
 const { onScrollJobs } = useScrollStore();
 
 const isCountScroll = computed(() => useScrollStore().countScrollJob);
 
 defineProps(["Type"]);
 
-const ListJobs = async () => {
+// Interface pour les données d'emploi
+interface Job {
+  id: number;
+  titre: string;
+  description: string;
+  [key: string]: any;
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface JobResponse {
+  data: Job[];
+  pagination: Pagination;
+}
+
+// Configuration automatique des limites
+const ITEMS_PER_PAGE = 20;
+
+// Page courante et liste cumulative des emplois
+const currentPage = ref(1);
+const accumulatedJobs = ref<Job[]>([]);
+const isLoadingMore = ref(false);
+
+// Fonction pour récupérer la liste des emplois
+const ListJobs = async (): Promise<JobResponse> => {
   const userId = await StorageUtils().getStore("userId");
+  const searchValue = useJobStore().state.searchValueData || "";
   return await SettingServices().listSetting(
-    URL_API_ROUTE.JOB_ALL + "/?userId=" + userId.value
+    URL_API_ROUTE.JOB_ALL +
+      `/?userId=${userId.value}&page=${currentPage.value}&limit=${ITEMS_PER_PAGE}&search=${searchValue}`
   );
 };
 
@@ -81,10 +135,37 @@ const {
   error: ErrorJobs,
   isLoading: LoadingJobs,
   isError: ISErrorJobs,
+  refetch,
 } = useQuery({
-  queryKey: ["ListJobs"],
+  queryKey: ["ListJobs", currentPage],
   queryFn: ListJobs,
 });
+
+// Observer les changements de données et mettre à jour accumulatedJobs
+watch([DataJobs, currentPage], ([newData, newPage]) => {
+  if (newData && newData.data) {
+    if (newPage === 1) {
+      accumulatedJobs.value = [...newData.data];
+    } else {
+      const uniqueIds = new Set(accumulatedJobs.value.map((item) => item.id));
+      const newItems = newData.data.filter((item: { id: number }) => !uniqueIds.has(item.id));
+      accumulatedJobs.value = [...accumulatedJobs.value, ...newItems];
+    }
+    isLoadingMore.value = false;
+  }
+});
+
+// Fonction pour charger plus de données
+const loadMore = () => {
+  if (
+    DataJobs.value?.pagination?.hasNextPage &&
+    !LoadingJobs.value &&
+    !isLoadingMore.value
+  ) {
+    isLoadingMore.value = true;
+    currentPage.value++;
+  }
+};
 
 // Délai avant actualisation des résultats de recherche
 let searchTimeout: NodeJS.Timeout;
@@ -94,34 +175,37 @@ watch(
   (newSearchValue) => {
     if (searchTimeout) clearTimeout(searchTimeout); // Annuler l'ancien délai
     searchTimeout = setTimeout(() => {
-      searchJob(newSearchValue);
+      currentPage.value = 1; // Réinitialiser la page lors d'une nouvelle recherche
+      accumulatedJobs.value = []; // Vider les résultats accumulés
+      refetch(); // Relancer la recherche
+
+      const uniqueIds = new Set(accumulatedJobs.value.map((item) => item.id));
+      const newItems = DataJobs.value.data.filter((item: { id: number }) => !uniqueIds.has(item.id));
+      accumulatedJobs.value = [...accumulatedJobs.value, ...newItems];
     }, 500); // Délai de 500ms avant de lancer la recherche
   }
 );
 
-// Recherche de job
+// Recherche de job (fonction conservée pour compatibilité avec HeaderMenuLayout)
 const searchJob = (searchValue: string) => {
-  useJobStore().DataJobs = [];
-  const filteredData = useJobStore().state?.DataHiddenJobs?.filter((job: any) => {
-    const name = job.titre.toLowerCase();
-    return name.includes(searchValue.toLowerCase());
-  });
-  useJobStore().DataJobs = filteredData;
+  useJobStore().state.searchValueData = searchValue;
 };
 
-// Utilisation de computed pour filtrer les jobs selon la recherche
-const filteredJobs = computed(() => {
-  const searchValue = useJobStore().state.searchValueData?.toLowerCase() || "";
-  return useJobStore().state.DataHiddenJobs?.filter((job: any) =>
-    job.titre?.toLowerCase().includes(searchValue) || job.description?.toLowerCase().includes(searchValue)
-  );
+// Observer les changements de page pour charger plus de données
+watch(currentPage, () => {
+  refetch();
 });
 
 onMounted(() => {
-  useJobStore().state.DataHiddenJobs = DataJobs;
+  // Initialiser les données au montage
+  if (DataJobs.value) {
+    accumulatedJobs.value = DataJobs.value.data || [];
+  }
 });
 </script>
 
 <style scoped>
-/* Vous pouvez personnaliser ici le style du loader ou d'autres éléments */
+.font-love {
+  font-family: var(--font-love, sans-serif);
+}
 </style>

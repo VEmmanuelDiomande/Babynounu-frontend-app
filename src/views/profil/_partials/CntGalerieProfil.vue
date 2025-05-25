@@ -1,9 +1,8 @@
 <template>
   <main class="relative">
-  
-    <div v-if="DataGaleries?.length > 0">
+    <div v-if="_DataGaleries?.length > 0">
       <section class="grid grid-cols-2 mb-8 gap-2">
-        <div v-for="(img, index) in DataGaleries" key="">
+        <div v-for="(img, index) in _DataGaleries" key="">
           <div class="w-full h-48">
             <img
               v-lazy="img.originalUrl"
@@ -15,16 +14,16 @@
       </section>
     </div>
 
-    <ContentLoader v-if="DataGaleries?.length <= 0" size="large" />
+    <ContentLoader v-if="LoadingGaleries" size="large" />
 
     <ContentEmpty
-      v-else-if=" DataGaleries?.length == 0"
-      nameIcons="RiBriefcaseLine"
-      heading="Aucune offre postulée."
-      subHeading="Vous n'avez pas encore postulé à une offre. Une opportunité pourrait vous intéresser."
+      v-else-if="_DataGaleries?.length == 0"
+      nameIcons="RiGalleryLine"
+      heading="Aucune images"
+      subHeading="Aucune image disponible. Ajoutez des images, afin de mieux vous présenter !"
     />
 
-    <!-- <ContentE404 v-if="" /> -->
+    <ContentE404 v-if="ISErrorGaleries" />
   </main>
 </template>
 
@@ -45,16 +44,19 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-defineProps(["DataGaleries"])
+defineProps(["DataGaleries"]);
+
+const router = useRouter();
+
+const GetUserId:any = ref("");
 
 const fetchProfilGaleries = async () => {
-//   return await SettingServices().listSetting(
-//     `${URL_API_ROUTE.JOB_APPLY_BY_USER}/${
-//       (
-//         await StorageUtils().getStore("nUser_Id")
-//       ).value
-//     }`
-//   );
+  GetUserId.value = route.params.id
+    ? route.params.id
+    : (await StorageUtils().getStore("nProfil_1_Id")).value;
+  return await SettingServices().listSetting(
+    `${URL_API_ROUTE.MEDIA_GALLERY.replace(":userId", GetUserId.value)}`
+  );
 };
 
 // Utilisation de Vue Query pour gérer la requête
@@ -64,13 +66,12 @@ const {
   isLoading: LoadingGaleries,
   isError: ISErrorGaleries,
 } = useQuery({
-  queryKey: ["ListProfilGaleries"],
+  queryKey: ["ListProfilGaleries", GetUserId.value],
   queryFn: fetchProfilGaleries,
   retry: 2, // Réessayer deux fois en cas d'échec
   refetchOnWindowFocus: false, // Ne pas recharger les données lors du focus de la fenêtre
 });
 
-const router = useRouter();
 const route = useRoute();
 
 const btnGaleriee = ref([

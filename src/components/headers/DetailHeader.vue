@@ -1,50 +1,73 @@
 <template>
-  <IonHeader>
+  <ion-header class="ion-no-border">
     <div
-      class="flex items-center justify-between px-2 py-2 border-b-[1px] bg-white text-zinc-800 shadow"
+      class="flex items-center justify-between px-4 py-2 border-b-[1px] bg-white text-zinc-800 shadow-sm"
     >
-      <div class="flex gap-0">
+      <div class="flex items-center">
         <!-- Back Button -->
-        <button class="rounded hover:bg-primary" @click="isBack ? isBack() :  $router.go(-1)">
-          <IcIcons name="RiArrowLeftSLine" :size="32"></IcIcons>
+        <button 
+          class="p-1 rounded-full hover:bg-gray-100 transition-colors" 
+          @click="handleBack"
+          aria-label="Retour"
+        >
+          <IcIcons name="RiArrowLeftSLine" :size="28"></IcIcons>
         </button>
       </div>
 
-      <!-- Chat Info -->
-      <div class="flex items-center">
-        <span class="text-lg font-bold ">{{ title.length > 0 ? title : "Details" }}</span>
+      <!-- Title -->
+      <div class="flex-1 text-center mx-2">
+        <span class="text-lg font-bold truncate">{{ displayTitle }}</span>
       </div>
 
       <!-- Options Button -->
-      <button class="p-2 rounded hover:bg-blue-600" @click="openOptions">
-        <IcIcons name="RiMore2Line" :size="20"></IcIcons>
+      <button 
+        class="p-1 rounded-full hover:bg-gray-100 transition-colors" 
+        @click="openOptions"
+        aria-label="Options"
+      >
+        <IcIcons name="RiMore2Line" :size="22"></IcIcons>
       </button>
     </div>
-  </IonHeader>
+  </ion-header>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed } from "vue";
+import { IonHeader } from "@ionic/vue";
 import IcIcons from "../icons/IcIcons.vue";
 
-const chatName = ref("John Doe"); // Nom de l'utilisateur ou du groupe
-const chatStatus = ref("En ligne"); // Statut du chat
-const avatar = ref("https://via.placeholder.com/150"); // Avatar par défaut
+interface Props {
+  title?: string;
+  isBack?: () => void;
+}
 
-defineProps(["title", "isBack"]);
+const props = withDefaults(defineProps<Props>(), {
+  title: ""
+});
 
-const goBack = () => {
-  // Fonction pour revenir en arrière
+// Computed properties
+const displayTitle = computed(() => {
+  return props.title || "Details";
+});
 
-  console.log("Retour !");
+// Methods
+const handleBack = () => {
+  if (props.isBack) {
+    props.isBack();
+  } else {
+    window.history.length > 1 ? window.history.back() : null;
+  }
 };
 
 const openOptions = () => {
-  // Fonction pour ouvrir les options du chat
   console.log("Options ouvertes !");
+  // Implémentation future: ouvrir un menu d'options ou un modal
 };
 </script>
 
 <style scoped>
-/* Style supplémentaire (si besoin) */
+.ion-header {
+  position: relative;
+  z-index: 10;
+}
 </style>

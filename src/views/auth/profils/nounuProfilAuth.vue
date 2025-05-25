@@ -18,8 +18,8 @@
         useProfiNounulStore().state.StepProfil == 9 ? 'Enregistré' : 'Continuer'
       "
       setcolor="bg-primary"
-      @click="
-        [
+      :actions="
+        () => {
           useProfiNounulStore().state.StepProfil == 1
             ? useProfiNounulStore().InfoPersonalNounuProfil()
             : useProfiNounulStore().state.StepProfil == 2
@@ -38,8 +38,8 @@
             ? useProfiNounulStore().DisponibiliteGeographiqueProfil()
             : useProfiNounulStore().state.StepProfil == 9
             ? useProfiNounulStore().Galery()
-            : createProfile(),
-        ]
+            : createProfile();
+        }
       "
     />
   </ion-footer>
@@ -76,7 +76,6 @@ import EvaluationAvisNounu from "./__nounus/evaluationAvisNounu.vue";
 const { createProfile, state } = useNounuHook();
 
 const modal = ref();
-
 
 function dismiss() {
   modal.value.$el.dismiss();

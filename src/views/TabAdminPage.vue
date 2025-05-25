@@ -16,22 +16,29 @@
           >
             <RiAddLine size="28" class="text-gray-400" />
           </div>
-          <div v-else class="flex flex-col justify-center items-center">
+          <div
+            v-else
+            class="flex flex-col justify-center items-center"
+            @click="logout(tab)"
+          >
             <IcIcons
               :name="getIconName(tab)"
               :size="tab.name ? 28 : 38"
               :class="getIconClass(tab)"
             />
             <p class="text-xr font-love" :class="getTextClass(tab)">
-              {{ tab.name }} {{ nPageType }}
+              {{ tab.name }}
             </p>
           </div>
           <div
-              v-if="tab.tab == 'tab_admin_chats' && useNotificationStore().state.countMessage?.adminUnread > 0"
-              class="absolute top-1 ring-2 ring-white right-1 size-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-            >
-              {{ useNotificationStore().state.countMessage?.adminUnread }}
-            </div>
+            v-if="
+              tab.tab == 'tab_admin_chats' &&
+              useNotificationStore().state.countMessage?.totalUnread > 0
+            "
+            class="absolute top-1 ring-2 ring-white right-1 size-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+          >
+            {{ useNotificationStore().state.countMessage?.totalUnread }}
+          </div>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -58,7 +65,6 @@ import { useNotificationStore } from "@/stores/notificationStore";
 const route = useRoute();
 const nPageType = ref<string | null>(null);
 
-
 // Tabs dynamiques basées sur le type de page
 const { state } = useTabHook();
 const tabs = computed(() => {
@@ -76,4 +82,12 @@ const getTextClass = (tab: any) =>
   tab.link === route.path
     ? "text-primary font-extrabold"
     : "font-bold text-zinc-400";
+
+const logout = async (tab: any) => {
+  console.log(tab);
+  if (tab.tab == "tab_admin_logout") {
+    await StorageUtils().clearStore();
+    window.location.href = "/auth/sign";
+  }
+};
 </script>

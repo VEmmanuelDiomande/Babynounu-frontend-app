@@ -11,6 +11,7 @@ export const useNounuStore = defineStore('NOUNU', () => {
   const DataHiddenNounus = ref(<any>[])
   const searchValueData = ref("")
   const isLoading = ref(false)
+  const isError = ref(false)
   const loadingJob = ref(false)
 
   const searchPreferences = reactive({
@@ -23,7 +24,7 @@ export const useNounuStore = defineStore('NOUNU', () => {
   })
 
 
-  const searchNounu = async (searchValue: string) => {
+  const searchNounu = async (searchValue: string, page: string, limit: string) => {
     useNounuStore().DataNounus = [];
     isLoading.value = true
     try {
@@ -37,7 +38,7 @@ export const useNounuStore = defineStore('NOUNU', () => {
         );
       };
 
-      const { data } = await axios.post(URL_API_ROUTE.NOUNU_SEARCH, {
+      const { data } = await axios.post(URL_API_ROUTE.NOUNU_SEARCH+`?page=${page}&limit=${limit}`, {
         fullname: searchValue,
         adress: preferencesIds().adress,
         zone_de_travail: preferencesIds().zone_de_travail,
@@ -52,6 +53,7 @@ export const useNounuStore = defineStore('NOUNU', () => {
         useNounuStore().DataNounus = data;
       }
     } catch (error) {
+      isError.value = true
       isLoading.value = false
       console.error("Erreur lors de la recherche de nounou:", error);
     }
@@ -63,6 +65,7 @@ export const useNounuStore = defineStore('NOUNU', () => {
     searchValueData,
     DataHiddenNounus,
     isLoading,
+    isError,
     loadingJob,
     searchNounu,
     searchPreferences

@@ -4,7 +4,7 @@ import ChatAdmin from "@/views/admin/chat.admin.vue";
 import ChatDetailAdmin from "@/views/admin/chatDetail.admin.vue";
 import AgencyAuth from "@/views/auth/agencyAuth.vue";
 import DeliveryAuth from "@/views/auth/deliveryAuth.vue";
-import SginInAuth from "@/views/auth/sginInAuth.vue";
+import SginInAuth from "@/views/auth/signInAuth.vue";
 import SignAuth from "@/views/auth/signAuth.vue";
 import SignUpAuth from "@/views/auth/signUpAuth.vue";
 
@@ -54,6 +54,20 @@ export const AdminRoutes = {
       name: "AdminUsers",
       component: () => import("@/views/admin/user.admin.vue"),
     },
+
+    {
+      path: "contracts",
+      meta: {
+        requiresAuth: false,
+        title: `Contracts`,
+        description: "",
+        "og:title": ``,
+        "og:description": "",
+        keywords: `reseau social`,
+      },
+      name: "AdminContracts",
+      component: () => import("@/views/admin/contract.admin.vue"),
+    },
   ],
 };
 
@@ -88,7 +102,5 @@ export const _AdminRoutes = {
       name: "AdminMediaDetail",
       component: () => import("@/views/admin/_details/detailMedia.admin.vue"),
     },
-
-    
   ],
 };

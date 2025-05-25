@@ -3,21 +3,28 @@ import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import { StorageUtils } from "@/utils/store.utils";
 import { useRouter } from "vue-router";
-import axios from "axios";
-import { reactive } from "vue";
+import axios, { AxiosError, AxiosResponse } from "axios";
+import { reactive, ref } from "vue";
 import { useNounuStore } from "@/stores/nounu.store";
 import { useAuthStore } from "@/stores/auth.store";
 
-interface CONTACT_REFERENCE {
+// Interfaces bien définies avec des noms plus explicites
+interface ContactReference {
   fullname: string;
   phone: string;
 }
 
-interface EVALUATION_PRECEDANTE {
+interface EvaluationPrecedente {
   nom: string;
   phone: string;
   note: string;
   commentaire: string;
+}
+
+// Interface pour la réponse API
+interface ProfileResponse {
+  id: string;
+  [key: string]: any;
 }
 
 export const useNounuHook = () => {
@@ -25,8 +32,13 @@ export const useNounuHook = () => {
   const state = reactive({
     loading: false,
     error: null as string | null,
+    success: false,
   });
 
+  /**
+   * Convertit les données du profil en FormData pour l'envoi au serveur
+   * @returns FormData contenant toutes les données du profil
+   */
   const mapProfileDataToFormData = (): FormData => {
     const nounuStore = useProfiNounulStore();
     const formData = new FormData();
@@ -37,14 +49,12 @@ export const useNounuHook = () => {
     formData.append("age", InformationPersonnelle.age);
     formData.append("phone", InformationPersonnelle.phone);
     formData.append("adress", JSON.stringify(InformationPersonnelle.address));
-    if (InformationPersonnelle.image_profil) {
+    
+    if (InformationPersonnelle.image_profil && InformationPersonnelle.image_profil.length > 0) {
       Array.from(InformationPersonnelle.image_profil).forEach((file: any) => {
         formData.append("imageNounu", file);
       });
     }
-
-
-
 
     // Expérience et compétences
     const { ExperienceEtCompetences } = nounuStore.state;
@@ -73,7 +83,7 @@ export const useNounuHook = () => {
     );
     formData.append(
       "urgences",
-      `${Disponibilites.urgences[0].id == 1 ? true : false}`
+      String(Disponibilites.urgences[0]?.id === 1)
     );
 
     // Tarifications
@@ -82,16 +92,17 @@ export const useNounuHook = () => {
     formData.append("tarif_mensuel", Tarifications.tarif_mensuel);
     formData.append(
       "flexibilite_tarifaire",
-      `${Tarifications.flexibilite_tarifaire[0].id == 1 ? true : false}`
+      String(Tarifications.flexibilite_tarifaire[0]?.id === 1)
     );
 
     // Références et certifications
     const { VerificationEtReferences } = nounuStore.state;
-    if (VerificationEtReferences.verification_confirmer) {
+    if (VerificationEtReferences.verification_confirmer && VerificationEtReferences.verification_confirmer.length > 0) {
       VerificationEtReferences.verification_confirmer.forEach((file: any) => {
         formData.append("documents", file);
       });
     }
+    
     formData.append(
       "certifications_criteres",
       JSON.stringify(VerificationEtReferences.certifications)
@@ -122,38 +133,85 @@ export const useNounuHook = () => {
 
     // Galerie
     const { Galery } = nounuStore.state;
-    Galery.gallery.forEach((file: any) => {
-      formData.append(`gallery`, file);
-    });
+    if (Galery.gallery && Galery.gallery.length > 0) {
+      Galery.gallery.forEach((file: any) => {
+        formData.append("gallery", file);
+      });
+    }
 
     return formData;
   };
 
-  const createProfile = async () => {
+  /**
+   * Détermine l'URL à utiliser pour la requête API
+   * @returns URL pour la création ou la mise à jour du profil
+   */
+  const getProfileEndpoint = (): string => {
+    const authStore = useAuthStore();
+    
+    if (authStore.isUpdateProfil === false) {
+      return URL_API_ROUTE.NOUNU_CREATE;
+    }
+    
+    return `${URL_API_ROUTE.NOUNU_UPDATE}/${authStore.isUpdateProfilID}`;
+  };
+
+  /**
+   * Crée ou met à jour le profil de l'utilisateur
+   */
+  const createProfile = async (): Promise<void> => {
+    const nounuStore = useNounuStore();
+    
     try {
-      useNounuStore().loading = true;
-      const userId: any = await StorageUtils().getStore("nUser_Id");
+      nounuStore.loading = true;
+      state.loading = true;
+      state.error = null;
+      
+      const userId = await StorageUtils().getStore("nUser_Id");
+      
+      if (!userId || !userId.value) {
+        throw new Error("ID utilisateur non trouvé");
+      }
 
       const formData = mapProfileDataToFormData();
       formData.append("userId", userId.value.toString());
 
-      const response = await axios.post( useAuthStore().isUpdateProfil === false ? URL_API_ROUTE.NOUNU_CREATE : URL_API_ROUTE.NOUNU_UPDATE + `/${useAuthStore().isUpdateProfilID}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const endpoint = getProfileEndpoint();
+      
+      const response = await axios.post<ProfileResponse>(
+        endpoint, 
+        formData, 
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
 
       if (response.data?.id) {
         await StorageUtils().setStore("nProfil_1_Id", response.data.id.toString());
-        const closeModal: any = document.querySelector("#closeModelAuthProfil");
-        closeModal?.click();
-        location.assign("/choose-destination-to-start");
+        state.success = true;
+        
+        // Fermer la modal si elle existe
+        const closeModal = document.querySelector("#closeModelAuthProfil") as HTMLElement;
+        if (closeModal) {
+          closeModal.click();
+        }
+        
+        // Redirection
+        location.assign("/auth/sign-in");
+      } else {
+        throw new Error("Réponse du serveur invalide");
       }
-    } catch (error) {
-      state.error = axios.isAxiosError(error)
-        ? error.response?.data?.message || "Erreur serveur"
-        : "Erreur inconnue";
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        state.error = (axiosError.response?.data as { message?: string })?.message || "Erreur de communication avec le serveur";
+      } else {
+        state.error = (error as Error).message || "Erreur inconnue";
+      }
       console.error("Erreur création profil:", error);
     } finally {
-      useNounuStore().loading = false;
+      nounuStore.loading = false;
+      state.loading = false;
     }
   };
 

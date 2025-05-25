@@ -203,7 +203,7 @@ const DeleteMediaGallery = async (idMediaI?:any) => {
   if (settingServices.useCreateSetting) {
    const {data} = await settingServices.useCreateSetting(
       URL_API_ROUTE.MEDIA_DELETE + `/${idMediaI}`,
-      {}, isLoading.value
+      {}
     );
     return data
   }

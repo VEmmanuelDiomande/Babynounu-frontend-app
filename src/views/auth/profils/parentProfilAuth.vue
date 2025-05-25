@@ -17,8 +17,7 @@
       "
       setcolor="bg-primary"
       :loading="useNounuStore().loading"
-      @click="
-        [
+      :actions=" () => {
           useProfilStore().state.stepProfil == 1
             ? useProfilStore().InfoPersonalParentProfil()
             : useProfilStore().state.stepProfil == 2
@@ -35,8 +34,8 @@
             ? useProfilStore().PaymentTermsParentProfil()
             : useProfilStore().state.stepProfil == 8
             ? useProfilStore().AutreInfoParentProfil()
-            : createParentProfile(),
-        ]
+            : createParentProfile()
+      }
       "
     />
   </ion-footer>

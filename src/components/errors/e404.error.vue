@@ -6,7 +6,7 @@ defineProps(["nameIcons", "heading", "subHeading"]);
 <template>
   <div class="max-h-screen fixed inset-0 h-full flex flex-col items-center justify-center font-love w-10/12 m-auto">
     <IcIcons :name="'RiErrorWarningLine'" :size="100" class="text-primary" />
-    <h1 class="text-xl font-anton "> Erreur ! </h1>
+    <h1 class="text-xl font-anton "> Erreur or probleme de connexion </h1>
     <p class="text-center text-sm">{{"Une erreur est survenue lors du chargement de cette page. Veuillez réessayer plus tard.." }} </p>
   </div>
 </template>

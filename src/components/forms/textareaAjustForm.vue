@@ -12,7 +12,7 @@
         :value="modelValue"
         @input="onInputChange"
         :style="{
-          height: textAreaHeight == 0 ? '300px' : textAreaHeight + 'px',
+          height: textAreaHeight == 0 ? _textAreaHeight + 'px' : textAreaHeight + 'px',
         }"
         class="w-full border-[1px] rounded-xl h-14 py-4 px-4 text-zinc-700 font-love placeholder:text-zinc-500 placeholder:font-love text-base border-zinc-300/70 bg-white/90  font-ligth outline-none focus:border-2 focus:border-primary"
         placeholder="Entrez votre texte..."
@@ -37,11 +37,12 @@ const props = defineProps({
   modelValue: { type: String, default: "" },
   name: { type: String, default: "" },
   error: { type: Object, default: { path: "", message: "" } },
+  _textAreaHeight: { type: Number, default: 300 },
 });
 
 const emit = defineEmits(["update:modelValue"]);
 
-const textAreaHeight = ref(300); // Hauteur initiale
+const textAreaHeight = ref(props._textAreaHeight); // Hauteur initiale
 
 const resizeTextarea = () => {
   const textarea = document.getElementById(
@@ -49,7 +50,7 @@ const resizeTextarea = () => {
   ) as HTMLTextAreaElement | null;
 
   if (textarea) {
-    textarea.style.height = "300px"; // Réinitialise la hauteur
+    textarea.style.height = props._textAreaHeight + "px"; // Réinitialise la hauteur
     textAreaHeight.value = textarea.scrollHeight; // Ajuste à la hauteur du contenu
   } else {
     console.error("Textarea non trouvé :", "textarea_" + props.name);

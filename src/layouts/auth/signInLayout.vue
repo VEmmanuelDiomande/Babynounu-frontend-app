@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import IcIcons from "@/components/icons/IcIcons.vue";
 import { IonImg } from "@ionic/vue";
+import { useRouter } from "vue-router";
 defineProps(["heading", "subHeading", "btnName", "bgColor", "submitForm"]);
+
+const router = useRouter()
+
+const toRedirect = () => {
+  router.push({name: 'STARTER_DESTINATION'})
+}
 </script>
 
 <template>
@@ -10,7 +17,7 @@ defineProps(["heading", "subHeading", "btnName", "bgColor", "submitForm"]);
   >
     <div class="fixed inset-0">
       <IonImg
-        src="https://img.freepik.com/premium-vector/gradient-holographic-texture-background_23-2151737372.jpg?ga=GA1.1.1435509380.1718711816"
+        :src="'/images/backgrounds/bn_background_auth.jpg'"
         class="w-full h-full object-cover opacity-20"
         alt=""
       >
@@ -19,7 +26,7 @@ defineProps(["heading", "subHeading", "btnName", "bgColor", "submitForm"]);
     <!-- Close Button -->
     <button
       class="absolute top-4 left-4 text-gray-500 hover:text-gray-900"
-      @click="$router.go(-1)"
+      @click="toRedirect"
     >
       <div class="flex items-center gap-8">
         <IcIcons name="RiCloseLine" :size="28" />
@@ -29,8 +36,8 @@ defineProps(["heading", "subHeading", "btnName", "bgColor", "submitForm"]);
     <div class="flex flex-col gap-8">
       <!-- Title -->
       <IonImg
-        src="/images/logos/bn_logo.png"
-        class="size-24 object-cover"
+        src="/images/logos/logo_babynounu_1.png"
+        class="h-32 w-32 object-cover"
         alt=""
       >
       </IonImg>

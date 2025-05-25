@@ -9,7 +9,7 @@ export const useNotificationStore = defineStore("NOTIFICATION", () => {
   const state = reactive({
     count: ref(0),
     countNotification: ref(0),
-    countMessage: ref(),
+    countMessage: ref(0),
     searchValueData: ref(""),
   });
 
@@ -26,9 +26,8 @@ export const useNotificationStore = defineStore("NOTIFICATION", () => {
   };
 
   const NCountChats = async () => {
-    socketService.emit("getGlobalUnreadCounts", _IsUserConnect());
-    socketService.on("globalUnreadCounts", (data: any) => {
-      console.log("globalUnreadCounts : ", data);
+    socketService.emit("getUnreadCounts", _IsUserConnect());
+    socketService.on("unreadCounts", (data: any) => {
       state.countMessage = data;
     });
   };
@@ -43,12 +42,9 @@ export const useNotificationStore = defineStore("NOTIFICATION", () => {
     });
   };
 
-
-
-
   return {
     state,
     NCountChats,
-    NCountNotification
+    NCountNotification,
   };
 });

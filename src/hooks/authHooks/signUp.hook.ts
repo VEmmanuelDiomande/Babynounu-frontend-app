@@ -33,7 +33,6 @@ export const useAuthSignUpHook = () => {
     state.loading = true;
     authState.in_register = data;
     authState.in_register.email = useAuthStore().state.email;
-    console.log(authState.in_register);
     authState.in_register.type = useProfilStore().state.activeMenu_typeOfProfil;
     const validate = signUpSchema.safeParse(authState.in_register);
     useAuthStore().isUpdateProfil = false

@@ -9,6 +9,7 @@
       <ContentProfil
         v-if="DataNounu"
         :DataNounu="DataNounu"
+        :id_profil="GetProfil"
       />
 
       <!-- Gestion des erreurs -->
@@ -50,6 +51,7 @@ onMounted(async () => {
 
 // Fonction pour récupérer les données du profil
 const fetchProfilNounu = async () => {
+  if(GetProfil.value == null) return
   return await SettingServices().listSetting(
     `${URL_API_ROUTE.NOUNU_ALL}/${GetProfil.value}`
   );

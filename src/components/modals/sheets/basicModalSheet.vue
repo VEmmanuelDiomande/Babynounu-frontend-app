@@ -21,16 +21,15 @@ ion-modal {
       </span>
 
       <div class="flex flex-col mt-4">
-        <SelectForm
+        <!-- <SelectForm
           label="ville / commune"
           placeholder="Yopougon"
           :options="options"
-          
-          :modelValue="state.in_standard.name"
+          option-name="test"
           @update:modelValue="
             state.in_standard.name = $event.target.value
           "
-        />
+        /> -->
         <InputForm
           type="number"
           label="Tarif"
@@ -45,7 +44,7 @@ ion-modal {
 
     <IonFooter class="shadow-sm p-4">
       <div class="flex gap-1 shadow-sm">
-        <AuthButton title="Ajouter" @click="AddNewPlace('Standard', state.in_standard, dismiss)" />
+        <AuthButton title="Ajouter"   :actions="() => AddNewPlace('Standard', state.in_standard, dismiss)" />
       </div>
     </IonFooter>
   </ion-modal>
@@ -64,6 +63,6 @@ const modal = ref();
 
 const dismiss = () => modal.value.$el.dismiss();
 
-const options = ref(["Yopougon", "Dakar"]);
+const options:any = ref(["Yopougon", "Dakar"]);
 const { state, AddNewPlace } = useCreateAgencyHook();
 </script>

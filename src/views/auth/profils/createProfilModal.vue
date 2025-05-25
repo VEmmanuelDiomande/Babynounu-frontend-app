@@ -31,16 +31,27 @@
 
 <script setup lang="ts">
 import IcIcons from "@/components/icons/IcIcons.vue";
+import { StorageUtils } from "@/utils/store.utils";
 import { IonModal } from "@ionic/vue";
 
+
+const router = useRouter();
+
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 defineProps(["StepProfil", "LessStepProfil"]);
 
 const page = ref();
 const modal = ref();
 
-function dismiss() {
+async function dismiss() {
   modal.value.$el.dismiss();
+  if(!(await StorageUtils().getStore('nProfil_1_Id')).value) {
+    await StorageUtils().clearStore();
+    return;
+  }
+  // 
+  // router.push({ name: "SignAuth" });
 }
 
 async function canDismiss(data?: any, role?: string) {

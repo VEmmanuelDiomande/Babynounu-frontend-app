@@ -7,7 +7,6 @@ import { globalFetch } from "@/routes/authenticate/fetch.authenticates";
 export const useSidebarHook = () => {
   const USER_PROFIL = reactive(<any>{});
   const state = reactive({
-    
     menuSideBar: reactive(<SIDEBAR_MENU>[
       {
         icon: "RiSearchLine",
@@ -23,8 +22,8 @@ export const useSidebarHook = () => {
       },
       {
         icon: "RiMegaphoneLine",
-        name: "Mes annonces",
-        link: "HOME",
+        name: "Annonces",
+        link: "JOB",
         actived: true,
       },
       {
@@ -34,12 +33,17 @@ export const useSidebarHook = () => {
         actived: true,
       },
       {
+        icon: "RiPriceTag3Line",
+        name: "Pricing",
+        link: "PackSubscrible",
+        actived: true,
+      },
+      {
         icon: "RiCustomerService2Line",
         name: "Aide",
         link: "HOME",
         actived: true,
       },
-      
     ]),
     countStatsProfile: [
       {
@@ -53,22 +57,23 @@ export const useSidebarHook = () => {
     ],
   });
 
-
   const Logout = () => {
     StorageUtils().clearStore();
     location.assign("/auth/sign");
-  }
+  };
 
   const GetUserConnect = async () => {
-    const UserId = (await StorageUtils().getStore('nUser_Id')).value
-    const response = await globalFetch(URL_API_ROUTE.USER_IS_LOGGED + '/' + UserId);
-    USER_PROFIL.value = response?.profil
-  }
+    const UserId = (await StorageUtils().getStore("nUser_Id")).value;
+    const response = await globalFetch(
+      URL_API_ROUTE.USER_IS_LOGGED + "/" + UserId
+    );
+    USER_PROFIL.value = response?.profil;
+  };
 
   return {
     state,
     Logout,
     GetUserConnect,
-    USER_PROFIL
+    USER_PROFIL,
   };
 };

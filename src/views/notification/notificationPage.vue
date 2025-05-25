@@ -1,123 +1,164 @@
 <template>
-  <IonPage @ionScroll="onScroll($event)" :scroll-events="true">
+  <IonPage @ionScroll="onScroll" :scroll-events="true">
     <IonContent>
+      <!-- Composant de rafraîchissement -->
       <IonRefresher
         slot="fixed"
-        @ionRefresh="_handleRefresh"
+        @ionRefresh="handleRefresh"
         :pullFactor="0.5"
         :pullMin="100"
         :pullMax="200"
       >
         <IonRefresherContent></IonRefresherContent>
       </IonRefresher>
+
+      <!-- En-tête avec barre de recherche -->
       <HeaderMenuLayout
         Title="Notifications"
         PlaceholderSearch="Rechercher dans messageries"
         :has-search="true"
         :countScroll="0"
-      >
-      </HeaderMenuLayout>
+      />
 
-      <PageLoader
-        class-custom="h-[100vh] fixed inset-0"
-        size="large"
-        v-if="isLoadingNotifications"
-      />
-      <div v-else-if="DataNotifications && DataNotifications?.length != 0">
-        <CardNotification :DataNotifications="DataNotifications" />
-      </div>
-      <EmptyError
-        v-else-if="DataNotifications && DataNotifications?.length == 0"
-        nameIcons="RiNotificationLine"
-        heading="Aucune notification"
-        subHeading="Aucune notification disponible. Interagissez avec les autres utilisateurs !"
-      />
-      <E404Error v-else="isErrorNotifications" />
+      <!-- Affichage conditionnel du contenu -->
+      <template v-if="isLoadingNotifications">
+        <PageLoader
+          class-custom="h-[100vh] fixed inset-0"
+          size="large"
+        />
+      </template>
+
+      <template v-else-if="hasNotifications">
+        <CardNotification :DataNotifications="notifications" />
+      </template>
+
+      <template v-else-if="isEmptyNotifications">
+        <EmptyError
+          nameIcons="RiNotificationLine"
+          heading="Aucune notification"
+          subHeading="Aucune notification disponible. Interagissez avec les autres utilisateurs !"
+        />
+      </template>
+
+      <template v-else-if="isErrorNotifications">
+        <E404Error />
+      </template>
     </IonContent>
   </IonPage>
 </template>
 
-<script lang="ts" setup>
-import MainSideBar from "@/components/headers/sidebars/MainSideBar.vue";
+<script setup lang="ts">
+import { onMounted, ref, computed } from "vue";
+import { IonContent, IonPage, IonRefresher, IonRefresherContent } from "@ionic/vue";
+
+// Composants
 import HeaderMenuLayout from "@/layouts/HeaderMenuLayout.vue";
-import {
-  IonContent,
-  IonPage,
-  IonRefresher,
-  IonRefresherContent,
-} from "@ionic/vue";
-import { computed, onMounted, ref } from "vue";
-import { ScrollUtils } from "@/utils/scroll.utils";
-import { useNotificationHook } from "@/hooks/notificationHooks/notification.hook";
 import E404Error from "@/components/errors/e404.error.vue";
 import EmptyError from "@/components/errors/empty.error.vue";
+import PageLoader from "@/components/loaders/pageLoader.vue";
+import CardNotification from "./CardNotification.vue";
+
+// Services et utilitaires
+import { ScrollUtils } from "@/utils/scroll.utils";
 import { SettingServices } from "@/services/setting.services";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { useQuery } from "@tanstack/vue-query";
 import { StorageUtils } from "@/utils/store.utils";
-import PageLoader from "@/components/loaders/pageLoader.vue";
-import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
-import CardNotification from "./CardNotification.vue";
 import { SocketService } from "@/services/socket.services";
-import { useNotificationStore } from "@/stores/notificationStore";
 
-const { state, toggleActiveMenu } = useNotificationHook();
-const GetUser = ref<string | null>(null);
+// Hooks et stores
+import { useNotificationHook } from "@/hooks/notificationHooks/notification.hook";
+import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
+import { useNotificationStore } from "@/stores/notificationStore";
+import { useQuery } from "@tanstack/vue-query";
+
+// Initialisation des hooks et services
+const { state } = useNotificationHook();
+const { onScroll } = ScrollUtils();
+const { handleRefresh: refreshHandler } = useRefetchHook();
+const notificationStore = useNotificationStore();
 const socketService = new SocketService();
 
-const { onScroll } = ScrollUtils();
+// État local
+const userId = ref<string | null>(null);
 
+// Fonction pour récupérer les notifications
 const fetchNotifications = async () => {
-  const storedUser = await StorageUtils().getStore("nUser_Id");
-  GetUser.value = storedUser?.value || null;
+  try {
+    // Récupérer l'ID utilisateur depuis le stockage
+    const storedUser = await StorageUtils().getStore("nUser_Id");
+    userId.value = storedUser?.value || null;
 
-  if (!GetUser.value) {
+    if (!userId.value) {
+      return [];
+    }
+
+    // Appel API pour récupérer les notifications
+    const response = await SettingServices().listSetting(
+      `${URL_API_ROUTE.NOTIFICATION_USER}/${userId.value}`
+    );
+
+    if (response) {
+      // Mettre à jour le compteur de notifications dans le store
+      notificationStore.state.countNotification = response.count;
+      return response.notifications;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des notifications:", error);
     return [];
   }
-
-  return await SettingServices()
-    .listSetting(`${URL_API_ROUTE.NOTIFICATION_USER}/${GetUser.value}`)
-    .then((res) => {
-      if (res) {
-        useNotificationStore().state.countNotification = res.count;
-        return res.notifications;
-      }
-    });
 };
 
-const updateViewByUserId = async () => {
-  socketService.emit("updateViewByUserId", {
-    userId: (await StorageUtils().getStore("nUser_Id")).value,
-  });
-};
-
-// Ecrire une query qui permet de charger les notifications
+// Requête pour charger les notifications
 const {
   isLoading: isLoadingNotifications,
   isError: isErrorNotifications,
-  data: DataNotifications,
-  error: ErrorNotifications,
-  refetch,
+  data: notifications,
+  refetch
 } = useQuery({
-  queryKey: ["ListNotifications", GetUser],
+  queryKey: ["ListNotifications", userId],
   queryFn: fetchNotifications,
-  retry: 2, // Réessayer en cas d'échec
-  refetchOnWindowFocus: false, // Ne pas recharger les données lors du focus de la fenêtre
+  retry: 2,
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  refetchOnWindowFocus: false
 });
 
-onMounted(() => {
-  updateViewByUserId();
-  // Mise jour de l'abonnement
-  socketService.on("notifications", (data: any) => {
-    if (GetUser.value == data.userId) {
-      // Mise à jour des notifications
-      DataNotifications.value = data.notifications;
-      useNotificationStore().state.countNotification = data.count;
-    }
+// Computed properties pour les conditions d'affichage
+const hasNotifications = computed(() => 
+  notifications.value && notifications.value.length > 0
+);
+
+const isEmptyNotifications = computed(() => 
+  notifications.value && notifications.value.length === 0
+);
+
+// Fonction pour gérer le rafraîchissement
+const handleRefresh = (event: CustomEvent) => {
+  refreshHandler(event, refetch);
+};
+
+// Configuration des écouteurs de socket
+const setupSocketListeners = () => {
+  socketService.on("notifications", () => {
+    refetch();
   });
-});
+};
 
-const { handleRefresh } = useRefetchHook();
-const _handleRefresh = (event: any) => handleRefresh(event, refetch);
+// Initialisation au montage du composant
+onMounted(() => {
+  setupSocketListeners();
+});
 </script>
-<style scoped></style>
+
+<style scoped>
+/* Animation pour le chargement */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ion-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+</style>

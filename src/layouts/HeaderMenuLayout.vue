@@ -1,7 +1,7 @@
 <template>
   <IonHeader class="flex flex-col relative bg-white w-full shadow-none">
     <div
-      class="m-auto h-12 flex items-center w-10/12"
+      class="m-auto h-12 flex items-center justify-between w-full pr-4 pl-8"
       v-if="countScroll === 0"
       :class="{
         'transition-all duration-1000 ease-in-out': true,
@@ -13,6 +13,10 @@
         <MenuButtonHeader :isLogged="useUserStore().isLogged" :isAdmin="useUserStore().isAdmin" />
         <div class="text-xl font-anton animate-fade-in">{{ Title }}</div>
       </div>
+
+      <RouterLink v-if="useUserStore().isOwner && isProfil == true" :to="{name: 'SETTINGS_PROFILE'}" class="flex items-center gap-4">
+        <IcIcons name="RiSettingsFill" :size="24" class="text-primary" />
+      </RouterLink>
     </div>
   </IonHeader>
 
@@ -36,13 +40,24 @@
         @click="clearSearch"
       />
 
-      <IcIcons
-        @click="OpenModalFilter"
-        name="RiEqualizer2Line"
-        v-if="hasFilter"
-        :size="24"
-        class="text-primary"
-      />
+      <!-- Icône de filtre avec vérification d'abonnement -->
+      <div v-if="hasFilter">
+        <IcIcons
+          v-if="isUserSubscribed"
+          @click="OpenModalFilter"
+          name="RiEqualizer2Line"
+          :size="24"
+          class="text-primary cursor-pointer"
+        />
+        <IcIcons
+          v-else
+          @click="redirectToPacks"
+          name="RiEqualizer2Line"
+          :size="24"
+          class="text-gray-400 cursor-pointer"
+          title="Abonnez-vous pour accéder aux filtres avancés"
+        />
+      </div>
     </div>
 
     <!-- Content Slot for Custom Content -->
@@ -51,17 +66,20 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps([
-  "Title",
-  "PlaceholderSearch",
-  "countScroll",
-  "hasSearch",
-  "searchFunc",
-  "isNoSerach",
-  "searchDate",
-  "hasFilter",
-]);
+const props = defineProps({
+  Title: { type: String, default: "" },
+  PlaceholderSearch: { type: String, default: "" },
+  countScroll: { type: Number, default: 0 },
+  hasSearch: { type: Boolean, default: false },
+  searchFunc: { type: Function, default: () => {} },
+  isNoSerach: { type: Boolean, default: false },
+  searchDate: { type: Boolean, default: false },
+  hasFilter: { type: Boolean, default: false },
+  isProfil: { type: Boolean, default: false },
+  data: { type: Object, default: () => ({}) }
+});
 
+import { useRouter } from 'vue-router';
 import MenuButtonHeader from "@/components/headers/MenuButtonHeader.vue";
 import IcIcons from "@/components/icons/IcIcons.vue";
 import { useJobStore } from "@/stores/jobStore";
@@ -70,11 +88,23 @@ import { useScrollStore } from "@/stores/scrollStore";
 import { useUserStore } from "@/stores/user.store";
 import { ScrollUtils } from "@/utils/scroll.utils";
 import { IonButtons, IonHeader, IonMenuButton } from "@ionic/vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+
+const router = useRouter();
+
+// Vérifier si l'utilisateur est abonné
+const isUserSubscribed = computed(() => {
+  return useUserStore().hasActiveSubscription;
+});
 
 // Function to clear the search input
 const clearSearch = () => {
   useNounuStore().searchValueData = "";
+};
+
+// Rediriger vers la page des packs d'abonnement
+const redirectToPacks = () => {
+  router.push({ name: 'PackSubscrible' });
 };
 
 // Focus handler

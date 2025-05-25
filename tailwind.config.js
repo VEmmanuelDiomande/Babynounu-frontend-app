@@ -101,7 +101,7 @@ export default {
           800: "#155e75",
           900: "#164e63",
         },
-        primary: "#e0a1aa",
+        primary: "#F77C3D",
         secondary: "#55c4bd",
         indigos: "#6574cd",
       },

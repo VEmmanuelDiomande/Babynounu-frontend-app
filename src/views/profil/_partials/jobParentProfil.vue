@@ -18,7 +18,7 @@
 
       <!-- ✅ Liste des offres d'emploi -->
       <div class="flex flex-col" v-else-if="DataUserJobs && DataUserJobs.length > 0">
-        <CardJob v-for="job in DataUserJobs" :key="job.id" :JobData="job" :isOwer="isOwner" />
+        <CardJob :JobData="DataUserJobs" :isOwner="isOwner" />
       </div>
 
       <!-- ✅ Aucune offre disponible -->
@@ -72,6 +72,6 @@ const {
 } = useQuery({
   queryKey: ["UserJobs_1", userId],
   queryFn: ListUserJobs,
-  enabled: !!userId.value, // Active la requête uniquement si userId est disponible
+  // Active la requête uniquement si userId est disponible
 });
 </script>

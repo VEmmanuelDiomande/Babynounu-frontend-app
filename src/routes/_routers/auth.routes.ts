@@ -1,7 +1,7 @@
 import BasicPage from "@/views/BasicPage.vue";
 import AgencyAuth from "@/views/auth/agencyAuth.vue";
 import DeliveryAuth from "@/views/auth/deliveryAuth.vue";
-import SginInAuth from "@/views/auth/sginInAuth.vue";
+import SginInAuth from "@/views/auth/signInAuth.vue";
 import SignAuth from "@/views/auth/signAuth.vue";
 import SignUpAuth from "@/views/auth/signUpAuth.vue";
 

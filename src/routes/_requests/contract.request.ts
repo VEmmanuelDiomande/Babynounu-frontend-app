@@ -5,5 +5,6 @@ export const apiContractRoutes = {
     CONTRACT_DELETE: '/contracts/delete',
     CONTRACT_FIND_ONE: '/contracts',
     CONTRACT_SEARCH: '/contracts/search',
-
+    CONTRACT_STATUS: '/contracts/:id/status',
+    
 }

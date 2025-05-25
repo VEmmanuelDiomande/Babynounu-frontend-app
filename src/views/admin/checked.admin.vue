@@ -1,53 +1,60 @@
 <template>
   <IonPage>
     <IonContent class="font-love">
-      <IonRefresher slot="fixed">
+      <!-- Pull to refresh component -->
+      <IonRefresher slot="fixed" @ionRefresh="handleRefresh($event)">
         <IonRefresherContent />
       </IonRefresher>
 
+      <!-- Header with search functionality -->
       <HeaderMenuLayout
-        Title="Verification des indentités"
-        PlaceholderSearch="Rechercher dans messageries"
+        Title="Identity Verification"
+        PlaceholderSearch="Search messages"
         :countScroll="scrollAdminCount"
       >
         <template v-slot:ContentSearchUp>
           <input
             type="text"
-            placeholder="Rechercher..."
+            placeholder="Search..."
             class="h-11 outline-none font-love text-base w-full bg-transparent border-5"
             v-model="searchQueryAdminChecked"
-            @keyup.enter="searchAdminChecked"
+            @keyup.enter="handleSearch"
           />
         </template>
       </HeaderMenuLayout>
 
+      <!-- Content section with conditional rendering -->
       <PageLoader
         class-custom="h-[100vh] fixed inset-0"
         size="large"
         v-if="isLoadingAdminChecked"
       />
-      <div v-else-if="dataAdminChecked && dataAdminChecked?.length != 0">
-        <div class="flex flex-col mx-4 gap-4 divide-y-[1px] pb-16">
-          <div v-for="item in dataAdminChecked" :key="item.id">
-            <CardAdminChecked :data="item" :updateValidation="updateValidation" />
-          </div>
+      
+      <div v-else-if="dataAdminChecked?.length" class="flex flex-col mx-4 gap-4 divide-y-[1px] pb-16">
+        <div v-for="item in dataAdminChecked" :key="item.id">
+          <CardAdminChecked
+            :data="item"
+            :updateValidation="handleValidationUpdate"
+            :updateRejection="handleValidationRejete"
+          />
         </div>
       </div>
+
       <EmptyError
-        v-else-if="dataAdminChecked && dataAdminChecked?.length == 0"
+        v-else-if="!isErrorAdminChecked && !dataAdminChecked?.length"
         nameIcons="RiPassValidLine"
-        heading="Pas de Nounou, inscrite."
-        subHeading="Aucune nounou inscrite. Ici vous validez les identités des nounou."
+        heading="No Nannies Registered"
+        subHeading="No nannies registered. Here you can validate nanny identities."
       />
-      <E404Error v-else="isErrorAdminChecked" />
+
+      <E404Error v-if="isErrorAdminChecked" />
     </IonContent>
   </IonPage>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { ref, onMounted } from "vue";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { StorageUtils } from "@/utils/store.utils";
 import { SettingServices } from "@/services/setting.services";
 import {
   IonContent,
@@ -57,36 +64,39 @@ import {
 } from "@ionic/vue";
 import { SocketService } from "@/services/socket.services";
 import { useQuery } from "@tanstack/vue-query";
+import { Toast } from "@capacitor/toast";
+
+// Component imports
 import PageLoader from "@/components/loaders/pageLoader.vue";
 import EmptyError from "@/components/errors/empty.error.vue";
 import E404Error from "@/components/errors/e404.error.vue";
 import CardAdminChecked from "./_partials/CardAdminChecked.vue";
 import HeaderMenuLayout from "@/layouts/HeaderMenuLayout.vue";
-import { Toast } from "@capacitor/toast";
 
+// Initialize services
 const socketService = new SocketService();
+const { createSetting } = SettingServices();
 
-// Data
+// State management
 const searchQueryAdminChecked = ref("");
 const scrollAdminCount = ref(0);
+const isLoadingUpdate = ref(false);
 
-const searchAdminChecked = () => {
-  // socketService.searchAdminChecked(searchQueryAdminChecked.value);
+/**
+ * Fetches uncertified nannies from the API
+ * @returns Promise with nanny data
+ */
+const fetchUncertifiedNannies = async () => {
+  try {
+    const response = await SettingServices().listSetting(URL_API_ROUTE.NOUNU_CERTIFICATE_NOT_ALL);
+    return response || [];
+  } catch (error) {
+    console.error('Error fetching uncertified nannies:', error);
+    throw error;
+  }
 };
 
-const props = defineProps({});
-
-const fetchConversations = async () => {
-  return await SettingServices()
-    .listSetting(`${URL_API_ROUTE.NOUNU_CERTIFICATE_NOT_ALL}`)
-    .then((res) => {
-      if (res) {
-        return res;
-      }
-    });
-};
-
-// Configuration de la requête
+// Query configuration using TanStack Query
 const {
   refetch,
   data: dataAdminChecked,
@@ -94,44 +104,83 @@ const {
   isError: isErrorAdminChecked,
 } = useQuery({
   queryKey: ["AdminChecked"],
-  queryFn: fetchConversations,
+  queryFn: fetchUncertifiedNannies,
   retry: 2,
   refetchOnWindowFocus: false,
 });
 
-// Mettre à jour la validation de la certification
-const isLaodingUpdate = ref(false);
-const { createSetting } = SettingServices();
-const updateValidation = async (id: any) => {
-  try {
-    isLaodingUpdate.value = true;
-    if (createSetting) {
-      const reponse = await createSetting(
-        `${URL_API_ROUTE.NOUNU_APPROVE_CERTIFICATION}/${id}`,
-        {}
-      );
-      if (reponse) {
-        await Toast.show({
-          text: "Validation effectuée",
-          duration: "long",
-        });
-        refetch();
-        isLaodingUpdate.value = false;
-
-        return reponse;
-      }
-    }
-  } catch (error) {
-    isLaodingUpdate.value = false;
-
-    // Toast
-    await Toast.show({
-      text: "Une erreur est survenue lors de la validation",
-      duration: "long",
-    });
-    console.log(error);
+/**
+ * Handles the search functionality
+ */
+const handleSearch = () => {
+  if (searchQueryAdminChecked.value.trim()) {
+    // socketService.searchAdminCehcked?.(searchQueryAdminChecked.value);
   }
 };
 
-onMounted(() => {});
+/**
+ * Handles the refresh event
+ * @param event - Refresh event object
+ */
+const handleRefresh = async (event: CustomEvent) => {
+  try {
+    await refetch();
+  } finally {
+    event.detail.complete();
+  }
+};
+/**
+ * Handles certification validation status updates
+ * @param id - Nanny ID to process
+ * @param type - Type of validation ('approve' or 'reject')
+ */
+const handleValidationStatus = async (id: string, type: 'approve' | 'reject') => {
+  try {
+    isLoadingUpdate.value = true;
+    
+    const endpoint = type === 'approve' 
+      ? URL_API_ROUTE.NOUNU_APPROVE_CERTIFICATION
+      : URL_API_ROUTE.NOUNU_REJECT_CERTIFICATION;
+    
+    const response = await createSetting(`${endpoint}/${id}`, {});
+
+    if (response) {
+      await Toast.show({
+        text: `${type === 'approve' ? 'Validation' : 'Rejection'} successful`,
+        duration: "long",
+      });
+      await refetch();
+    }
+  } catch (error) {
+    console.error(`${type} update error:`, error);
+    await Toast.show({
+      text: `${type === 'approve' ? 'Validation' : 'Rejection'} failed`,
+      duration: "long",
+    });
+  } finally {
+    isLoadingUpdate.value = false;
+  }
+};
+
+/**
+ * Updates the certification validation status
+ * @param id - Nanny ID to validate
+ */
+const handleValidationUpdate = async (id: string) => {
+  await handleValidationStatus(id, 'approve');
+};
+
+/**
+ * Handles the rejection of certification validation
+ * @param id - Nanny ID to reject
+ */
+const handleValidationRejete = async (id: string) => {
+  await handleValidationStatus(id, 'reject');
+};
+
+
+// Lifecycle hooks
+onMounted(() => {
+  // Add any initialization logic here
+});
 </script>

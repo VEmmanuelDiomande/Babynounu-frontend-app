@@ -35,8 +35,6 @@ export const useParentStore = defineStore('PARENTS', () => {
         );
       };
 
-      console.log(preferencesIds());
-
       const { data } = await axios.post(URL_API_ROUTE.PARENT_SEARCH, {
         fullname: searchValue,
         besions_specifiques: preferencesIds().besions_specifiques,

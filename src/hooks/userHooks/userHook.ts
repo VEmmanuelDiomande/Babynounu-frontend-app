@@ -8,16 +8,23 @@ import { reactive } from "vue";
 export const useUserHook = () => {
   const state = reactive({});
 
-  const isUserLogged = async () => {
-    await authentificateApp();
-    if (
-      useUserStore().isLogged == false &&
-      ((await StorageUtils().getStore("nToken")).value != null &&
-        (await StorageUtils().getStore("nProfil_1_Id")).value != null)
-    ) {
-      useUserStore().isLogged = true;
-    }
-  };
+const isUserLogged = async () => {
+  await authentificateApp();
+  
+  const token = (await StorageUtils().getStore("nToken")).value;
+  const profileId = (await StorageUtils().getStore("nProfil_1_Id")).value;
+  const adminId = (await StorageUtils().getStore("nAdmin_Id")).value;
+
+  if (
+    useUserStore().isLogged === false && 
+    token != null &&
+    (profileId != null || adminId != null)
+  ) {
+    useUserStore().isLogged = true;
+  } else if (!token) {
+    await StorageUtils().clearStore();
+  }
+};
 
 
   const isAdminLogged = async () => {

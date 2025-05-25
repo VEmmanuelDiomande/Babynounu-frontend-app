@@ -1,16 +1,13 @@
-
-
 <template>
-
-    <CntProfil
-      :Greeting="Greeting"
-      :Data="DataNounu"
-      :cardData="cardData"
-      :OpenEditProfil="OpenEditProfil"
-      :OpenGalery="OpenGalery"
-      :isAbonnement="isAbonnement"
-    />
-  
+  <CntProfil
+    :Greeting="Greeting"
+    :Data="DataNounu"
+    :cardData="cardData"
+    :OpenEditProfil="OpenEditProfil"
+    :OpenGalery="OpenGalery"
+    :isAbonnement="isAbonnement()"
+    :isOwner="isOwner"
+  />
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, computed } from "vue";
@@ -21,6 +18,7 @@ import { BASE_URL_CENTER } from "@/routes/_requests/index.request";
 import { useProfilNounuHook } from "@/hooks/Profile/profilNounu.hook";
 import { useProfilHook } from "@/hooks/Profile/profil.hook";
 import CntProfil from "./cntProfil.vue";
+import { useUserStore } from "@/stores/user.store";
 
 const router = useRouter();
 const isMainProfil = ref(true);
@@ -51,6 +49,9 @@ const isAbonnement = () => _isAbonnement();
 // Lifecycle
 onMounted(() => {
   Greeting.value = GetGreetingUtils();
-  console.log(props.DataNounu);
+});
+
+const isOwner = computed(() => {
+  return useUserStore().isOwner;
 });
 </script>

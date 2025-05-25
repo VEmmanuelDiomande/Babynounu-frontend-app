@@ -1,127 +1,125 @@
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import { reactive } from "vue";
+import { reactive, readonly } from "vue";
 import { StorageUtils } from "@/utils/store.utils";
 import { useRouter } from "vue-router";
 import { useJobStore } from "@/stores/jobStore";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Toast } from "@capacitor/toast";
 
+// Interface pour les erreurs API
+interface ApiError {
+  path?: string;
+  message?: string;
+}
+
+// Interface pour l'état du hook
+interface JobHookState {
+  loading: boolean;
+  error: string | null;
+  success: boolean;
+}
+
+/**
+ * Hook pour la gestion des offres d'emploi
+ * Permet de créer et mettre à jour des offres
+ */
 export const useJobHook = () => {
   const router = useRouter();
   const jobStore = useJobStore();
-  const state = reactive({
+  
+  // État local avec réactivité
+  const state = reactive<JobHookState>({
     loading: false,
-    error: null as string | null,
+    error: null,
+    success: false
   });
 
+  /**
+   * Convertit les données du store en FormData pour l'API
+   * @returns FormData formatée pour l'API
+   */
   const mapJobDataToFormData = (): FormData => {
     const formData = new FormData();
     const { state: jobState } = jobStore;
 
+    // Fonction utilitaire pour ajouter des données au FormData
+    const appendData = (key: string, value: any, shouldStringify = false) => {
+      if (value === undefined || value === null) return;
+      
+      formData.append(
+        key, 
+        shouldStringify ? JSON.stringify(value) : value
+      );
+    };
+
+    // Fonction utilitaire pour ajouter des données d'array au FormData
+    const appendArrayValue = (key: string, array: any[] | undefined, index = 0) => {
+      if (!array || array.length === 0) return null;
+      return array[index]?.value || null;
+    };
+
     // Informations Générales
-    formData.append("titre", jobState.informationsGenerales.titre);
-    formData.append("description", jobState.informationsGenerales.description);
-    formData.append(
-      "adress",
-      JSON.stringify(jobState.informationsGenerales.adress)
-    );
-    formData.append(
-      "zone_de_travail",
-      JSON.stringify(jobState.informationsGenerales.zone_de_travail)
-    );
-    formData.append(
-      "moyens_de_contact",
-      jobState.informationsGenerales.moyens_de_contact?.length > 0 ?
-      jobState.informationsGenerales.moyens_de_contact[0].value : null
+    appendData("titre", jobState.informationsGenerales.titre);
+    appendData("description", jobState.informationsGenerales.description);
+    appendData("adress", jobState.informationsGenerales.adress, true);
+    appendData("zone_de_travail", jobState.informationsGenerales.zone_de_travail, true);
+    appendData(
+      "moyens_de_contact", 
+      appendArrayValue("moyens_de_contact", jobState.informationsGenerales.moyens_de_contact)
     );
 
     // Type de Service
-    formData.append(
-      "type_services",
-      JSON.stringify(jobState.typeService.type_services)
+    appendData("type_services", jobState.typeService.type_services, true);
+    appendData(
+      "combinaison_service", 
+      jobState.typeService.combinaison_service[0]?.value
     );
-    formData.append(
-      "combinaison_service",
-      jobState.typeService.combinaison_service[0].value
-    );
-    formData.append("taches", JSON.stringify(jobState.typeService.taches));
+    appendData("taches", jobState.typeService.taches, true);
 
     // Détails Mission
-    formData.append(
-      "frequence_des_services",
-      JSON.stringify(jobState.detailsMission.frequence_des_services)
-    );
-    formData.append(
-      "horaire_souhaites",
-      JSON.stringify(jobState.detailsMission.horaire_souhaites)
-    );
-    formData.append(
-      "inclus_weekend",
-      jobState.detailsMission.inclus_weekend?.length > 0 ?
-      jobState.detailsMission.inclus_weekend[0].value : null
+    appendData("frequence_des_services", jobState.detailsMission.frequence_des_services, true);
+    appendData("horaire_souhaites", jobState.detailsMission.horaire_souhaites, true);
+    appendData(
+      "inclus_weekend", 
+      appendArrayValue("inclus_weekend", jobState.detailsMission.inclus_weekend)
     );
 
     // Nounou
-    formData.append("nombre_enfants", jobState.nounou.nombre_enfants);
-    formData.append(
-      "garde_enfants",
-      JSON.stringify(jobState.nounou.garde_enfants)
-    );
-    formData.append(
-      "competance_specifique",
-      JSON.stringify(jobState.nounou.competance_specifique)
-    );
-    formData.append(
-      "besions_specifiques",
-      JSON.stringify(jobState.nounou.besions_specifiques)
-    );
-    formData.append(
-      "langue_parler",
-      JSON.stringify(jobState.nounou.langue_parler)
-    );
+    appendData("nombre_enfants", jobState.nounou.nombre_enfants);
+    appendData("garde_enfants", jobState.nounou.garde_enfants, true);
+    appendData("competance_specifique", jobState.nounou.competance_specifique, true);
+    appendData("besions_specifiques", jobState.nounou.besions_specifiques, true);
+    appendData("langue_parler", jobState.nounou.langue_parler, true);
 
     // Femme de Ménage
-    formData.append(
-      "aide_menagere",
-      JSON.stringify(jobState.femmeDeMenage.aide_menagere)
-    );
-    formData.append(
-      "equipement_menager",
-      JSON.stringify(jobState.femmeDeMenage.equipement_menager)
-    );
+    appendData("aide_menagere", jobState.femmeDeMenage.aide_menagere, true);
+    appendData("equipement_menager", jobState.femmeDeMenage.equipement_menager, true);
 
     // Critères
-    formData.append(
-      "experience_minimun",
-      JSON.stringify(jobState.criteres.experience_minimun)
-    );
-    formData.append("annee_experience", jobState.criteres.annee_experience);
-    formData.append(
-      "certifications_criteres",
-      JSON.stringify(jobState.criteres.certifications)
-    );
-    formData.append(
-      "criteres_selections",
-      JSON.stringify(jobState.criteres.criteres_selections)
-    );
+    appendData("experience_minimun", jobState.criteres.experience_minimun, true);
+    appendData("annee_experience", jobState.criteres.annee_experience);
+    appendData("certifications_criteres", jobState.criteres.certifications, true);
+    appendData("criteres_selections", jobState.criteres.criteres_selections, true);
 
     // Rémunération
-    formData.append("tarif", jobState.remuneration.tarifPropose);
-    formData.append("negociable", jobState.remuneration.negociable?.length > 0 ? jobState.remuneration.negociable[0].value : null);
-    console.log(jobState.dateDebut.missionUrgente)
+    appendData("tarif", jobState.remuneration.tarifPropose);
+    appendData(
+      "negociable", 
+      appendArrayValue("negociable", jobState.remuneration.negociable)
+    );
+
     // Date de Début
-    formData.append("date_debut", jobState.dateDebut.dateDebut);
-    formData.append(
-      "mission_urgente",
-      jobState.dateDebut.missionUrgente?.length > 0 ? jobState.dateDebut.missionUrgente[0].value : null
+    appendData("date_debut", jobState.dateDebut.dateDebut);
+    appendData(
+      "mission_urgente", 
+      appendArrayValue("mission_urgente", jobState.dateDebut.missionUrgente)
     );
 
     // Autres Infos
-    formData.append(
-      "description_complementaire",
-      jobState.autresInfos.descriptionComplementaire
-    );
-    if (jobState.autresInfos.photoVideo) {
+    appendData("description_complementaire", jobState.autresInfos.descriptionComplementaire);
+    
+    // Ajout des fichiers
+    if (jobState.autresInfos.photoVideo && jobState.autresInfos.photoVideo.length > 0) {
       jobState.autresInfos.photoVideo.forEach((file: any) => {
         formData.append("Images_videos", file);
       });
@@ -130,24 +128,71 @@ export const useJobHook = () => {
     return formData;
   };
 
-  const showToast = async (message: string) => {
+  /**
+   * Affiche un message toast à l'utilisateur
+   * @param message Message à afficher
+   */
+  const showToast = async (message: string): Promise<void> => {
     await Toast.show({
       text: message,
+      duration: 'long'
     });
   };
 
+  /**
+   * Gère les erreurs de l'API
+   * @param error Erreur reçue
+   */
+  const handleApiError = (error: unknown): void => {
+    console.error("Erreur lors de l'opération:", error);
+    state.error = "Erreur lors de la création de l'offre";
+
+    if (axios.isAxiosError(error)) {
+      const apiError = error.response?.data as ApiError;
+      
+      // Afficher le message d'erreur à l'utilisateur
+      showToast(apiError?.message || "Une erreur est survenue");
+      
+      // Mettre à jour l'état d'erreur dans le store
+      jobStore.state.in_error = {
+        path: apiError?.path || "global",
+        message: apiError?.message || "Erreur inconnue",
+      };
+    }
+  };
+
+  /**
+   * Crée ou met à jour une offre d'emploi
+   */
   const createJob = async (): Promise<void> => {
-    useJobStore().state.loading = true;
+    // Mettre à jour l'état de chargement
+    jobStore.state.loading = true;
+    state.loading = true;
     state.error = null;
+    state.success = false;
 
     try {
-      const userId = await StorageUtils().getStore("nUser_Id");
+      // Récupérer l'ID utilisateur
+      const userIdStore = await StorageUtils().getStore("nUser_Id");
+      const userId = userIdStore?.value;
+      
+      if (!userId) {
+        throw new Error("ID utilisateur non disponible");
+      }
+
+      // Préparer les données du formulaire
       const formData = mapJobDataToFormData();
-      formData.append("user_id", `${userId.value}`);
+      formData.append("user_id", `${userId}`);
 
+      // Déterminer l'URL en fonction du mode (création ou mise à jour)
+      const isUpdate = useJobStore().isUpdateJob;
+      const url = isUpdate 
+        ? `${URL_API_ROUTE.JOB_UPDATE}/${useJobStore().isUpdateJobID}` 
+        : URL_API_ROUTE.JOB_CREATE;
 
+      // Envoyer la requête à l'API
       const { data } = await axios.post<{ id: string }>(
-        useJobStore().isUpdateJob ? URL_API_ROUTE.JOB_UPDATE + `/${useJobStore().isUpdateJobID}` : URL_API_ROUTE.JOB_CREATE,
+        url,
         formData,
         {
           headers: {
@@ -156,29 +201,31 @@ export const useJobHook = () => {
         }
       );
 
+      // Stocker l'ID de l'offre créée
       await StorageUtils().setStore("nJob_Id", data.id);
-      await showToast("Offre creée avec succès");
+      
+      // Afficher un message de succès
+      const message = isUpdate ? "Offre mise à jour avec succès" : "Offre créée avec succès";
+      await showToast(message);
+      
+      // Réinitialiser l'état de mise à jour
       useJobStore().isUpdateJob = false;
+      state.success = true;
+      
+      // Rediriger l'utilisateur
       router.push({ name: "STARTER_DESTINATION" });
     } catch (error) {
-      console.log(error)
-      state.error = "Erreur lors de la création de l'offre";
-
-      if (axios.isAxiosError(error)) {
-        const apiError = error.response?.data;
-        showToast(apiError?.message);
-        jobStore.state.in_error = {
-          path: apiError?.path || "global",
-          message: apiError?.message || "Erreur inconnue",
-        };
-      }
+      handleApiError(error);
     } finally {
+      // Réinitialiser l'état de chargement
       useJobStore().state.loading = false;
+      state.loading = false;
     }
   };
 
+  // Exposer uniquement les méthodes et propriétés nécessaires
   return {
-    state,
+    state: readonly(state), // Exposer l'état en lecture seule
     createJob,
   };
 };

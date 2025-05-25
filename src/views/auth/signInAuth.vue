@@ -101,9 +101,20 @@ const {
           <AuthButton
             title="Se connecter"
             setcolor="bg-secondary"
-            @click="Login(state.in_login)"
+            :actions="() => Login(state.in_login)"
             :loading="state.loading"
           />
+<div class="flex flex-col gap-4 mt-4">
+  <p class="text-sm text-gray-600 text-center">
+    Vous n'avez pas encore de compte ?
+  </p>
+  <router-link 
+    to="/auth/sign-up"
+    class="text-primary hover:text-primary-dark text-center font-medium"
+  >
+    S'inscrire
+  </router-link>
+</div>
         </template>
       </SignInLayout>
 

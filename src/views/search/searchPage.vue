@@ -9,7 +9,9 @@
       :hasFilter="true"
     >
       <template v-slot:ContentSearch>
-        <div class="grid grid-cols-2 gap-1 w-11/12 m-auto mt-2 mb-1 font-love z-50">
+        <div
+          class="grid grid-cols-2 gap-1 w-11/12 m-auto mt-2 mb-1 font-love z-50"
+        >
           <div v-for="(menu, index) in state.verticalMenu" :key="index">
             <div
               @click="toggleActiveMenu(index)"
@@ -40,7 +42,6 @@
     <IonContent>
       <!-- Nounus Searched content -->
       <NounuSearch v-show="isMenuSearchActived === 0" toCard="Nounu" />
-
       <!-- Parent content -->
       <ParentSearch v-show="isMenuSearchActived === 1" toCard="Parent" />
     </IonContent>
@@ -51,8 +52,6 @@
       </template>
     </FilterModal>
   </IonPage>
-
-  
 </template>
 
 <script lang="ts" setup>
@@ -70,7 +69,7 @@ import FilterContentModal from "@/components/modals/FilterContentModal.vue";
 import { useScrollStore } from "@/stores/scrollStore";
 
 const { state } = useSearchHook();
-const {  countScroll: countScrollHeader} = useScrollStore();
+const { countScroll: countScrollHeader } = useScrollStore();
 const isMenuSearchActived = ref(0);
 
 const isCountScroll = computed(() => useScrollStore().countScroll);

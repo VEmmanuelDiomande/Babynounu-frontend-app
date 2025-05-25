@@ -19,7 +19,7 @@
           <div
             v-else
             class="flex flex-col justify-center items-center"
-            @click="UpdatePage(tab)"
+            @click="updatePage(tab)"
           >
             <IcIcons
               :name="getIconName(tab)"
@@ -29,24 +29,14 @@
             <p class="text-xr font-love" :class="getTextClass(tab)">
               {{ tab.name }}
             </p>
-            <div
-              v-if="
-                tab.tab == 'tab4' &&
-                useNotificationStore().state.countNotification > 0
-              "
-              class="absolute top-1 ring-2 ring-white right-1 size-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-            >
-              {{ useNotificationStore().state.countNotification }}
-            </div>
-            <div
-              v-if="
-                tab.tab == 'tab3' &&
-                useNotificationStore().state.countMessage?.parentUnread > 0
-              "
-              class="absolute top-1 ring-2 ring-white right-1 size-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-            >
-              {{ useNotificationStore().state.countMessage?.parentUnread }}
-            </div>
+            <NotificationBadge
+              v-if="tab.tab === 'tab4' && hasNotifications" 
+              :count="notificationCount" 
+            />
+            <NotificationBadge 
+              v-if="tab.tab === 'tab3' && hasUnreadMessages" 
+              :count="unreadMessagesCount" 
+            />
           </div>
         </ion-tab-button>
       </ion-tab-bar>
@@ -62,18 +52,25 @@ import {
   IonTabBar,
   IonTabButton,
 } from "@ionic/vue";
-import { ref, computed, onMounted, onActivated } from "vue";
+import { ref, computed, onMounted, onActivated, defineComponent } from "vue";
 import { useRoute } from "vue-router";
 import { useTabHook } from "@/hooks/menuHooks/useTab.hook";
 import { StorageUtils } from "@/utils/store.utils";
 import IcIcons from "@/components/icons/IcIcons.vue";
 import { RiAddLine } from "@remixicon/vue";
-import { useAuthStore } from "@/stores/auth.store";
 import { useUserStore } from "@/stores/user.store";
-import { useConversationStore } from "@/stores/conversationStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { SocketService } from "@/services/socket.services";
-import { set } from "zod";
+import NotificationBadge from "@/components/notifications/NotificationBadge.vue";
+
+// Définition des types
+interface TabItem {
+  tab: string;
+  link: string;
+  name?: string;
+  icon: string;
+  iconFull: string;
+}
 
 // State
 const route = useRoute();
@@ -83,9 +80,9 @@ const nType_Profil = ref("");
 // Méthode pour récupérer les données depuis le Storage
 const fetchPageTypeAndProfile = async () => {
   const pageType = await StorageUtils().getStore("nPageType");
-  const typeProfil: any = await StorageUtils().getStore("nType_Profil");
+  const typeProfil = await StorageUtils().getStore("nType_Profil");
   nPageType.value = pageType?.value || null;
-  nType_Profil.value = typeProfil?.value;
+  nType_Profil.value = typeProfil?.value || "";
 };
 
 // Exécuter fetchPageTypeAndProfile lors du montage ou de l'activation du composant
@@ -95,52 +92,91 @@ const initializeData = async () => {
 onMounted(initializeData);
 onActivated(initializeData);
 
-
-
-const UpdatePage = async (tab: any) => {
-  if (tab.tab == "tab4") {
+// Méthode pour mettre à jour les vues de notification
+const updatePage = async (tab: TabItem) => {
+  if (tab.tab === "tab4") {
+    const userId = await StorageUtils().getStore("nUser_Id");
     new SocketService().emit("updateViewByUserId", {
-      userId: (await StorageUtils().getStore("nUser_Id")).value,
+      userId: userId.value,
     });
   }
 };
 
+// Accès aux stores pour les notifications
+const notificationStore = useNotificationStore();
+const notificationCount = computed(() => notificationStore.state.countNotification);
+const hasNotifications = computed(() => notificationCount.value > 0);
+const unreadMessagesCount = computed(() => notificationStore.state.countMessage?.totalUnread || 0);
+const hasUnreadMessages = computed(() => unreadMessagesCount.value > 0);
+
 // Tabs dynamiques basées sur le type de page
 const { state } = useTabHook();
 const tabs = computed(() => {
-  if (useUserStore().pageType && useUserStore().pageType == "/home/nounus") {
-    state.menuTabs[0].link = "/home/nounus";
-    state.menuTabs[0].tab = "tab1";
-    state.menuTabs[1].link = "/search/nounus";
-    state.menuTabs[1].tab = "tab2";
-  } else {
-    state.menuTabs[0].link = "/home/jobs";
-    state.menuTabs[0].tab = "tab11";
-    state.menuTabs[1].link = "/search/jobs";
-    state.menuTabs[1].tab = "tab22";
-  }
+  const menuTabs = 
+  nType_Profil.value == "parent"
+    ? [...state.menuTabs] // Copie pour éviter la mutation directe
+    : [...state.menuJobTabs] // Copie pour éviter la mutation directe
+  
+  const userStore = useUserStore();
+  
+  // Configuration des onglets en fonction du type de page
+  // if (userStore.pageType === "/home/nounus") {
+  //   configureNounusTab(menuTabs);
+  // } else {
+  //   configureJobsTab(menuTabs);
+  // }
 
-  if (nType_Profil.value == "parent") {
-    state.menuTabs[state.menuTabs.length].link = `/profil/parent`;
-  } else if (nType_Profil.value == "nounu") {
-    if (state.menuTabs.length == 5) {
-      state.menuTabs.splice(2, 1);
-    }
-    state.menuTabs[3].link = `/profil/nounu`;
+  // Configuration des onglets en fonction du type de profil
+  if (nType_Profil.value === "parent") {
+    configureParentTab(menuTabs);
+  } else if (nType_Profil.value === "nounu") {
+    configureNounuTab(menuTabs);
   }
-  return state.menuTabs;
+  
+  return menuTabs;
 });
 
-// Méthodes utilitaires pour les classes et icônes
-const getIconName = (tab: any) =>
-  tab.link === route.path ? tab.iconFull : tab.icon;
-
-const getIconClass = (tab: any) => {
-  return tab.link === route.path ? "text-primary" : "text-gray-400";
+// Fonctions de configuration des onglets
+const configureNounusTab = (tabs: TabItem[]) => {
+  tabs[0].link = "/home/nounus";
+  tabs[0].tab = "tab1";
+  tabs[1].link = "/search/nounus";
+  tabs[1].tab = "tab2";
 };
 
-const getTextClass = (tab: any) =>
-  tab.link === route.path
+const configureJobsTab = (tabs: TabItem[]) => {
+  tabs[0].link = "/home/jobs";
+  tabs[0].tab = "tab-jobs-1";
+  tabs[1].link = "/search/jobs";
+  tabs[1].tab = "tab-jobs-2";
+};
+
+const configureParentTab = (tabs: TabItem[]) => {
+  const lastIndex = tabs.length - 1;
+  if (lastIndex >= 0) {
+    tabs[lastIndex].link = `/profil/parent`;
+  }
+};
+
+const configureNounuTab = (tabs: TabItem[]) => {
+  // Créer une nouvelle copie sans l'élément à l'index 2 si nécessaire
+  if (tabs.length === 5) {
+    tabs.splice(2, 1);
+  }
+};
+
+// Fonctions pour les icônes
+const getIconName = (tab: TabItem): string => {
+  return route.path.includes(tab.link) ? tab.iconFull : tab.icon;
+};
+
+const getIconClass = (tab: TabItem): string => {
+  return route.path.includes(tab.link) ? "text-primary" : "text-gray-400";
+};
+
+const getTextClass = (tab: TabItem): string => {
+  return route.path.includes(tab.link)
     ? "text-primary font-extrabold"
     : "font-bold text-zinc-400";
+};
 </script>

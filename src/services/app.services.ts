@@ -11,7 +11,7 @@ const AppService = () => {
    */
   const setServiceFindAll = async (URL_API: string, callback: Function) => {
     try {
-      const { json } = await FindAllService(URL_API);
+      const  json  = await FindAllService(URL_API);
 
       if (json) {
         callback(json);

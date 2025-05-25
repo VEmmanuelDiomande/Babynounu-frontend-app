@@ -1,13 +1,17 @@
 <template>
   <SearchContent
-    :isLoading="LoadingNounuSearch"
-    :isError="ISErrorNounuSearch"
-    :filteredData="filteredData"
+    :isLoading="useNounuStore().isLoading && !isLoadingMore"
+    :isError="useNounuStore().isError"
+    :filteredData="accumulatedData"
+    :pagination="filteredData?.pagination"
     emptyIcon="RiServiceLine"
     emptyHeading="Aucune nounou disponible"
     emptySubHeading="Aucune nounou disponible. Veuillez affiner votre recherche afin d'obtenir de meilleurs résultats."
-     toCard="Parent"
-     :isLoading_search="useNounuStore().isLoading"
+    toCard="Parent"
+    :isLoading_search="useNounuStore().isLoading"
+    :isLoadingMore="isLoadingMore"
+    @page-change="handlePageChange"
+    @load-more="loadMoreData"
   />
 </template>
 
@@ -23,36 +27,57 @@ import SearchContent from "./searchContent.vue";
 import { ScrollUtils } from "@/utils/scroll.utils";
 import { useScrollStore } from "@/stores/scrollStore";
 
+const currentPage = ref(1);
+const pageSize = ref(20); // Augmenter le nombre d'éléments par page
+const isLoadingMore = ref(false);
+const accumulatedData = ref<any[]>([]);
 
-const { onScroll } = useScrollStore();
-
-const isCountScroll = computed(() => useScrollStore().countScroll);
-
-// Fetch data for nounus
-const {
-  data: DataNounuSearch,
-  isLoading: LoadingNounuSearch,
-  isError: ISErrorNounuSearch,
-} = useQuery({
-  queryKey: ["ListNounus"],
-  queryFn: async () => {
-    const userId = await StorageUtils().getStore("nUser_Id");
-    return await SettingServices().listSetting(
-      URL_API_ROUTE.NOUNU_ALL + "/?userId=" + userId.value
-    );
-  },
-});
-
-onMounted(() => {
-  useNounuStore().searchNounu(useNounuStore().searchValueData);
+onMounted(async () => {
+  await useNounuStore().searchNounu(useNounuStore().searchValueData, currentPage.value, pageSize.value);
+  if (useNounuStore().DataNounus?.data) {
+    accumulatedData.value = [...useNounuStore().DataNounus.data];
+  }
 });
 
 // Filtered data for nounus
 const filteredData = computed(() => useNounuStore().DataNounus);
 
-// Watch search value
+// Observer les changements dans le store
+watch(() => useNounuStore().DataNounus, (newData) => {
+  if (newData && newData.data) {
+    if (currentPage.value === 1) {
+      // Si c'est la première page, remplacer les données
+      accumulatedData.value = [...newData.data];
+    } else {
+      // Sinon, ajouter les nouvelles données
+      // Utiliser un Set pour éviter les doublons (basé sur l'ID)
+      const uniqueIds = new Set(accumulatedData.value.map(item => item.id));
+      const newItems = newData.data.filter((item: { id: number | string }) => !uniqueIds.has(item.id));
+      accumulatedData.value = [...accumulatedData.value, ...newItems];
+    }
+    isLoadingMore.value = false;
+  }
+});
 
-const timeout:any = ref(null);
+// Gestion du changement de page
+const handlePageChange = (page: number) => {
+  currentPage.value = page;
+  useNounuStore().searchNounu(useNounuStore().searchValueData, page, pageSize.value);
+  // Remonter en haut de la page lors du changement de page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Fonction pour charger plus de données
+const loadMoreData = async () => {
+  if (isLoadingMore.value) return;
+  
+  isLoadingMore.value = true;
+  currentPage.value += 1;
+  await useNounuStore().searchNounu(useNounuStore().searchValueData, currentPage.value, pageSize.value);
+};
+
+// Watch search value
+const timeout: any = ref(null);
 
 watch(
   () => useNounuStore().searchValueData,
@@ -60,8 +85,12 @@ watch(
     if (timeout.value) {
       clearTimeout(timeout.value);
     }
+    // Réinitialiser la page à 1 et vider les données accumulées lors d'une nouvelle recherche
+    currentPage.value = 1;
+    accumulatedData.value = [];
+    
     timeout.value = setTimeout(() => {
-      useNounuStore().searchNounu(newSearchValue);
+      useNounuStore().searchNounu(newSearchValue, currentPage.value, pageSize.value);
     }, 500);
   }
 );

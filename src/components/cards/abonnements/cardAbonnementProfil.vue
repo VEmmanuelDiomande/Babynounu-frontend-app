@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="
-      useUserStore().isOwner == false &&
+      isOwner == false &&
       useAbonnementStore().isAbonnement == false
     "
     class="fixed bottom-0 w-full bg-gradient-to-t from-white to-white/80 z-50 pt-8 px-4 font-love"
@@ -10,6 +10,7 @@
       <div class="flex flex-col gap-2 justify-center text-center">
         <span class="text-lg font-bold">Abonnement</span>
         <span class="text-sm">
+          {{ isOwner }}
           Abonnez-vous pour voir davantage d'informations sur
           <strong>{{ Data.fullname }}</strong
           >, {{ Data.year_experience }} ans d'expérience, Profil(vérifiés)
@@ -35,7 +36,7 @@ import { StorageUtils } from "@/utils/store.utils";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
-defineProps({
+const props = defineProps({
   Data: {
     type: Object,
     default: null,
@@ -47,6 +48,14 @@ defineProps({
   },
 });
 const route = useRoute();
+
+onMounted(async () => {
+  useUserStore().isOwnerUserConnected(props.Data?.id);
+});
+
+const isOwner = computed(() => {
+  return useUserStore().isOwner;
+});
 
 const { OpenModelAbonnement, isAbonnement } = useProfilHook();
 </script>

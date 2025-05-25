@@ -6,12 +6,12 @@
       :title="useJobStore().state.stepJob == 8 ? 'Enregistré' : 'Continuer'"
       setcolor="bg-primary"
       :loading="useNounuStore().loading"
-      @click="
-        [
+      @actions="
+        () => {
           useJobStore().state.stepJob == 1
             ? useJobStore().InfoGeneralJob()
-            : createJob(),
-        ]
+            : createJob();
+        }
       "
     />
   </ion-footer>

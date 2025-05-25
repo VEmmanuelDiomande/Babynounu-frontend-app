@@ -113,7 +113,7 @@ const applyFilter = () => {
         />
 
         <SelectTagForm
-          label="Comp tences sp cifi ques"
+          label="Compétences spécifiques"
           optionName="name"
           :options="DataLocalizations?.parameter['competences-specifiques']"
           name="competance_specifique"
@@ -121,7 +121,7 @@ const applyFilter = () => {
         />
 
         <SelectTagForm
-          label="Langues parl es"
+          label="Langues parlées"
           optionName="name"
           :options="DataLocalizations?.parameter['langues-parlees']"
           name="langue_parler"
@@ -132,7 +132,7 @@ const applyFilter = () => {
       <!-- Parents -->
       <div class="w-11/12 flex flex-col gap-4 py-8 m-auto" v-show="ActivedCardFilter == 'parents'">
         <SelectTagForm
-          label="Besoins sp cifi ques"
+          label="Besoins spécifiéques"
           optionName="name"
           :options="DataLocalizations?.parameter['besoins-specifique']"
           name="besions_specifiques"
@@ -148,7 +148,7 @@ const applyFilter = () => {
         />
 
         <SelectTagForm
-          label="Aide m nag re"
+          label="Aide ménagère"
           optionName="name"
           :options="DataLocalizations?.parameter['aide-menagere']"
           name="aide_menagere"
@@ -156,7 +156,7 @@ const applyFilter = () => {
         />
 
         <SelectTagForm
-          label="Fr quence des services"
+          label="Fréquence des services"
           optionName="name"
           :options="DataLocalizations?.parameter['frequence-de-services']"
           name="frequence_des_services"
@@ -199,7 +199,7 @@ const applyFilter = () => {
       :title="'Appliquer'"
       setcolor="bg-primary"
       :loading="useNounuStore().loading"
-      @click="applyFilter"
+      :actions="applyFilter"
     />
   </ion-footer>
 </template>
