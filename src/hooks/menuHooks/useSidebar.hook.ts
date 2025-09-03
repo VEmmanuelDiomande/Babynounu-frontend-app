@@ -23,7 +23,7 @@ export const useSidebarHook = () => {
       {
         icon: "RiMegaphoneLine",
         name: "Annonces",
-        link: "JOB",
+        link: "HOME",
         actived: true,
       },
       {

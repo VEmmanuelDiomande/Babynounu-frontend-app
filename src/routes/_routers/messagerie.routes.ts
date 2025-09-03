@@ -23,30 +23,18 @@ export const ChatRoutes = {
       name: "CHAT_MESSAGE",
       component: chatMessage,
     },
-    {
-      path: ":id",
-      meta: {
-        requiresAuth: false,
-        title: `Detail Messagerie`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "CHAT_MESSAGE_DETAIL",
-      component: chatMessageDetail,
-    },
   ],
 };
 
 export const _ChatRoutes = {
-  path: "/chat",
-  redirect: "/chat",
+  path: "/chats",
+  redirect: "/chats",
   component: BasicPage,
 
   children: [
     {
-      path: ":id",
+      path: "detail/:id",
+
       meta: {
         requiresAuth: false,
         title: `Detail Messagerie`,

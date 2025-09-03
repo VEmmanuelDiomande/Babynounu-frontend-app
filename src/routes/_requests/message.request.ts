@@ -12,6 +12,6 @@ export const apiMessageRoutes = {
     CONVERSATION_ALL_ADMIN: '/chat/conversations/admin',
     CONVERSATION_ONLY: '/chat/room',
     CONVERSATION_USER: '/chat/conversations/user',
-    CONVERSATION_CREATE: '/chat/find-or-create-room',
+    CONVERSATION_CREATE: '/chat/find-or-create-room/',
     CONVERSATION_UPDATE: '/chat/conversations/update',
 }

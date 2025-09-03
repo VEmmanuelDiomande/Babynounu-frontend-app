@@ -31,7 +31,6 @@
           </div>
         </template>
       </HeaderMenuLayout>
-
       <!-- États de l'interface -->
       <div class="pb-20">
         <!-- État de chargement -->
@@ -160,7 +159,9 @@ const fetchConversations = async () => {
       `${URL_API_ROUTE.CONVERSATION_ALL}?userId=${userId}`
     );
     
-    return response || [];
+    // Filter out conversations with null lastMessage
+    const conversations = response || [];
+    return conversations.filter(conv => conv.lastMessage !== null);
   } catch (error) {
     console.error("Erreur lors de la récupération des conversations:", error);
     return [];
@@ -204,7 +205,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   cleanupSocketListeners();
-});
+}); 
 
 // Observer les changements de recherche pour des recherches en temps réel
 watch(searchQuery, (newValue, oldValue) => {

@@ -178,7 +178,7 @@ export const useNounuHook = () => {
 
       const endpoint = getProfileEndpoint();
       
-      const response = await axios.post<ProfileResponse>(
+      const response = await axios.post(
         endpoint, 
         formData, 
         {
@@ -186,8 +186,13 @@ export const useNounuHook = () => {
         }
       );
 
-      if (response.data?.id) {
-        await StorageUtils().setStore("nProfil_1_Id", response.data.id.toString());
+      // const response = await fetch(endpoint, {
+      //   method: "POST",
+      //   body: ,
+      // });
+
+      if (response.data) {
+        // await StorageUtils().setStore("nProfil_1_Id", response.data.id.toString());
         state.success = true;
         
         // Fermer la modal si elle existe
@@ -197,6 +202,7 @@ export const useNounuHook = () => {
         }
         
         // Redirection
+        StorageUtils().clearStore();
         location.assign("/auth/sign-in");
       } else {
         throw new Error("Réponse du serveur invalide");

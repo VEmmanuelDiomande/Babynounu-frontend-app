@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-between p-2 gap-4 items-center">
-    <span class="text-sm">
+    <span class="text-xs">
       Démarrez une nouvelle mission, faites des propositions.
     </span>
     <button

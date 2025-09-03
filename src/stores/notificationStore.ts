@@ -11,6 +11,7 @@ export const useNotificationStore = defineStore("NOTIFICATION", () => {
     countNotification: ref(0),
     countMessage: ref(0),
     searchValueData: ref(""),
+    scheduleNotificationData: ref([]),
   });
 
   const socketService = new SocketService();
@@ -41,6 +42,7 @@ export const useNotificationStore = defineStore("NOTIFICATION", () => {
       state.countNotification = data;
     });
   };
+
 
   return {
     state,

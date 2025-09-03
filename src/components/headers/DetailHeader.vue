@@ -1,7 +1,7 @@
 <template>
-  <ion-header class="ion-no-border">
+  <ion-header class="ion-no-border mt-8">
     <div
-      class="flex items-center justify-between px-4 py-2 border-b-[1px] bg-white text-zinc-800 shadow-sm"
+      class="flex items-center justify-between px-4  border-b-[1px] bg-white text-zinc-800 shadow-sm"
     >
       <div class="flex items-center">
         <!-- Back Button -->

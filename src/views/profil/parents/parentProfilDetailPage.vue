@@ -42,6 +42,8 @@
   import PageLoader from "@/components/loaders/pageLoader.vue";
   import E404Error from "@/components/errors/e404.error.vue";
 import ContentParentProfil from "../_partials/contentParentProfil.vue";
+import { socketService } from "@/services/socket.services";
+import { getUserId } from "@/utils/helpers.utils";
   
   //   import IcIcons from "@/components/icons/IcIcons.vue";
   const route = useRoute();
@@ -82,8 +84,23 @@ const handleRefresh = async (event: any) => {
     isRefreshing.value = false;
   }
 };
+
+/**
+ * Checks if user has an active subscription
+ */
+ const isAbonnement = async (): Promise<void> => {
+  try {
+    const userId = await getUserId();
+    if (userId) {
+      socketService.emit("isAbonnement", { userId });
+    }
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+  }
+};
   
-  onMounted(() => {
+  onMounted(async() => {
+    await isAbonnement();
     Greeting.value = GetGreetingUtils();
   });
   

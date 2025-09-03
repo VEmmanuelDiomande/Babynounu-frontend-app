@@ -38,6 +38,8 @@ import { StorageUtils } from "@/utils/store.utils";
 import ContentProfil from "./_partials/contentProfil.vue";
 import PageLoader from "@/components/loaders/pageLoader.vue";
 import E404Error from "@/components/errors/e404.error.vue";
+import { socketService } from "@/services/socket.services";
+import { getUserId } from "@/utils/helpers.utils";
 
 //   import IcIcons from "@/components/icons/IcIcons.vue";
 const route = useRoute();
@@ -49,7 +51,19 @@ const ListProfilNounu = async () => {
   );
 };
 
-
+/**
+ * Checks if user has an active subscription
+ */
+ const isAbonnement = async (): Promise<void> => {
+  try {
+    const userId = await getUserId();
+    if (userId) {
+      socketService.emit("isAbonnementUser", { userId });
+    }
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+  }
+};
 
 const {
   data: DataNounu,
@@ -63,7 +77,8 @@ const {
 
 const Greeting = ref("Hello");
 
-onMounted(() => {
+onMounted(async() => {
+  await isAbonnement();
   Greeting.value = GetGreetingUtils();
 });
 

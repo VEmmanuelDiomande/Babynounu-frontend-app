@@ -35,6 +35,8 @@ import E404Error from "@/components/errors/e404.error.vue";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import CntProfil from "./_partials/cntProfil.vue";
+import { socketService } from "@/services/socket.services";
+import { getUserId } from "@/utils/helpers.utils";
 
 // Router
 const route = useRoute();
@@ -43,8 +45,23 @@ const router = useRouter();
 // Références et état
 const GetProfil = ref<string | null>();
 
+/**
+ * Checks if user has an active subscription
+ */
+ const isAbonnement = async (): Promise<void> => {
+  try {
+    const userId = await getUserId();
+    if (userId) {
+      socketService.emit("isAbonnement", { userId });
+    }
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+  }
+};
+
 // Chargement de l'ID du profil utilisateur depuis le stockage
 onMounted(async () => {
+  await isAbonnement()
   const storedProfil = await StorageUtils().getStore("nProfil_1_Id");
   GetProfil.value = storedProfil?.value || null;
 });

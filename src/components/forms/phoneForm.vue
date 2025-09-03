@@ -33,7 +33,7 @@
         @input="onInput"
         @blur="onBlur"
         class="flex-1 border-[1px] border-l-0 rounded-r-xl h-14 px-4 text-zinc-700 font-love placeholder:text-zinc-500 placeholder:font-normal text-base border-zinc-300/70 bg-white/90 font-light outline-none focus:border-2 focus:border-primary"
-        :placeholder="placeholder"
+        :placeholder="'01 407 520 01'"
         :class="{ 'is-invalid': error }"
       />
     </div>
@@ -46,6 +46,7 @@
       {{ error?.message }}
     </span>
   </div>
+
 </template>
 
 <script setup lang="ts">
@@ -126,10 +127,13 @@ const phoneWithoutPrefix = computed(() => {
   
   // Supprimer le préfixe du pays s'il est présent
   if (props.modelValue.startsWith(selectedCountry.value.prefix)) {
-    return props.modelValue.substring(selectedCountry.value.prefix.length);
+    const phoneNumber = parsePhoneNumberFromString(props.modelValue, selectedCountry.value.code as any);
+    return phoneNumber?.formatNational();
   }
   
-  return props.modelValue;
+  const phoneNumber = parsePhoneNumberFromString(props.modelValue, selectedCountry.value.code as any);
+  console.log(phoneNumber)
+  return phoneNumber ? phoneNumber.formatInternational() : props.modelValue;
 });
 
 // Formater le numéro de téléphone en temps réel
@@ -156,7 +160,7 @@ const onInput = (event: Event) => {
   asYouType.input(rawInput);
   
   // Émettre le numéro complet avec le préfixe
-  emit('update:modelValue', selectedCountry.value.prefix + rawInput);
+  emit('update:modelValue',  selectedCountry.value.prefix + rawInput);
 };
 
 // Valider le numéro de téléphone lors du blur

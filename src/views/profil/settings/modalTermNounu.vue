@@ -1,7 +1,7 @@
 <template>
   <ion-modal :is-open="policyModalOpen" @didDismiss="policyModalOpen = false">
-    <ion-header>
-      <ion-toolbar class="bg-primary">
+    <ion-header class="" >
+      <div class="flex justify-between h-12 items-center">
         <ion-title class="text-black text-lg font-anton">
           Conditions Générales d'Utilisation
         </ion-title>
@@ -14,7 +14,7 @@
             ></IcIcons>
           </ion-button>
         </ion-buttons>
-      </ion-toolbar>
+      </div>
     </ion-header>
     <ion-content class="ion-padding font-love">
       <div class="space-y-4">

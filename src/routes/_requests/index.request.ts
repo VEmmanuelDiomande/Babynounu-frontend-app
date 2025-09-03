@@ -12,37 +12,32 @@ import { apiMediaRoutes } from "./media.request";
 import { apiContractRoutes } from "./contract.request";
 
 // Configuration de l'environnement
-export const MODE_APP: string = import.meta.env.PROD ? "prod" : "dev";
+const MODE_APP_ENV = "dev"; // "prod" ou "dev"
+export const MODE_APP: string = MODE_APP_ENV;
 
 // Fonction pour déterminer la valeur en fonction du mode
 const MODE_APP_DEFINED = <T>(developpement: T, production: T): T => {
-  return MODE_APP === "dev" ? production : developpement;
+  return MODE_APP === "prod" ? production : developpement;
 };
 
 // Domaines de base
-const API_DOMAIN_DEV = 'http://192.168.50.155';
-const API_DOMAIN_PROD = 'https://api.babynounu.com';
-const MAIN_DOMAIN_DEV = 'http://localhost:5173';
-const MAIN_DOMAIN_PROD = 'https://babynounu.com';
-const PROVIDER_DOMAIN = 'https://provider.babynounu.com';
+const API_DOMAIN_DEV = "http://192.168.137.1";
+const API_DOMAIN_PROD = "https://api.babynounu.com";
+const MAIN_DOMAIN_DEV = "http://localhost:5173";
+const MAIN_DOMAIN_PROD = "https://babynounu.com";
+const PROVIDER_DOMAIN = "https://provider.babynounu.com";
 
 // URLs de base
 export const URL_PROVIDER_APP = PROVIDER_DOMAIN;
 
-const BASE_URL = MODE_APP_DEFINED(
-  API_DOMAIN_DEV,
-  `${API_DOMAIN_PROD}/api`
-);
+const BASE_URL = MODE_APP_DEFINED(API_DOMAIN_DEV, `${API_DOMAIN_PROD}/api`);
 
 export const BASE_URL_CENTER = MODE_APP_DEFINED(
   `${BASE_URL}:3000`,
   API_DOMAIN_PROD
 );
 
-export const HOST_URL = MODE_APP_DEFINED(
-  MAIN_DOMAIN_DEV,
-  MAIN_DOMAIN_PROD
-);
+export const HOST_URL = MODE_APP_DEFINED(MAIN_DOMAIN_DEV, MAIN_DOMAIN_PROD);
 
 export const REDIRECT_PAYMENT_URL = MODE_APP_DEFINED(
   `${API_DOMAIN_DEV}:8081`,
@@ -56,11 +51,11 @@ type URL_API_ROUTE = typeof apiAuthRoutes &
   typeof apiNounuRoutes &
   typeof apiParentRoutes &
   typeof apiNotificationRoutes &
-  typeof apiAbonnementRoutes & 
+  typeof apiAbonnementRoutes &
   typeof apiJobRoutes &
-  typeof apiJobApplicationRoutes & 
-  typeof apiMessageRoutes & 
-  typeof apiMediaRoutes & 
+  typeof apiJobApplicationRoutes &
+  typeof apiMessageRoutes &
+  typeof apiMediaRoutes &
   typeof apiContractRoutes;
 
 // Regroupement des routes API dans un tableau
@@ -76,7 +71,7 @@ const apiRoutesArray = [
   apiJobApplicationRoutes,
   apiMessageRoutes,
   apiMediaRoutes,
-  apiContractRoutes
+  apiContractRoutes,
 ];
 
 // Fusion des routes en un seul objet

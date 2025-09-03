@@ -1,7 +1,7 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar class="h-16 flex items-center mx-2">
+    <ion-header >
+      <div class="flex justify-between h-16 items-center mx-2">
         <ion-buttons slot="start">
           <IcIcons
             name="RiArrowLeftLine"
@@ -11,7 +11,8 @@
           />
         </ion-buttons>
         <ion-title class="text-xl font-bold font-love">Mes Documents</ion-title>
-      </ion-toolbar>
+        <span></span>
+      </div>
     </ion-header>
 
     <ion-content class="p-4 font-love">

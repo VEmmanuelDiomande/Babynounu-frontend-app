@@ -22,10 +22,10 @@
         <!-- Content -->
         <div class="flex flex-col gap-6 w-11/12 m-auto font-love">
           <div class="flex flex-col gap-2">
-            <span class="text-lg font-extrabold"> Continuez avec </span>
             <span class="font-love text-ng"
               >Que recherchez-vous principalement sur Baby Nounus ?</span
             >
+            <span class="text-lg font-extrabold"> Continuez en tant que </span>
           </div>
 
           <div class="flex flex-col gap-2 font-love">
@@ -128,7 +128,7 @@ const isButtonDisabled = (buttonName: string): boolean => {
 };
 
 const router = useRouter();
-const route = useRoute(); 
+const route = useRoute();
 const { state } = useTabHook();
 
 /**
@@ -138,21 +138,20 @@ const { state } = useTabHook();
 const redirectToPath = async (path: string): Promise<void> => {
   // Vérification pour l'accès à la section admin
   const adminId = await StorageUtils().getStore("nAdmin_Id");
-  
+
   if (adminId?.value == null && path === "/admin/chats") {
     router.push({ name: "SignAuth" });
     return;
   }
-  
+
   // Mise à jour du type de page et redirection
   await Promise.all([
     StorageUtils().removeStore("nPageType"),
     StorageUtils().setStore("nPageType", path),
   ]);
-  
-  
-    useUserStore().pageType = path;
-    router.replace(path);
+
+  useUserStore().pageType = path;
+  router.replace(path);
 };
 </script>
 

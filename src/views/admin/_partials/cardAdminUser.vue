@@ -54,10 +54,10 @@
   <script setup lang="ts">
   import IcIcons from "@/components/icons/IcIcons.vue";
   import { reactive } from "vue";
-  import { Dialer } from "capacitor-dialer";
   import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
   import { useRouter } from "vue-router";
   import { useMediaStore } from "@/stores/mediaStore";
+import openDialer from "@/utils/openDialer.utils";
   
   
   const router = useRouter();
@@ -81,7 +81,7 @@
       color: "bg-primary",
       loading: false,
       actions: (data: any) => {
-        Dialer.openDialer({ phoneNumber: data.phone });
+        openDialer({ phoneNumber: data.phone });
       },
     },
   ]);

@@ -1,6 +1,6 @@
 <template>
     <ion-header class="w-full shadow-none">
-      <ion-toolbar class="pr-4 pl-2 shadow-none border-b-[1px]">
+      <div class="flex justify-between h-12 items-centerpr-4 pl-2 shadow-none border-b-[1px]">
         <ion-buttons slot="start">
           <ion-button class="bg-gray-100 rounded-full  " >
             <RiUserLine size="18" />  
@@ -10,7 +10,7 @@
         <ion-buttons slot="end"> 
             <RiNotification2Line size="24" />
         </ion-buttons>
-      </ion-toolbar>
+      </div>
     </ion-header>
   </template>
   

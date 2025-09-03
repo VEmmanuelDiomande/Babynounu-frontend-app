@@ -1,5 +1,7 @@
 // src/utils/helpers.ts
 
+import { StorageUtils } from "./store.utils";
+
 /**
  * Retarde l'exécution d'une promesse
  * @param ms - Temps en millisecondes
@@ -113,6 +115,19 @@ export const delay = (ms: number): Promise<void> => {
   
     return statusMap[status] || { color: 'primary', icon: 'help-circle-outline', label: 'Inconnu' };
   };
+
+  /**
+ * Récupère l'ID utilisateur depuis le stockage
+ */
+export const getUserId = async (): Promise<string | null> => {
+  try {
+    const result = await StorageUtils().getStore("nUser_Id");
+    return result.value;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'ID utilisateur:", error);
+    return null;
+  }
+};
   
   /**
    * Tronque un texte avec une ellipse si nécessaire

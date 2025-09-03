@@ -19,7 +19,7 @@
       <div class="mt-2" @click="OpenModelAbonnement()">
         <ActionProfilButton
           sizeText="medium"
-          icon="RiPaypalLine"
+          icon="RiWallet3Line"
           setcolor="bg-zinc-800 text-lg"
           title="Souscrire"
         />

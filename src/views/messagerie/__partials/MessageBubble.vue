@@ -15,9 +15,9 @@
     >
       <!-- Avatar pour les messages des autres utilisateurs -->
       <div v-if="!isCurrentUser" class="flex items-end mb-1">
-        <div class="w-6 h-6 rounded-full bg-gray-200 mr-1 overflow-hidden flex-shrink-0">
+        <div class="w-6 h-6 rounded-full bg-gray-200 mr-1 overflow-hidden hidden flex-shrink-0">
           <!-- Si vous avez un avatar, vous pouvez l'ajouter ici -->
-          <div class="w-full h-full flex items-center justify-center text-xs text-gray-500">
+          <div class="w-full h-full flex items-center justify-center text-xs  text-gray-500">
             {{ message.sender?.name?.charAt(0) || '?' }}
           </div>
         </div>

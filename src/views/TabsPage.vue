@@ -120,11 +120,14 @@ const tabs = computed(() => {
   const userStore = useUserStore();
   
   // Configuration des onglets en fonction du type de page
-  // if (userStore.pageType === "/home/nounus") {
-  //   configureNounusTab(menuTabs);
-  // } else {
-  //   configureJobsTab(menuTabs);
-  // }
+  if(!nType_Profil.value ){
+    if (userStore.pageType === "/home/nounus") {
+    configureNounusTab(menuTabs);
+  } else {
+    configureJobsTab(menuTabs);
+  }
+  }
+  
 
   // Configuration des onglets en fonction du type de profil
   if (nType_Profil.value === "parent") {

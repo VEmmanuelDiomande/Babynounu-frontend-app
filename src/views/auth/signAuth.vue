@@ -17,10 +17,10 @@ const { state: authState } = useAuthStore();
       <div
         class="min-h-screen flex flex-col font-love justify-center items-center bg-white p-4"
       >
-        <div class="fixed inset-0">
+        <div class="fixed inset-0 ">
           <IonImg
             src="/images/backgrounds/bynu_background_auth.png"
-            class="w-full h-full object-cover opacity-20"
+            class="w-full h-full object-cover opacity-20 "
             alt=""
           >
           </IonImg>
@@ -53,11 +53,12 @@ const { state: authState } = useAuthStore();
         <div class="flex flex-col w-full mt-8 gap-2 z-40">
           <div class="flex flex-col gap-1">
             <InputForm label="Email" name="email" type="email" v-model="authState.email"  placeholder="infos@chay.com"  />
+            
             <AuthButton
-              title="S'inscrire"
-              setcolor=" bg-primary"
-              :actions="() => GlobalRedirect($router, 'SignUpAuth')"
-            />
+            title="Se connecter"
+            setcolor=" bg-secondary"
+            :actions="() => GlobalRedirect($router, 'SginInAuth')"
+          />
           </div>
 
           <div
@@ -65,15 +66,15 @@ const { state: authState } = useAuthStore();
           >
             <span
               class="flex absolute text-xs text-zinc-400 font-bold px-4 bg-white"
-              >OU - Restez connecter</span
+              >Commencez avec babyNounu</span
             >
           </div>
 
           <AuthButton
-            title="Se connecter"
-            setcolor=" bg-secondary"
-            :actions="() => GlobalRedirect($router, 'SginInAuth')"
-          />
+              title="S'inscrire"
+              setcolor=" bg-primary"
+              :actions="() => GlobalRedirect($router, 'SignUpAuth')"
+            />
 
           <RouterLink
             :to="{ name: 'HOME' }"

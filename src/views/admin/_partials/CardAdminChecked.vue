@@ -106,9 +106,9 @@
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useMediaStore } from "@/stores/mediaStore";
-import { Dialer } from "capacitor-dialer";
 import IcIcons from "@/components/icons/IcIcons.vue";
 import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
+import openDialer from "@/utils/openDialer.utils";
 
 // Types
 interface AdminAction {
@@ -175,7 +175,7 @@ const adminActions = reactive<AdminAction[]>([
     color: "bg-primary",
     loading: false,
     actions: (data: any, index?: number) => {
-      Dialer.openDialer({ phoneNumber: data.phone });
+      openDialer({ phoneNumber: data.phone });
     },
   },
 ]);

@@ -1,6 +1,6 @@
 <template>
   <ion-page class="subscription-modal">
-    <ion-header class="bg-gradient-to-r p-4">
+    <ion-header class="bg-gradient-to-r p-4 ">
       <div class="flex justify-between items-center">
         <ion-title class="text-ng font-light font-anton">Abonnements Premium</ion-title>
         <ion-buttons slot="end">
@@ -19,12 +19,16 @@
             <span class="bg-indigo-100 text-indigo-800 p-2 rounded-full mr-3">
               <ion-icon :icon="star" class="text-lg" />
             </span>
-            Nos Packs Abonnements
+            Nos Packs Abonnements 
+            <span v-if="userStore.typeProfil" class="text-sm font-normal text-gray-600 ml-2">
+              ({{ userStore.typeProfil === 'parent' ? 'Parent' : 'Nounou' }})
+            </span>
           </h2>
           
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Pack Nounu -->
+            <!-- Pack Nounu - Affiché seulement pour les nounous ou si type non défini -->
             <div 
+              v-if="!userStore.typeProfil || userStore.typeProfil === 'nounu'"
               class="relative overflow-hidden rounded-2xl shadow-none border border-gray-200 bg-white transform transition-all hover:scale-[1.02] hover:shadow-2xl"
             >
               <div class="p-8">
@@ -35,7 +39,7 @@
                   </div>
                   <div class="text-right">
                     <span class="text-3xl font-extrabold text-gray-900">2500 FCFA</span>
-                    <span class="block text-sm text-gray-500">par mois</span>
+                    <span class="block text-sm text-gray-500 hidden">par mois</span>
                   </div>
                 </div>
                 
@@ -46,10 +50,10 @@
                   </li>
                 
                 </ul>
-                
+                {{ isUserSubscribed }} test
                 <button 
                   expand="block" 
-                  :disabled="nounuPlan.loading"
+                  :disabled="nounuPlan.loading || isUserSubscribed"
                   @click="initierPaiement(nounuPlan)"
                   class="h-full text-lg font-bold py-5 w-full rounded-xl text-white bg-primary hover:bg-primary/80"
                   size="large"
@@ -60,8 +64,9 @@
               </div>
             </div>
             
-            <!-- Pack Parent -->
+            <!-- Pack Parent - Affiché seulement pour les parents ou si type non défini -->
             <div 
+              v-if="!userStore.typeProfil || userStore.typeProfil === 'parent'"
               class="relative overflow-hidden rounded-2xl shadow-none border border-gray-200 bg-white transform transition-all hover:scale-[1.02] hover:shadow-2xl"
             >
               <div class="absolute top-0 right-0 bg-primary text-white px-4 py-1 text-sm font-bold rounded-bl-lg">
@@ -76,7 +81,7 @@
                   </div>
                   <div class="text-right">
                     <span class="text-3xl font-extrabold text-gray-900">5000 FCFA</span>
-                    <span class="block text-sm text-gray-500">par mois</span>
+                    <span class="block text-sm text-gray-500 hidden">par adhésion</span>
                   </div>
                 </div>
                 
@@ -86,10 +91,10 @@
                     <span class="text-gray-700"> {{ feature }} </span>
                   </li>
                 </ul>
-                
+                s{{ useAbonnementStore().isAbonnement }}
                 <button 
                   expand="block" 
-                  :disabled="parentPlan.loading"
+                  :disabled="parentPlan.loading || useAbonnementStore().isAbonnement"
                   @click="initierPaiement(parentPlan)"
                   class="h-full text-lg font-bold py-5 w-full rounded-xl text-white bg-primary hover:bg-primary/80"
                   size="large"
@@ -212,7 +217,7 @@ import IcIcons from '@/components/icons/IcIcons.vue';
 import { useUserStore } from '@/stores/user.store';
 import { useAbonnementStore } from '@/stores/abonnementStore';
 import { useRouter } from 'vue-router';
-import { HOST_URL, URL_API_ROUTE } from '@/routes/_requests/index.request';
+import { HOST_URL, REDIRECT_PAYMENT_URL, URL_API_ROUTE } from '@/routes/_requests/index.request';
 import axios from 'axios';
 import { StorageUtils } from '@/utils/store.utils';
 import { Browser } from '@capacitor/browser';
@@ -225,7 +230,7 @@ const router = useRouter();
 
 // Vérifier si l'utilisateur est déjà abonné
 const isUserSubscribed = computed(() => {
-  return useAbonnementStore().isSubscribed;
+  return useAbonnementStore().isAbonnement;
 });
 
 // Définition des plans d'abonnement
@@ -239,7 +244,7 @@ const nounuPlan = reactive({
     'Accès à toutes les offres d\'emploi',
     'Postuler à des offres d\'emploi',
     'Profil mis en avant',
-    '500 points de disponibilité',
+    '300 points de disponibilité',
     'Support prioritaire'
   ],
   loading: false
@@ -329,8 +334,8 @@ try {
   transactionData.value.description = `Abonnement ${plan.name}`;
   transactionData.value.metadata = plan.name;
   transactionData.value.userId = nUser_Id.value;
-  transactionData.value.notify_url = `${HOST_URL}/notify`;
-  transactionData.value.return_url = `${HOST_URL}/?userId=${nUser_Id.value}&transactionId=${transactionData.value.transaction_id}`;
+  transactionData.value.notify_url = `${REDIRECT_PAYMENT_URL}/?userId=${nUser_Id.value}&transactionId=${transactionData.value.transaction_id}`;
+  transactionData.value.return_url = `${REDIRECT_PAYMENT_URL}/?userId=${nUser_Id.value}&transactionId=${transactionData.value.transaction_id}`;
 
   const response = await axios.post(
     URL_API_ROUTE.PAYMENTS_INITIER,
@@ -439,8 +444,9 @@ const closeModal = async () => {
   }
 };
 
-onMounted(() => {
-  // Initialiser les données nécessaires au chargement
+onMounted(async () => {
+  // Récupérer les données utilisateur pour déterminer le type de profil
+  await userStore._USER();
 });
 </script>
 

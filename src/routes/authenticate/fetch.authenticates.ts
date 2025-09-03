@@ -8,7 +8,6 @@ export const globalFetch = async (
   try {
     // Récupérer le token d'autorisation si nécessaire
     const token = includeAuth ? (await StorageUtils().getStore("nToken")).value : null;
-    console.log(token)
     // Configurer les en-têtes par défaut
     const defaultHeaders: HeadersInit = {
       "Content-Type": "application/json",

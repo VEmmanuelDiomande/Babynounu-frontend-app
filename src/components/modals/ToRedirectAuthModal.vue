@@ -1,17 +1,12 @@
 <template>
   <ion-modal :is-open="isOpen" @didDismiss="closeModal">
     <ion-content class="font-love z-50">
-      <div class="flex flex-col h-full z-40 bg-white">
+      <div class="flex flex-col h-full z-40  bg-white">
         <!-- En-tête du modal -->
-        <div class="flex justify-between items-center mb-6 z-40 bg-white p-4">
-          <h2 class="text-xl font-bold text-gray-800">{{ title }}</h2>
-          <ion-button id="closeModalToRedirectAuthModal" fill="clear" @click="closeModal">
-            <ion-icon
-              :icon="closeOutline"
-              slot="icon-only"
-              class="text-gray-500"
-              
-            ></ion-icon>
+        <div class="flex justify-between items-center mb-6 z-40 absolute top-4 left-4 bg-white/5 px-4 py-2">
+          <span class="text-ng font-bold text-gray-800 hidden">{{ title }}</span>
+          <ion-button id="closeModalToRedirectAuthModal"  fill="clear" @click="closeModal">
+            <IcIcons name="RiCloseLine" class="hidden" :size="28" />
           </ion-button>
         </div>
 
@@ -41,6 +36,7 @@ import {
 } from "ionicons/icons";
 import SignAuth from "@/views/auth/signAuth.vue";
 import { useRouter } from "vue-router";
+import IcIcons from "../icons/IcIcons.vue";
 
 // Props
 const props = defineProps({

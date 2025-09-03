@@ -1,7 +1,7 @@
 <template>
   <ion-page class="font-love">
-    <ion-header>
-      <ion-toolbar class="bg-primary">
+    <ion-header class="">
+      <div class="flex justify-between h-12 items-center">
         <div class="flex flex-row justify-between items-center px-4 w-full">
           <IcIcons
             @click="$router.go(-1)"
@@ -14,7 +14,7 @@
           >
           <span></span>
         </div>
-      </ion-toolbar>
+      </div>
     </ion-header>
 
     <ion-content class="bg-gray-50 font-love">

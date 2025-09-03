@@ -80,8 +80,8 @@ export const useParentHook = () => {
     if (closeModal) {
       closeModal.click();
     }
-    await StorageUtils().setStore(STORAGE_KEYS.PROFILE, result.id.toString());
-    location.assign("/choose-destination-to-start");
+    // await StorageUtils().setStore(STORAGE_KEYS.PROFILE, result.id.toString());
+    location.assign("/auth/sign-in");
   };
 
   /**
@@ -197,7 +197,7 @@ export const useParentHook = () => {
         { headers: { "Content-Type": CONTENT_TYPE_HEADER } }
       );
 
-      if (data?.id) {
+      if (data) {
         useAuthStore().isUpdateProfil = false;
         await handleSuccessResponse(data);
       } else {

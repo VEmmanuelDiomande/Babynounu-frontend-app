@@ -1,6 +1,6 @@
 <template>
   <ion-header class="shadow-none">
-    <ion-toolbar class="shadow-none border-b-[1px]">
+    <div class="flex justify-between h-12 items-centershadow-none border-b-[1px]">
       <ion-buttons slot="start">
         <ion-button @click="$router.go(-1)">
           <RiCloseLargeLine size="20" />
@@ -8,7 +8,7 @@
       </ion-buttons>
       <ion-title class="text-ng text-zinc-800 font-anton"> {{ title }} </ion-title>
       <ion-buttons slot="end"> </ion-buttons>
-    </ion-toolbar>
+    </div>
   </ion-header>
 </template>
 

@@ -16,7 +16,7 @@
           :size="12"
           class="text-white flex-shrink-0"
         />
-        <span class="text-white font-love text-xs font-extrabold ml-1">
+        <span class="text-white font-love text-xr font-extrabold ml-1">
           {{ data.annees_experience }} ans
         </span>
       </div>
@@ -30,7 +30,7 @@
         class="inline-flex w-2 h-2 rounded-full"
         :class="data.status === 'disponible' ? 'bg-green-500' : 'bg-red-500'"
       ></div>
-      <span class="text-white font-love text-xs font-extrabold ml-1">
+      <span class="text-white font-love text-xr font-extrabold ml-1">
         {{ data.status === "disponible" ? "Disponible" : "Indispo" }}
       </span>
     </div>
@@ -62,7 +62,7 @@
       </div>
       <!-- Nom et âge -->
       <div class="flex items-center gap-1 w-full">
-        <span class="text-base font-love font-extrabold text-white truncate">
+        <span class="text-sm font-love font-extrabold text-white truncate">
           {{ data.fullname }}
         </span>
         <span class="text-sm font-love font-bold text-white min-w-max flex">
@@ -82,9 +82,9 @@
       <template v-if="isNounu">
         <!-- Tarif horaire (uniquement pour les nounous) -->
         <div class="flex items-center gap-1">
-          <IcIcons name="RiPaypalLine" :size="12" class="text-white" />
+          <IcIcons name="RiWallet3Line" :size="12" class="text-white" />
           <div class="flex items-center gap-1">
-            <span class="font-bold text-white">
+            <span class="font-bold text-sm text-white">
               {{
                 new Intl.NumberFormat("fr-FR", {
                   style: "currency",

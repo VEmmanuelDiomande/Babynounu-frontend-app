@@ -58,7 +58,8 @@
                   'bg-gray-400': !isOnline,
                 }"
               ></span>
-              {{ isOnline ? "En ligne" : "Hors ligne" }}
+
+              {{ isOnline ? "En ligne" : arWriting.find((ins: any) => ins.id == Room.user.id) ? "Entrain d'ecrire..." :  "Hors ligne" }}
             </span>
           </div>
         </div>
@@ -137,6 +138,7 @@ import { useConversationStore } from "@/stores/conversationStore";
 import { useRoute, useRouter } from "vue-router";
 import { IonHeader } from "@ionic/vue";
 import { socketService } from "@/services/socket.services";
+import { array } from "zod";
 
 const props = defineProps({
   Room: {
@@ -150,6 +152,10 @@ const props = defineProps({
   activeConversation: {
     type: [String, Number],
     default: null,
+  },
+  arWriting: {
+    type: <any>[],
+    default: []
   },
 });
 
@@ -178,18 +184,18 @@ const checkOnlineStatus = () => {
   });
 
   // Écouter l'événement userOffline pour mettre à jour le statut
-  socketService.on("userOnlineStatus", ({ userId, isOnline }) => {
-    if (userId === props.Room?.id) {
-      if(isOnline){
+  socketService.on("userOnlineStatus", ({ userId, isOnline:_isOnline }) => {
+    
+      if(_isOnline){
         isOnline.value = true;
         return;
       }
       isOnline.value = false;
-    }
+    
   });
 
   // Demander le statut actuel
-  socketService.emit("userOnline", props.Room?.id);
+  socketService.emit("userOnline", props.Room?.user?.id);
 };
 
 // Gérer les erreurs de chargement d'image

@@ -65,9 +65,7 @@
               :actions="Logout" 
               title="Se déconnecter" 
             />
-            <RouterLink to="/auth/sign" v-if="!useUserStore().isLogged">
-              <AuthButton title="Se connecter" />
-            </RouterLink>
+           
           </div>
         </div>
       </div>

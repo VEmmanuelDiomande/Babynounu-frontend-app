@@ -2,7 +2,7 @@
   <ion-page class="min-h-screen bg-gray-50 font-love">
     <!-- Header avec bouton retour -->
     <ion-header class="bg-white shadow-sm">
-      <ion-toolbar class="px-4">
+      <div class="flex justify-between h-12 items-centerpx-4">
         <ion-buttons slot="start">
           <ion-button @click="router.back()" class="text-gray-800">
             <IcIcons name="RiArrowLeftLine" :size="24" />
@@ -11,7 +11,7 @@
         <ion-title class="text-lg font-bold text-gray-900"
           >Mission Acceptée</ion-title
         >
-      </ion-toolbar>
+      </div>
     </ion-header>
 
     <ion-content class="pb-20 font-love">

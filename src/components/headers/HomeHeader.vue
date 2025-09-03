@@ -1,10 +1,10 @@
 <template>
   <ion-header
-    class="non-fixed-header shadow-none border-b-[0px] w-full h-12 items-center flex font-love bg-white"
+    class=" shadow-none border-b-[0px] w-full items-center flex font-love bg-white"
   >
-    <ion-toolbar
+    <div
       color="white"
-      class="shadow-none bg-white border-b-[1px] flex gap-4 m-auto h-full items-center justify-center px-4"
+      class="shadow-none h-12 w-full bg-white border-b-[1px] flex gap-4 m-auto items-center justify-between px-4"
     >
       <MenuButtonHeader :isLogged="useUserStore().isLogged" />
 
@@ -30,7 +30,7 @@
           </div>
         </RouterLink>
       </ion-buttons>
-    </ion-toolbar>
+    </div>
   </ion-header>
 </template>
 

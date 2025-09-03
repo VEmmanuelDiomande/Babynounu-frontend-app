@@ -110,8 +110,22 @@ const { state: authState } = useAuthStore();
               Avis de cookies.
             </RouterLink>
           </div>
+
+          <div class="flex flex-col gap-4 mt-4">
+  <p class="text-sm text-gray-600 text-center">
+    Vous avez dèja un compte ?
+  </p>
+  <router-link 
+    to="/auth/sign-in"
+    class="text-primary hover:text-primary-dark text-center font-medium"
+  >
+    Connectez-vous
+  </router-link>
+</div>
         </template>
       </SignInLayout>
+
+  
 
     
     </IonContent>

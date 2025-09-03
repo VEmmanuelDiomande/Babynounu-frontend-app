@@ -14,7 +14,7 @@
       </ion-buttons>
 
       <ion-title class="text-ng font-bold text-zinc-800 font-love"> {{ title }} </ion-title>
-    </ion-toolbar>
+    h-12
   </ion-header>
 </template>
 

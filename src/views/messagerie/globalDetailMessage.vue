@@ -6,6 +6,7 @@
       :photo="dataChat?.photo"
       :activeConversation="activeConversation"
       class="sticky top-0 z-10"
+      :arWriting="typingUsers"
     />
 
     <!-- Main content area -->
@@ -41,20 +42,29 @@
       >
         <div class="flex flex-col gap-3">
           <!-- Groupement des messages par date -->
-          <template v-for="(group, groupIndex) in groupedMessages" :key="groupIndex">
+          <template
+            v-for="(group, groupIndex) in groupedMessages"
+            :key="groupIndex"
+          >
             <!-- Date separator -->
             <div class="flex justify-center my-3">
-              <div class="bg-gray-200/80 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm">
+              <div
+                class="bg-gray-200/80 text-gray-600 text-xs px-3 py-1 rounded-full shadow-sm"
+              >
                 {{ formatDateHeader(group.date) }}
               </div>
             </div>
 
             <!-- Messages for this date -->
-            <div v-for="message in group.messages" :key="message.id" class="message-container">
+            <div
+              v-for="message in group.messages"
+              :key="message.id"
+              class="message-container"
+            >
               <!-- Regular text message -->
-              <MessageBubble 
-                v-if="!message.isProposition" 
-                :message="message" 
+              <MessageBubble
+                v-if="!message.isProposition"
+                :message="message"
                 :is-current-user="isCurrentUser(message.sender.id)"
                 :format-time="formatTime"
               />
@@ -84,7 +94,7 @@
       </div>
 
       <!-- Typing indicator -->
-      <TypingIndicator 
+      <TypingIndicator
         v-if="typingUsers.length > 0"
         :typing-users="typingUsers"
       />
@@ -114,7 +124,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from "vue";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  computed,
+  defineAsyncComponent,
+} from "vue";
 import { format, isToday, isYesterday, isSameDay, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
@@ -128,12 +144,23 @@ import IcIcons from "@/components/icons/IcIcons.vue";
 import { SocketService } from "@/services/socket.services";
 import moment from "moment";
 import CardMissionsValidate from "./__partials/cardMissionsValidate.vue";
+import { useNotificationHook } from "@/hooks/notificationHooks/notification.hook";
 
 // Composants asynchrones pour améliorer les performances
-const MessageBubble = defineAsyncComponent(() => import('./__partials/MessageBubble.vue'));
-const ProposalCard = defineAsyncComponent(() => import('./__partials/ProposalCard.vue'));
-const TypingIndicator = defineAsyncComponent(() => import('./__partials/TypingIndicator.vue'));
-const MessageInputForm = defineAsyncComponent(() => import('./__partials/MessageInputForm.vue'));
+const MessageBubble = defineAsyncComponent(
+  () => import("./__partials/MessageBubble.vue")
+);
+const ProposalCard = defineAsyncComponent(
+  () => import("./__partials/ProposalCard.vue")
+);
+const TypingIndicator = defineAsyncComponent(
+  () => import("./__partials/TypingIndicator.vue")
+);
+const MessageInputForm = defineAsyncComponent(
+  () => import("./__partials/MessageInputForm.vue")
+);
+
+
 
 // Interfaces for type safety
 interface User {
@@ -195,23 +222,23 @@ const isStatus = ref<"Accepted" | "Refused" | "Pending">("Pending");
 // Computed properties
 const groupedMessages = computed(() => {
   const groups: MessageGroup[] = [];
-  
-  messages.value.forEach(message => {
-    const messageDate = new Date(message.createdAt).toISOString().split('T')[0];
-    
+
+  messages.value.forEach((message) => {
+    const messageDate = new Date(message.createdAt).toISOString().split("T")[0];
+
     // Chercher si un groupe avec cette date existe déjà
-    const existingGroup = groups.find(group => group.date === messageDate);
-    
+    const existingGroup = groups.find((group) => group.date === messageDate);
+
     if (existingGroup) {
       existingGroup.messages.push(message);
     } else {
       groups.push({
         date: messageDate,
-        messages: [message]
+        messages: [message],
       });
     }
   });
-  
+
   return groups;
 });
 
@@ -231,7 +258,7 @@ const joinRoom = () => {
  */
 const formatDateHeader = (dateString: string): string => {
   const date = parseISO(dateString);
-  
+
   if (isToday(date)) {
     return "Aujourd'hui";
   } else if (isYesterday(date)) {
@@ -412,7 +439,9 @@ const loadMessages = async () => {
       isStatus.value = props.dataChat.contract[0].message.proposalStatus;
     }
 
-    scrollToBottom();
+    setTimeout(() => {
+      scrollToBottom();
+    }, 500);
   } catch (error) {
     console.error("Failed to load messages:", error);
   }
@@ -433,22 +462,26 @@ const sendMessage = () => {
 
   newMessage.value = "";
 };
-
 /**
  * Sets up socket event listeners
  */
 const setupSocketListeners = () => {
   socketService.on("newMessage", (message: Message) => {
+    
     if (
       props.activeConversation &&
       message.room.id == props.activeConversation
     ) {
-      messages.value.push({
-        ...message,
-        expired: message.isProposition
-          ? formatExpiredTime(message.propositionExpired)
-          : undefined,
-      });
+      // Check if message already exists before adding
+      const messageExists = messages.value.some((msg) => msg.id === message.id);
+      if (!messageExists) {
+        messages.value.push({
+          ...message,
+          expired: message.isProposition
+            ? formatExpiredTime(message.propositionExpired)
+            : undefined,
+        });
+      }
 
       scrollToBottom();
 
@@ -536,24 +569,26 @@ onMounted(async () => {
   setupSocketListeners();
 
   // Setup typing listeners
-  socketService.on("userTyping", (data: { userId: number; userName: string }) => {
-    if (data.userId !== currentUser.value.id) {
-      const existingUser = typingUsers.value.find(
-        (user) => user.id === data.userId
-      );
-      if (!existingUser) {
-        typingUsers.value.push({
-          id: data.userId,
-          name: data.userName,
-        });
+  socketService.on(
+    "userTyping",
+    (data: { userId: number; userName: string }) => {
+      if (data.userId !== currentUser.value.id) {
+        const existingUser = typingUsers.value.find(
+          (user) => user.id === data.userId
+        );
+        if (!existingUser) {
+          typingUsers.value.push({
+            id: data.userId,
+            name: data.userName,
+          });
+        }
       }
     }
-  });
+  );
 
-  socketService.on("userStoppedTyping", (userId: number) => {
-    typingUsers.value = typingUsers.value.filter(
-      (user) => user.id !== userId
-    );
+  socketService.on("userStoppedTyping", (userId: any) => {
+    console.log(userId, typingUsers.value)
+    typingUsers.value = typingUsers.value.filter((user) => user.id !== userId?.userId);
   });
 
   // Mark messages as read when conversation is opened

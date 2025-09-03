@@ -1,5 +1,6 @@
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { SettingServices } from "@/services/setting.services";
+import { getUserId } from "@/utils/helpers.utils";
 import { StorageUtils } from "@/utils/store.utils";
 import { reactive } from "vue";
 
@@ -13,8 +14,9 @@ export const useConversationHook = () => {
     router: any
   ) => {
     if (listSetting) {
+      const userId = await getUserId();
       const data = await listSetting(
-        `${URL_API_ROUTE.CONVERSATION_CREATE}?nounouId=${nounouId}&parentId=${parentId}`
+        `${URL_API_ROUTE.CONVERSATION_CREATE}?nounouId=${nounouId}&parentId=${parentId}&userId=${userId}`
       );
 
       if (data) {

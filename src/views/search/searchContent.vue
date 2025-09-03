@@ -1,13 +1,13 @@
 <template>
-  <section class="h-full overflow-auto" v-on:scroll="onScroll($event)">
+  <section class="h-full overflow-auto" v-on:scroll="onScroll($event)" v-if="filteredData">
     <template v-if="isLoading || isLoading_search">
       <PageLoader classCustom="h-[100vh] fixed inset-0" />
     </template>
-    <template v-else-if="isError">
+    <template v-if="isError">
       <E404Error />
     </template>
     <EmptyError
-      v-else-if="filteredData && filteredData.length === 0"
+      v-if="useNounuStore().searchValueData.length == 0 && !isLoading && !isLoading_search && !isError && filteredData.length == 0"
       :nameIcons="emptyIcon"
       :heading="emptyHeading"
       :subHeading="emptySubHeading"
@@ -58,6 +58,7 @@ import EmptyError from "@/components/errors/empty.error.vue";
 import CardAccessHome from "../home/partials/cardAccessHome.vue";
 import CardParentHome from "../home/partials/cardParentHome.vue";
 import { useScrollStore } from "@/stores/scrollStore";
+import { useNounuStore } from "@/stores/nounu.store";
 
 const { onScroll } = useScrollStore();
 

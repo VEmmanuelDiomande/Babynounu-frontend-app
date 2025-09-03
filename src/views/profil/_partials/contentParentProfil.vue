@@ -13,11 +13,8 @@
     />
 
     <!-- En-tête pour les visiteurs -->
-    <ion-header
-      class="shadow-none font-love"
-      v-if="!isOwnerProfile"
-    >
-      <ion-toolbar
+    <ion-header class="shadow-none font-love" v-if="!isOwnerProfile">
+      <div
         color="white"
         class="border-b-[1px] shadow-none w-11/12 m-auto flex justify-between"
       >
@@ -31,7 +28,7 @@
             {{ PARENT?.fullname }}
           </div>
         </div>
-      </ion-toolbar>
+      </div>
     </ion-header>
 
     <!-- Contenu principal -->
@@ -61,19 +58,19 @@
 
             <!-- Points disponibles (visible uniquement pour le propriétaire) -->
             <div v-if="isOwnerProfile" class="flex items-center gap-2">
-              <div class="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-lg">
+              <div
+                class="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-lg"
+              >
                 <IcIcons name="RiCoinsFill" :size="16" class="text-primary" />
                 <span class="text-sm font-semibold text-primary">
                   {{ PARENT?.points || 0 }} Points disponibles
                 </span>
               </div>
             </div>
-
-       
           </div>
-          <Avatar 
-            size="14" 
-            :src="PARENT.image?.originalUrl" 
+          <Avatar
+            size="14"
+            :src="PARENT.image?.originalUrl"
             shape="circle"
             :alt="`Photo de ${PARENT.fullname}`"
           />
@@ -84,26 +81,28 @@
       <section v-if="isOwnerProfile" class="w-11/12 mx-auto my-2 hidden">
         <div class="grid grid-cols-3 gap-3">
           <div class="bg-primary/10 rounded-lg p-3 flex flex-col items-center">
-            <span class="text-2xl font-bold text-primary">{{ statsData.jobsPosted }}</span>
+            <span class="text-2xl font-bold text-primary">{{
+              statsData.jobsPosted
+            }}</span>
             <span class="text-xs text-gray-600">Offres publiées</span>
           </div>
           <div class="bg-green-100 rounded-lg p-3 flex flex-col items-center">
-            <span class="text-2xl font-bold text-green-600">{{ statsData.applicationsReceived }}</span>
+            <span class="text-2xl font-bold text-green-600">{{
+              statsData.applicationsReceived
+            }}</span>
             <span class="text-xs text-gray-600">Candidatures</span>
           </div>
           <div class="bg-blue-100 rounded-lg p-3 flex flex-col items-center">
-            <span class="text-2xl font-bold text-blue-600">{{ statsData.completedJobs }}</span>
+            <span class="text-2xl font-bold text-blue-600">{{
+              statsData.completedJobs
+            }}</span>
             <span class="text-xs text-gray-600">Missions terminées</span>
           </div>
         </div>
       </section>
 
       <!-- Boutons d'action -->
-      <CntBtnProfil
-        :Data="PARENT"
-        :isOwner="isOwnerProfile"
-        type="parent"
-      />
+      <CntBtnProfil :Data="PARENT" :isOwner="isOwnerProfile" type="parent" />
 
       <!-- Menu de navigation -->
       <CntMenuProfil
@@ -118,7 +117,7 @@
         class="flex flex-col w-full m-auto pt-4 pb-10"
         :class="{
           'h-[800px]': true,
-          'overflow-auto': !isScrollEnabled
+          'overflow-auto': !isScrollEnabled,
         }"
       >
         <!-- Informations -->
@@ -142,36 +141,53 @@
         >
           <div class="bg-white rounded-lg shadow-sm p-4">
             <h3 class="text-lg font-bold mb-4">Statistiques détaillées</h3>
-            
+
             <!-- Graphique d'activité -->
             <div class="mb-6">
               <h4 class="text-md font-semibold mb-2">Activité mensuelle</h4>
-              <div class="h-40 bg-gray-50 rounded-lg flex items-end justify-between p-2">
-                <div v-for="(month, index) in statsData.monthlyActivity" :key="index" 
-                     class="w-8 bg-primary hover:bg-primary/80 rounded-t-sm transition-all duration-200"
-                     :style="`height: ${month.value}%; min-height: 4px;`">
-                  <div class="text-xs text-center mt-2 transform -rotate-45 origin-left">{{ month.label }}</div>
+              <div
+                class="h-40 bg-gray-50 rounded-lg flex items-end justify-between p-2"
+              >
+                <div
+                  v-for="(month, index) in statsData.monthlyActivity"
+                  :key="index"
+                  class="w-8 bg-primary hover:bg-primary/80 rounded-t-sm transition-all duration-200"
+                  :style="`height: ${month.value}%; min-height: 4px;`"
+                >
+                  <div
+                    class="text-xs text-center mt-2 transform -rotate-45 origin-left"
+                  >
+                    {{ month.label }}
+                  </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- Statistiques détaillées -->
             <div class="grid grid-cols-2 gap-4">
               <div class="border rounded-lg p-3">
                 <div class="text-sm text-gray-500">Taux de réponse</div>
-                <div class="text-xl font-bold">{{ statsData.responseRate }}</div>
+                <div class="text-xl font-bold">
+                  {{ statsData.responseRate }}
+                </div>
               </div>
               <div class="border rounded-lg p-3">
                 <div class="text-sm text-gray-500">Temps de réponse</div>
-                <div class="text-xl font-bold">{{ statsData.responseTime }}</div>
+                <div class="text-xl font-bold">
+                  {{ statsData.responseTime }}
+                </div>
               </div>
               <div class="border rounded-lg p-3">
                 <div class="text-sm text-gray-500">Nounous engagées</div>
-                <div class="text-xl font-bold">{{ statsData.hiredNounous }}</div>
+                <div class="text-xl font-bold">
+                  {{ statsData.hiredNounous }}
+                </div>
               </div>
               <div class="border rounded-lg p-3">
                 <div class="text-sm text-gray-500">Satisfaction</div>
-                <div class="text-xl font-bold">{{ statsData.satisfactionRate }}</div>
+                <div class="text-xl font-bold">
+                  {{ statsData.satisfactionRate }}
+                </div>
               </div>
             </div>
           </div>
@@ -209,7 +225,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive } from "vue";
-import { IonContent, IonPage, IonHeader, IonToolbar, IonButtons } from "@ionic/vue";
+import {
+  IonContent,
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+} from "@ionic/vue";
 import { useRoute, useRouter } from "vue-router";
 import IcIcons from "@/components/icons/IcIcons.vue";
 import Avatar from "@/components/avatars/avatar.vue";
@@ -237,15 +259,15 @@ interface StatsData {
   responseTime: string;
   hiredNounous: number;
   satisfactionRate: string;
-  monthlyActivity: Array<{label: string, value: number}>;
+  monthlyActivity: Array<{ label: string; value: number }>;
 }
 
 // Props avec typage
 const props = defineProps({
   PARENT: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 
 // Stores et hooks
@@ -267,18 +289,18 @@ const statsData = reactive<StatsData>({
   jobsPosted: 8,
   applicationsReceived: 24,
   completedJobs: 5,
-  responseRate: '92%',
-  responseTime: '3h',
+  responseRate: "92%",
+  responseTime: "3h",
   hiredNounous: 6,
-  satisfactionRate: '4.7/5',
+  satisfactionRate: "4.7/5",
   monthlyActivity: [
-    { label: 'Jan', value: 30 },
-    { label: 'Fév', value: 45 },
-    { label: 'Mar', value: 60 },
-    { label: 'Avr', value: 40 },
-    { label: 'Mai', value: 75 },
-    { label: 'Juin', value: 65 }
-  ]
+    { label: "Jan", value: 30 },
+    { label: "Fév", value: 45 },
+    { label: "Mar", value: 60 },
+    { label: "Avr", value: 40 },
+    { label: "Mai", value: 75 },
+    { label: "Juin", value: 65 },
+  ],
 });
 
 // Computed properties
@@ -294,12 +316,12 @@ const isOwner = computed(() => {
 // Éléments du menu avec l'ajout de l'onglet Statistiques
 const menuItems = computed(() => {
   const baseItems = [1, 3, 4, 6]; // Onglets de base
-  
+
   // Ajouter l'onglet Statistiques (2) si l'utilisateur est le propriétaire
   if (isOwnerProfile.value) {
     return [1, 3, 4, 6];
   }
-  
+
   return baseItems;
 });
 
@@ -321,7 +343,7 @@ const loadStatistics = async (parentId: string) => {
     // Exemple de chargement de statistiques (à remplacer par votre appel API réel)
     // const response = await statisticsService.getParentStats(parentId);
     // Object.assign(statsData, response.data);
-    
+
     // Pour l'instant, nous utilisons des données simulées
     console.log(`Chargement des statistiques pour le parent ID: ${parentId}`);
   } catch (error) {
@@ -337,10 +359,10 @@ onMounted(async () => {
   // Récupérer l'ID du profil depuis le stockage
   const storedProfil = await StorageUtils().getStore("nProfil_1_Id");
   profileId.value = storedProfil?.value || null;
-  
+
   // Définir le message de bienvenue
   Greeting.value = GetGreetingUtils();
-  
+
   // Charger les statistiques si l'utilisateur est le propriétaire
   if (isOwnerProfile.value && profileId.value) {
     loadStatistics(profileId.value);
@@ -359,11 +381,13 @@ onMounted(async () => {
 }
 
 /* Animation pour les cartes de statistiques */
-.grid-cols-3 > div, .grid-cols-2 > div {
+.grid-cols-3 > div,
+.grid-cols-2 > div {
   transition: transform 0.2s ease;
 }
 
-.grid-cols-3 > div:hover, .grid-cols-2 > div:hover {
+.grid-cols-3 > div:hover,
+.grid-cols-2 > div:hover {
   transform: translateY(-2px);
 }
 
@@ -382,8 +406,12 @@ onMounted(async () => {
 
 /* Animation pour le graphique */
 @keyframes growUp {
-  from { height: 0%; }
-  to { height: var(--target-height); }
+  from {
+    height: 0%;
+  }
+  to {
+    height: var(--target-height);
+  }
 }
 
 .bg-primary.rounded-t-sm {

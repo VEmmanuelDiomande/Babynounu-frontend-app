@@ -1,9 +1,9 @@
 <template>
     <ion-page>
       <ion-header>
-        <ion-toolbar>
+        <div>
           <ion-title>Liste des Contrats</ion-title>
-        </ion-toolbar>
+        </div>
       </ion-header>
   
       <ion-content class="bg-gray-50">

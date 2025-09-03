@@ -1,7 +1,7 @@
 <template>
   <ion-page class="font-love">
-    <ion-header>
-      <ion-toolbar class="bg-indigo-600 text">
+    <ion-header class="">
+      <div class="flex justify-between h-12 items-center bg-white text">
         <div class="flex px-4">
           <IcIcons
             @click="$router.go(-1)"
@@ -13,7 +13,7 @@
             >Mon Abonnement</ion-title
           >
         </div>
-      </ion-toolbar>
+      </div>
     </ion-header>
 
     <ion-content class="bg-gray-50 font-love">
@@ -66,13 +66,14 @@
               <div>
                 <p class="text-indigo-100 text-sm">Prochain renouvellement</p>
                 <p class="font-medium">
-                  {{ formatDate(subscriptionData?.paiement?.createdAt) }}
+                  <!-- {{ formatDate(subscriptionData?.paiement?.createdAt) }} -->
+                    A vie
                 </p>
               </div>
               <div class="text-right">
                 <p class="text-indigo-100 text-sm">Prix</p>
                 <p class="font-medium">
-                  {{ subscriptionData?.paiement?.amount + ' F/Mois' || "5.000 F / mois" }}
+                  {{ subscriptionData?.paiement?.amount + ' XOF' || "5.000 F / mois" }}
                 </p>
               </div>
             </div>
