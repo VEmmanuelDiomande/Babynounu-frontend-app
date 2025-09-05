@@ -1,14 +1,14 @@
 <template>
-  <ion-page>
+  <IonPage>
     <!-- Header -->
     <HomeHeader title="Baby Nounu" />
 
     <!-- Content -->
     <IonContent class="w-full ion-padding">
       <!-- Refresher -->
-      <ion-refresher slot="fixed" @ionRefresh="_handleRefresh">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
+      <IonRefresher slot="fixed" @ionRefresh="_handleRefresh">
+        <IonRefresherContent />
+      </IonRefresher>
 
       <PageLoader
         classCustom="h-[100vh] fixed inset-0"
@@ -32,27 +32,7 @@
           </div>
         </div>
 
-        <!-- Indicateur de chargement pour "charger plus" -->
-        <div v-if="isLoadingMore" class="col-span-2 flex justify-center my-4">
-          <SpinnerLoader size="medium" />
-        </div>
-
-        <!-- Pagination avec un seul bouton -->
-        <div class="flex flex-col items-center font-love my-4 gap-2">
-          <div
-            v-if="dataNounus?.pagination?.hasNextPage"
-            fill="outline"
-            size="default"
-            class="max-w-xs ring-2 ring-primary text-primary p-2 rounded-xl"
-            :disabled="isLoadingMore"
-            @click="loadMoreData()"
-          >
-            <span v-if="!isLoadingMore">Voir plus</span>
-            <SpinnerLoader v-else size="small" color="white" />
-          </div>
-        </div>
-
-        <!-- Bloc de pagination -->
+        <!-- Pagination principale -->
         <div
           v-if="
             dataNounus?.pagination &&
@@ -80,7 +60,7 @@
         <E404Error />
       </template>
     </IonContent>
-  </ion-page>
+  </IonPage>
 </template>
 
 <script lang="ts" setup>
@@ -89,10 +69,8 @@ import {
   IonPage,
   IonRefresher,
   IonRefresherContent,
-  IonList,
-  IonButton,
 } from "@ionic/vue";
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useQuery } from "@tanstack/vue-query";
 
 import HomeHeader from "@/components/headers/HomeHeader.vue";
@@ -102,7 +80,6 @@ import PageLoader from "@/components/loaders/pageLoader.vue";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { SettingServices } from "@/services/setting.services";
 import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
-import { useRefetchHook } from "@/hooks/refetchHooks/refetch.hook";
 import { StorageUtils } from "@/utils/store.utils";
 import EmptyError from "@/components/errors/empty.error.vue";
 import E404Error from "@/components/errors/e404.error.vue";
@@ -133,7 +110,6 @@ const {
   data: dataNounus,
   isError: isErrorNounus,
   isLoading: LoadingNounus,
-  error: errorNounus,
   refetch,
 } = useQuery({
   queryKey: ["ListNounus", currentPage, pageSize],
@@ -167,15 +143,16 @@ onMounted(async () => {
   }
 });
 
-const { handleRefresh } = useRefetchHook();
-
 // Gérer le rafraîchissement complet (réinitialiser la pagination)
 const _handleRefresh = async (event: any) => {
   isRefreshing.value = true;
   currentPage.value = 1; // Réinitialiser à la première page
-  await refetch();
-  isRefreshing.value = false;
-  event.target.complete();
+  try {
+    await refetch();
+  } finally {
+    isRefreshing.value = false;
+    event.detail.complete();
+  }
 };
 
 // Fonction pour charger plus de données
@@ -184,33 +161,10 @@ const loadMoreData = async () => {
 
   isLoadingMore.value = true;
   currentPage.value += 1;
-  await refetch();
-};
-
-// Fonction pour générer les numéros de page à afficher
-const getPageNumbers = () => {
-  if (!dataNounus?.pagination) return [];
-
-  const { currentPage: current, totalPages } = dataNounus.pagination;
-  const maxPagesToShow = 5;
-
-  if (totalPages <= maxPagesToShow) {
-    // Afficher toutes les pages si le nombre total est inférieur à maxPagesToShow
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  try {
+    await refetch();
+  } finally {
+    isLoadingMore.value = false;
   }
-
-  // Calculer les pages à afficher
-  let startPage = Math.max(current - Math.floor(maxPagesToShow / 2), 1);
-  let endPage = startPage + maxPagesToShow - 1;
-
-  if (endPage > totalPages) {
-    endPage = totalPages;
-    startPage = Math.max(endPage - maxPagesToShow + 1, 1);
-  }
-
-  return Array.from(
-    { length: endPage - startPage + 1 },
-    (_, i) => startPage + i
-  );
 };
 </script>

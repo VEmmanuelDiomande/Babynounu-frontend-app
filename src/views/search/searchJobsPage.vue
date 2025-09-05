@@ -19,7 +19,12 @@
     </HeaderMenuLayout>
 
     <IonContent :scroll-events="true" @ionScroll="onScrollJobs($event)">
-      <template v-if="LoadingJobs && currentPage === 1">
+      <!-- Refresher -->
+      <ion-refresher slot="fixed" @ionRefresh="handleRefreshLocal">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+
+      <template v-if="(LoadingJobs || isFetching) && currentPage === 1">
         <PageLoader classCustom="h-[100vh] fixed inset-0" />
       </template>
       <template v-else-if="ISErrorJobs">
@@ -49,12 +54,11 @@
             fill="outline"
             size="default"
             class="max-w-xs ring-2 ring-primary text-primary p-2 rounded-xl cursor-pointer"
-            :class="{ 'opacity-50': isLoadingMore }"
-            :disabled="LoadingJobs || isLoadingMore"
+            :class="{ 'opacity-50 pointer-events-none': isFetching }"
             @click="loadMore"
           >
-            <span v-if="!isLoadingMore" class="font-love">Voir plus</span>
-            <span v-else class="font-love">Chargement...</span>
+            <span v-if="!(isLoadingMore && isFetching)" class="font-love">Voir plus</span>
+            <SpinnerLoader v-else size="small" color="white" />
           </div>
         </div>
       </template>
@@ -65,7 +69,8 @@
 <script lang="ts" setup>
 import { useSearchHook } from "@/hooks/searchHooks/search.hook";
 import HeaderMenuLayout from "@/layouts/HeaderMenuLayout.vue";
-import { IonContent, IonPage, IonSpinner } from "@ionic/vue";
+import { IonContent, IonPage, IonSpinner, IonRefresher, IonRefresherContent } from "@ionic/vue";
+import type { RefresherCustomEvent } from "@ionic/vue";
 import CardAccessHome from "../home/partials/cardAccessHome.vue";
 import { useJobHook } from "@/hooks/jobHooks/job.hooks";
 import { computed, onMounted, ref, watch } from "vue";
@@ -80,6 +85,7 @@ import CardJob from "../job/_partiels/cardJob.vue";
 import EmptyError from "@/components/errors/empty.error.vue";
 import E404Error from "@/components/errors/e404.error.vue";
 import { useScrollStore } from "@/stores/scrollStore";
+import SpinnerLoader from "@/components/loaders/spinnerLoader.vue";
 
 const { state } = useSearchHook();
 const { state: stateJob } = useJobHook();
@@ -135,16 +141,17 @@ const {
   error: ErrorJobs,
   isLoading: LoadingJobs,
   isError: ISErrorJobs,
+  isFetching,
   refetch,
-} = useQuery({
+} = useQuery<JobResponse, Error>({
   queryKey: ["ListJobs", currentPage],
   queryFn: ListJobs,
 });
 
 // Observer les changements de données et mettre à jour accumulatedJobs
-watch([DataJobs, currentPage], ([newData, newPage]) => {
-  if (newData && newData.data) {
-    if (newPage === 1) {
+watch(DataJobs, (newData) => {
+  if (newData && Array.isArray(newData.data)) {
+    if (currentPage.value === 1) {
       accumulatedJobs.value = [...newData.data];
     } else {
       const uniqueIds = new Set(accumulatedJobs.value.map((item) => item.id));
@@ -152,11 +159,14 @@ watch([DataJobs, currentPage], ([newData, newPage]) => {
       accumulatedJobs.value = [...accumulatedJobs.value, ...newItems];
     }
     isLoadingMore.value = false;
+  } else if (currentPage.value === 1) {
+    accumulatedJobs.value = [];
   }
 });
 
 // Fonction pour charger plus de données
 const loadMore = () => {
+  if (isFetching.value) return;
   if (
     DataJobs.value?.pagination?.hasNextPage &&
     !LoadingJobs.value &&
@@ -168,20 +178,20 @@ const loadMore = () => {
 };
 
 // Délai avant actualisation des résultats de recherche
-let searchTimeout: NodeJS.Timeout;
+let searchTimeout: NodeJS.Timeout | null = null;
 
 watch(
   () => useJobStore().state.searchValueData,
   (newSearchValue) => {
     if (searchTimeout) clearTimeout(searchTimeout); // Annuler l'ancien délai
-    searchTimeout = setTimeout(() => {
+    searchTimeout = setTimeout(async () => {
       currentPage.value = 1; // Réinitialiser la page lors d'une nouvelle recherche
       accumulatedJobs.value = []; // Vider les résultats accumulés
-      refetch(); // Relancer la recherche
-
-      const uniqueIds = new Set(accumulatedJobs.value.map((item) => item.id));
-      const newItems = DataJobs.value.data.filter((item: { id: number }) => !uniqueIds.has(item.id));
-      accumulatedJobs.value = [...accumulatedJobs.value, ...newItems];
+      try {
+        await refetch(); // Relancer la recherche (watch(DataJobs) mettra à jour accumulatedJobs)
+      } catch (error) {
+        console.error("Erreur lors de la recherche:", error);
+      }
     }, 500); // Délai de 500ms avant de lancer la recherche
   }
 );
@@ -191,14 +201,33 @@ const searchJob = (searchValue: string) => {
   useJobStore().state.searchValueData = searchValue;
 };
 
+// Pull-to-refresh
+const handleRefreshLocal = async (event: RefresherCustomEvent) => {
+  currentPage.value = 1;
+  accumulatedJobs.value = [];
+  try {
+    const result = await refetch();
+    const refreshedList = result?.data?.data ?? DataJobs.value?.data ?? [];
+    accumulatedJobs.value = Array.isArray(refreshedList) ? [...refreshedList] : [];
+  } catch (error) {
+    console.error("Erreur lors du rafraîchissement:", error);
+  } finally {
+    event.detail.complete();
+  }
+};
+
 // Observer les changements de page pour charger plus de données
-watch(currentPage, () => {
-  refetch();
+watch(currentPage, async () => {
+  try {
+    await refetch();
+  } catch (error) {
+    console.error("Erreur lors du chargement de la page:", error);
+  }
 });
 
 onMounted(() => {
   // Initialiser les données au montage
-  if (DataJobs.value) {
+  if (DataJobs.value && Array.isArray(DataJobs.value.data)) {
     accumulatedJobs.value = DataJobs.value.data || [];
   }
 });

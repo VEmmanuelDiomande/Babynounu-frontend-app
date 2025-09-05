@@ -12,7 +12,7 @@ import { apiMediaRoutes } from "./media.request";
 import { apiContractRoutes } from "./contract.request";
 
 // Configuration de l'environnement
-const MODE_APP_ENV = "dev"; // "prod" ou "dev"
+const MODE_APP_ENV = "prod"; // "prod" ou "dev"
 export const MODE_APP: string = MODE_APP_ENV;
 
 // Fonction pour déterminer la valeur en fonction du mode

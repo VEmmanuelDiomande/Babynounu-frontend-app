@@ -30,11 +30,11 @@
               {{ tab.name }}
             </p>
             <NotificationBadge
-              v-if="tab.tab === 'tab4' && hasNotifications" 
+              v-if="tab.link === '/notifications' && hasNotifications" 
               :count="notificationCount" 
             />
             <NotificationBadge 
-              v-if="tab.tab === 'tab3' && hasUnreadMessages" 
+              v-if="tab.link === '/chat' && hasUnreadMessages" 
               :count="unreadMessagesCount" 
             />
           </div>
@@ -94,7 +94,7 @@ onActivated(initializeData);
 
 // Méthode pour mettre à jour les vues de notification
 const updatePage = async (tab: TabItem) => {
-  if (tab.tab === "tab4") {
+  if (tab.link === "/notifications") {
     const userId = await StorageUtils().getStore("nUser_Id");
     new SocketService().emit("updateViewByUserId", {
       userId: userId.value,
@@ -110,63 +110,32 @@ const unreadMessagesCount = computed(() => notificationStore.state.countMessage?
 const hasUnreadMessages = computed(() => unreadMessagesCount.value > 0);
 
 // Tabs dynamiques basées sur le type de page
-const { state } = useTabHook();
+const { state, configureNounuTabs, configureParentTabs } = useTabHook();
 const tabs = computed(() => {
-  const menuTabs = 
-  nType_Profil.value == "parent"
-    ? [...state.menuTabs] // Copie pour éviter la mutation directe
-    : [...state.menuJobTabs] // Copie pour éviter la mutation directe
-  
   const userStore = useUserStore();
-  
-  // Configuration des onglets en fonction du type de page
-  if(!nType_Profil.value ){
-    if (userStore.pageType === "/home/nounus") {
-    configureNounusTab(menuTabs);
-  } else {
-    configureJobsTab(menuTabs);
-  }
-  }
-  
+  let menuTabs: TabItem[] = [];
 
-  // Configuration des onglets en fonction du type de profil
-  if (nType_Profil.value === "parent") {
-    configureParentTab(menuTabs);
-  } else if (nType_Profil.value === "nounu") {
-    configureNounuTab(menuTabs);
+  if (nType_Profil.value === "nounu") {
+    // Utilisateur nounu
+    menuTabs = [...state.menuTabs];
+    configureNounuTabs(menuTabs);
+  } else if (nType_Profil.value === "parent") {
+    // Utilisateur parent (cherche des jobs)
+    menuTabs = [...state.menuJobTabs];
+    configureParentTabs(menuTabs);
+  } else {
+    // Fallback basé sur la dernière page visitée
+    if (userStore.pageType === "/home/nounus") {
+      menuTabs = [...state.menuTabs];
+      configureNounuTabs(menuTabs);
+    } else {
+      menuTabs = [...state.menuJobTabs];
+      configureParentTabs(menuTabs);
+    }
   }
-  
+
   return menuTabs;
 });
-
-// Fonctions de configuration des onglets
-const configureNounusTab = (tabs: TabItem[]) => {
-  tabs[0].link = "/home/nounus";
-  tabs[0].tab = "tab1";
-  tabs[1].link = "/search/nounus";
-  tabs[1].tab = "tab2";
-};
-
-const configureJobsTab = (tabs: TabItem[]) => {
-  tabs[0].link = "/home/jobs";
-  tabs[0].tab = "tab-jobs-1";
-  tabs[1].link = "/search/jobs";
-  tabs[1].tab = "tab-jobs-2";
-};
-
-const configureParentTab = (tabs: TabItem[]) => {
-  const lastIndex = tabs.length - 1;
-  if (lastIndex >= 0) {
-    tabs[lastIndex].link = `/profil/parent`;
-  }
-};
-
-const configureNounuTab = (tabs: TabItem[]) => {
-  // Créer une nouvelle copie sans l'élément à l'index 2 si nécessaire
-  if (tabs.length === 5) {
-    tabs.splice(2, 1);
-  }
-};
 
 // Fonctions pour les icônes
 const getIconName = (tab: TabItem): string => {
