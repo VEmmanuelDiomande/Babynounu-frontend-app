@@ -14,6 +14,7 @@
     >
       <!-- Slide 1 -->
       <swiper-slide>
+        <!-- changement d'image  -->
         <CardSlider
           heading="Babysitters professionnels"
           subHeading="Touves des Babysitters professionnels près de chez vous."
@@ -23,9 +24,10 @@
 
       <!-- Slide 2 -->
       <swiper-slide>
+        <!-- changement d'image  -->
         <CardSlider
           heading="Proposition d'offre et discutions"
-          subHeading="Faites des propositions d'offre et discutez avec les nounus"
+          subHeading="Faites des propositions d'offre et discutez avec les nounous"
           img="/images/sliders/dlx_babysitter_2.png"
         />
       </swiper-slide>
@@ -34,7 +36,7 @@
       <swiper-slide>
         <CardSlider
           heading="Profils ideals"
-          subHeading="Des profils adapter au besoin de vos enfants"
+          subHeading="Des profils adaptés aux besoins de vos enfants."
           img="/images/sliders/dlx_babysitter_3.svg"
         />
       </swiper-slide>
@@ -80,7 +82,7 @@ import { IonContent, IonFooter, IonPage } from "@ionic/vue";
   transition: transform 0.8s, background-color 0.8s;
 }
 .custom-pagination .swiper-pagination-bullet-active {
-  background-color: #55c4bd; /* Couleur active */
+  background-color: #f47033; /* Couleur active */
   width: 34px !important; /* Largeur élargie */
   border-radius: 12px; /* Ajustement pour une forme plus elliptique */
   transform: scale(1.2); /* Effet de zoom */
