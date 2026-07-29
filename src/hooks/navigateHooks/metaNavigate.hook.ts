@@ -1,19 +1,15 @@
 import { META } from "@/types/navigation.type";
 
-const doc:any = document
-
 export const changeMetaTags = (meta: META) => {
     document.title = `${meta.title}`;
     
-    doc?.querySelector('meta[name="og:title"]')
-       .setAttribute('content', meta['og:title']);
-    
-       doc?.querySelector('meta[name="description"]')
-       .setAttribute('content', meta.description);
-    
-       doc?.querySelector('meta[name="og:description"]')
-       .setAttribute('content', meta['og:description']);
-    
-       doc?.querySelector('meta[name="keywords"]')
-       .setAttribute('content', meta.keywords);
+    const setMeta = (selector: string, content: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute('content', content);
+    };
+
+    setMeta('meta[name="og:title"]', meta['og:title']);
+    setMeta('meta[name="description"]', meta.description);
+    setMeta('meta[name="og:description"]', meta['og:description']);
+    setMeta('meta[name="keywords"]', meta.keywords);
   };

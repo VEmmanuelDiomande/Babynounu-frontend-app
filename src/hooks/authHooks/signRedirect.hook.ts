@@ -7,7 +7,6 @@ export const useSignRedirectHook = () => {
   const GlobalRedirect = (Router:any, RouteName:any) => {
      Router?.push({name: RouteName})
      const closeModalToRedirectAuthModal = document.querySelector("#closeModalToRedirectAuthModal") as HTMLElement;
-     console.log(closeModalToRedirectAuthModal);
      if (closeModalToRedirectAuthModal) {
        closeModalToRedirectAuthModal.click();
      }

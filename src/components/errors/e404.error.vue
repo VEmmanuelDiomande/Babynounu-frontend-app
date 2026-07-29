@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import IcIcons from '../icons/IcIcons.vue';
-defineProps(["nameIcons", "heading", "subHeading"]);
+withDefaults(
+  defineProps<{
+    title?: string;
+    message?: string;
+  }>(),
+  {
+    title: 'Contenu introuvable',
+    message: "L'element demande n'est pas disponible.",
+  }
+);
 </script>
 
 <template>
-  <div class="max-h-screen fixed inset-0 h-full flex flex-col items-center justify-center font-love w-10/12 m-auto">
-    <IcIcons :name="'RiErrorWarningLine'" :size="100" class="text-primary" />
-    <h1 class="text-xl font-anton "> Erreur or probleme de connexion </h1>
-    <p class="text-center text-sm">{{"Une erreur est survenue lors du chargement de cette page. Veuillez réessayer plus tard.." }} </p>
+  <div class="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
+    <i class="ri ri-search-line mb-4 text-6xl text-gray-300" aria-hidden="true"></i>
+    <h2 class="font-anton text-2xl text-gray-900">{{ title }}</h2>
+    <p class="mt-2 font-love text-sm text-gray-500">{{ message }}</p>
   </div>
 </template>
-
-<style scoped>
-</style>

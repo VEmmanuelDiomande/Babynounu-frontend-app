@@ -18,8 +18,8 @@ export const useProfilParentHook = () => {
   const Greeting = ref("");
 
   const Experiences = ref([
-    { name: "Contrats", count: 0, color: "bg-primary", icon: "RiServiceFill" },
-    { name: "Visites", count: 0, color: "bg-secondary", icon: "RiEye2Fill" },
+    { name: "Contrats", count: 0, color: "bg-primary", icon: "briefcase-line" },
+    { name: "Visites", count: 0, color: "bg-secondary", icon: "eye-line" },
   ]);
   
   // Cards Information
@@ -82,6 +82,16 @@ export const useProfilParentHook = () => {
           data: props.PARENT?.preferences?.aide_menagere,
           type: "aide_menagere",
           title: "Infos sur les dames de ménage",
+        },
+        {
+          data: props.PARENT?.preferences?.taches,
+          type: "taches",
+          title: "Tâches spécifiques",
+        },
+        {
+          data: props.PARENT?.preferences?.criteres_selections,
+          type: "criteres_selections",
+          title: "Critères de sélection",
         },
       ]
   };

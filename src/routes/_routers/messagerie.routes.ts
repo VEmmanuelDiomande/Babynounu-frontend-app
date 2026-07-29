@@ -1,50 +1,25 @@
-// import BasicPage from "@/views/BasicPage.vue";
-import chatMessage from "@/views/messagerie/messageriePage.vue";
-import chatMessageDetail from "@/views/messagerie/messagerieDetailPage.vue";
-import TabsPage from "@/views/TabsPage.vue";
-import BasicPage from "@/views/BasicPage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const ChatRoutes = {
-  path: "/chat",
-  redirect: "/chat",
-  component: TabsPage,
-
+export const ChatRoutes: RouteRecordRaw = {
+  path: '/chats',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Messagerie`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "CHAT_MESSAGE",
-      component: chatMessage,
+      path: '',
+      name: 'CHAT_MESSAGE',
+      component: () => import('@/features/nounus/pages/ChatListPage.vue'),
     },
   ],
 };
 
-export const _ChatRoutes = {
-  path: "/chats",
-  redirect: "/chats",
-  component: BasicPage,
-
+export const _ChatRoutes: RouteRecordRaw = {
+  path: '/chats/:id',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "detail/:id",
-
-      meta: {
-        requiresAuth: false,
-        title: `Detail Messagerie`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "CHAT_MESSAGE_DETAIL",
-      component: chatMessageDetail,
+      path: '',
+      name: 'CHAT_MESSAGE_DETAIL',
+      component: () => import('@/features/nounus/pages/ChatDetailPage.vue'),
     },
   ],
 };

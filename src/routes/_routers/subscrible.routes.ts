@@ -1,41 +1,29 @@
-// import BasicPage from "@/views/BasicPage.vue";
-import Subscrible from "@/views/subscribles/subscriblePage.vue";
-import BasicPage from "@/views/BasicPage.vue";
-import PackSubscriblePage from "@/views/subscribles/packSubscriblePage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const SubscribleRoutes = {
-  path: "/subscrible",
-  redirect: "/subscrible",
-  component: BasicPage,
-
+export const SubscribleRoutes: RouteRecordRaw = {
+  path: '/subscription',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Subscrible`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "MySubscrible",
-      component: Subscrible,
+      path: '',
+      name: 'PackSubscrible',
+      component: () => import('@/features/nounus/pages/SubscriptionRequiredPage.vue'),
     },
     {
-      path: "pack",
-      meta: {
-        requiresAuth: false,
-        title: `Subscrible`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "PackSubscrible",
-      component: PackSubscriblePage,
+      path: 'my',
+      name: 'MySubscription',
+      component: () => import('@/features/subscriptions/pages/MySubscriptionPage.vue'),
     },
   ],
 };
 
-
+export const PaymentReturnRoutes: RouteRecordRaw = {
+  path: '/payment',
+  children: [
+    {
+      path: 'return',
+      name: 'PAYMENT_RETURN',
+      component: () => import('@/features/nounus/pages/PaymentReturnPage.vue'),
+    },
+  ],
+};

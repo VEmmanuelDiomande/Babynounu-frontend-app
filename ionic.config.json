@@ -1,7 +1,0 @@
-{
-  "name": "BabyNounu",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "vue-vite"
-}

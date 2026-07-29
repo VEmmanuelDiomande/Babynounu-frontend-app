@@ -1,6 +1,7 @@
 export const apiMediaRoutes = {
+    MEDIA_UPLOAD: '/media/upload',
     MEDIA_DELETE: '/media',
-    MEDIA_GALLERY: '/media/gallery/:userId',
-    MEDIA_DOCUMENT: '/media/document/:userId',
-    MEDIA_DELETES: '/media/:mediaId'
+    MEDIA_GALLERY: '/media',
+    MEDIA_DOCUMENT: '/media',
+    MEDIA_DELETES: '/media'
 }

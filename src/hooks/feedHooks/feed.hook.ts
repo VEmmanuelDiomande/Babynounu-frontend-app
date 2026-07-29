@@ -6,19 +6,19 @@ export const useFeedHook = () => {
     actions: [
       {
         name: "Likes",
-        icon: "RiHeart3Line",
+        icon: "heart-line",
         actived: false,
         count: "0",
       },
       {
         name: "Comments",
-        icon: "RiChat3Line",
+        icon: "chat-3-line",
         actived: false,
         count: "0",
       },
       {
         name: "Participes",
-        icon: "RiGroupLine",
+        icon: "group-line",
         actived: false,
         count: "0",
       },

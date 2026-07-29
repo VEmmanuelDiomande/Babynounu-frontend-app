@@ -11,14 +11,14 @@ export const useProfilNounuHook = () => {
   // States
   const Greeting = ref("");
   const Experiences = ref([
-    { name: "Missons", count: 0, color: "bg-primary", icon: "RiServiceFill" },
-    { name: "Visites", count: 0, color: "bg-secondary", icon: "RiEye2Fill" },
+    { name: "Missons", count: 0, color: "bg-primary", icon: "briefcase-line" },
+    { name: "Visites", count: 0, color: "bg-secondary", icon: "eye-line" },
   ]);
   const Functionality = ref([
-    { name: "Missions", icon: "RiServiceFill" },
-    { name: "Visites", icon: "RiEye2Fill" },
-    { name: "Alerte", icon: "RiAlarmWarningFill" },
-    { name: "Récompenses", icon: "RiAwardFill" },
+    { name: "Missions", icon: "briefcase-line" },
+    { name: "Visites", icon: "eye-line" },
+    { name: "Alerte", icon: "notification-3-line" },
+    { name: "Récompenses", icon: "trophy-line" },
   ]);
 
   // Cards Information

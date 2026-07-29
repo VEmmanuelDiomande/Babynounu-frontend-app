@@ -1,47 +1,25 @@
-// import BasicPage from "@/views/BasicPage.vue";
-import SearchJobsPage from "@/views/search/searchJobsPage.vue";
-import Search from "@/views/search/searchPage.vue";
-import TabsPage from "@/views/TabsPage.vue";
-import TabsParentPage from "@/views/TabAdminPage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const SearchJobsRoutes = {
-  path: "/search/jobs",
-  component: TabsPage,
-
+export const SearchNounusRoutes: RouteRecordRaw = {
+  path: '/search-nounus',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Search`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "SEARCH_JOBS",
-      component: SearchJobsPage,
+      path: '',
+      name: 'SEARCH_NOUNUS',
+      component: () => import('@/features/nounus/pages/SearchPage.vue'),
     },
   ],
 };
 
-export const SearchNounusRoutes = {
-  path: "/search/nounus",
-  component: TabsPage,
-
+export const SearchJobsRoutes: RouteRecordRaw = {
+  path: '/search-jobs',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Search`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "SEARCH_NOUNU_PAGE",
-      component:  Search,
+      path: '',
+      name: 'SEARCH_JOBS',
+      component: () => import('@/features/nounus/pages/SearchPage.vue'),
     },
   ],
 };

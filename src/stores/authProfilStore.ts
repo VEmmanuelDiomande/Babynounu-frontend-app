@@ -6,6 +6,8 @@ import {
   LocalizationsSchema,
   TarificationsSchema,
   PreferencePourLesSpecifiquesSchema,
+  TachesSpecifiquesSchema,
+  CriteresSelectionSchema,
   ModalitesDePaiementSchema,
   AutreInformationsSchema,
   InformationPersonnelleSchema,
@@ -31,6 +33,7 @@ interface ProfileState {
     besions_specifiques: string[];
   };
   ServicesRecherches: {
+    type_services: string[];
     garde_enfants: string[];
     aide_menagere: string[];
     frequence_des_services: string[];
@@ -47,6 +50,12 @@ interface ProfileState {
     competance_specifique: string[];
     langue_parler: string[];
     disponibility_du_prestataire: string[];
+  };
+  TachesSpecifiques: {
+    taches: string[];
+  };
+  CriteresSelection: {
+    criteres_selections: string[];
   };
   ModalitesDePaiement: {
     mode_de_paiement: string[];
@@ -85,6 +94,7 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
       besions_specifiques: [],
     },
     ServicesRecherches: {
+      type_services: [],
       garde_enfants: [],
       aide_menagere: [],
       frequence_des_services: [],
@@ -101,6 +111,12 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
       competance_specifique: [],
       langue_parler: [],
       disponibility_du_prestataire: [],
+    },
+    TachesSpecifiques: {
+      taches: [],
+    },
+    CriteresSelection: {
+      criteres_selections: [],
     },
     ModalitesDePaiement: {
       mode_de_paiement: [],
@@ -140,12 +156,16 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
       try {
         await createParentProfile();
       } catch (error) {
+        const err = error as any;
         state.in_error = {
-          message: "Erreur lors de la création du profil",
+          message:
+            err?.response?.data?.message ||
+            err?.message ||
+            "Erreur lors de la création du profil",
         };
       }
     } else {
-      state.stepProfil = Math.min(state.stepProfil + 1, 8);
+      state.stepProfil = Math.min(state.stepProfil + 1, 10);
     }
   };
 
@@ -155,7 +175,7 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
   };
 
   const ChangeInputToEdit = (Data: any) => {
-    useAuthStore().isUpdateProfilID = Data.id;
+    useAuthStore().setUpdateProfil(true, Data.id);
     state.InformationPersonnelle.fullname = Data.fullname;
     state.InformationPersonnelle.adresse_mail = Data.adresse_mail;
     state.InformationPersonnelle.phone = Data.phone;
@@ -165,6 +185,7 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
     state.InformationSurLesEnfants.besions_specifiques =
       Data?.preferences?.besions_specifiques;
 
+    state.ServicesRecherches.type_services = Data?.preferences?.type_services;
     state.ServicesRecherches.garde_enfants = Data?.preferences?.garde_enfants;
     state.ServicesRecherches.aide_menagere = Data?.preferences?.aide_menagere;
     state.ServicesRecherches.frequence_des_services =
@@ -184,6 +205,11 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
       Data?.preferences?.langue_parler;
     state.PreferencePourLesSpecifiques.disponibility_du_prestataire =
       Data?.preferences?.disponibility_du_prestataire;
+
+    state.TachesSpecifiques.taches = Data?.preferences?.taches;
+
+    state.CriteresSelection.criteres_selections =
+      Data?.preferences?.criteres_selections;
 
     state.ModalitesDePaiement.mode_de_paiement =
       Data?.preferences?.mode_de_paiement;
@@ -218,6 +244,10 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
         "PreferencePourLesSpecifiques",
         PreferencePourLesSpecifiquesSchema
       ),
+    TachesSpecifiquesProfil: () =>
+      handleStepValidation("TachesSpecifiques", TachesSpecifiquesSchema),
+    CriteresSelectionProfil: () =>
+      handleStepValidation("CriteresSelection", CriteresSelectionSchema),
     PaymentTermsParentProfil: () =>
       handleStepValidation("ModalitesDePaiement", ModalitesDePaiementSchema),
     AutreInfoParentProfil: () =>

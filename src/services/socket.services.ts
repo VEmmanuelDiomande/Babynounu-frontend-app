@@ -11,7 +11,7 @@ export class SocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private readonly reconnectDelay = 5000; // 5s entre les tentatives (corrigé de 150s)
-  private eventListeners: Map<string, (data: any) => void> = new Map();
+  private eventListeners: Map<string, Set<(data: any) => void>> = new Map();
   private isConnecting = false;
 
   private async getAuthOptions() {
@@ -25,7 +25,7 @@ export class SocketService {
 
       // Validation stricte des données d'authentification
       if (!token?.value || !userId?.value || !typeProfil?.value) {
-        throw new Error("Missing authentication data");
+        return null;
       }
 
       return {
@@ -42,7 +42,6 @@ export class SocketService {
         },
       };
     } catch (error) {
-      console.error("Failed to get auth options:", error);
       throw error;
     }
   }
@@ -65,6 +64,10 @@ export class SocketService {
         }
 
         const authOptions = await this.getAuthOptions();
+        
+        if (!authOptions) {
+          throw new Error('User not authenticated');
+        }
         
         this.socket = io(SOCKET_URL, {
           timeout: 20000,
@@ -99,7 +102,7 @@ export class SocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      // console.log('Socket connected successfully');
+      console.log('[Socket] Connected successfully');
       this.reconnectAttempts = 0;
     });
 
@@ -113,7 +116,7 @@ export class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      // console.error('Socket connection error:', error);
+      console.error('[Socket] Connection error:', error.message);
     });
 
     // Restaurer les event listeners après reconnexion
@@ -166,8 +169,11 @@ export class SocketService {
     if (!this.socket) return;
     
     // Restaurer tous les event listeners stockés
-    this.eventListeners.forEach((callback, event) => {
-      this.socket?.on(event, callback);
+    this.eventListeners.forEach((callbacks, event) => {
+      callbacks.forEach((callback) => {
+        this.socket?.off(event, callback); // Éviter les doublons
+        this.socket?.on(event, callback);
+      });
     });
   }
 
@@ -181,22 +187,32 @@ export class SocketService {
   }
 
   async on(event: string, callback: (data: any) => void): Promise<void> {
-    this.eventListeners.set(event, callback);
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, new Set());
+    }
+    this.eventListeners.get(event)!.add(callback);
     
     try {
       const socket = await this.connect();
+      socket.off(event, callback); // Éviter les doublons (restoreEventListeners peut déjà l'avoir enregistré)
       socket.on(event, callback);
+      console.log(`[Socket] Listener registered for '${event}'`);
     } catch (error) {
-      console.error(`Failed to register event listener for '${event}':`, error);
-      throw error;
+      console.warn(`[Socket] Not connected, listener for '${event}' pending. Error:`, error);
     }
   }
 
-  async off(event: string): Promise<void> {
-    this.eventListeners.delete(event);
-    
-    if (this.socket?.connected) {
-      this.socket.off(event);
+  async off(event: string, callback?: (data: any) => void): Promise<void> {
+    if (callback) {
+      this.eventListeners.get(event)?.delete(callback);
+      if (this.socket?.connected) {
+        this.socket.off(event, callback);
+      }
+    } else {
+      this.eventListeners.delete(event);
+      if (this.socket?.connected) {
+        this.socket.off(event);
+      }
     }
   }
 

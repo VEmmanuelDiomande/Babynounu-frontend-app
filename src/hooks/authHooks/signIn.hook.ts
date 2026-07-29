@@ -20,32 +20,29 @@ export const useAuthSignInHook = () => {
   });
 
 
-  const Login = (data: SIGN_IN) => {
-    state.loading = true;
-    state.in_login = data;
-    state.in_login.email = useAuthStore().state.email;
-    console.log(state)
+  const Login = async (data: SIGN_IN) => {
+    const authStore = useAuthStore();
+    authStore.clearErrors();
+    authStore.setUpdateProfil(false);
+
+    state.in_login = { ...data };
     const validate = signInSchema.safeParse(state.in_login);
-    useAuthStore().isUpdateProfil = false
-  
+
     if (!validate.success) {
-      useAuthStore().state.in_error_login = {
+      authStore.setError('login', {
         path: validate.error.issues[0].path[0].toString(),
         message: validate.error.issues[0].message,
-      };
+      });
       state.loading = false;
       return;
     }
 
-    authService.login(data).then(() => { }).finally(() => {
-      state
+    state.loading = true;
+    try {
+      await authService.login(state.in_login);
+    } finally {
       state.loading = false;
-    })
-
-    useAuthStore().state.in_error_login = {
-      path: "",
-      message: "",
-    };
+    }
   }
 
   return {

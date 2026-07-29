@@ -17,5 +17,6 @@ export const useMessagerieHook = () => {
 
   return {
     state,
+    handleRefresh,
   };
 };

@@ -1,7 +1,5 @@
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
-import type { DELIVERY_TYPE_STANDARD } from "@/types/agency.types";
 import { StorageUtils } from "@/utils/store.utils";
-import { a, u } from "@tanstack/vue-query/build/legacy/queryClient-C5JH3kKW";
 import axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -10,24 +8,31 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
   const isAbonnement = ref(false);
   const isExpired = ref(false);
   const isVerity = ref(false);
+  const isLifetime = ref(false);
+  const subscriptionFeatures = ref<string[]>([]);
+  const subscriptionData = ref<any>(null);
 
   const myAbonnement = async () => {
+    const nToken = await StorageUtils().getStore("nToken");
+    const token = nToken?.value;
+    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     const { data } = await axios.get(
-      URL_API_ROUTE.ABONNEMENT_HAS_ACTIVE_SUBSCRIPTION +
-        "" +
-        (
-          await StorageUtils().getStore("nUser_Id")
-        ).value
+      URL_API_ROUTE.ABONNEMENT_HAS_ACTIVE_SUBSCRIPTION,
+      { headers }
     );
 
-    if (data) {
-      isAbonnement.value = data.hasActiveSubscription;
-      const createdAt = new Date(data.createdAt);
-      const today = new Date();
-      const diffTime = Math.abs(today.getTime() - createdAt.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      isExpired.value = diffDays > 30 ? true : false;
-    }
+    const hasActive = !!data && data.status === 'active' && (
+      data.expiresAt === null || new Date(data.expiresAt) > new Date()
+    );
+    isAbonnement.value = hasActive;
+    isLifetime.value = !!data && data.expiresAt === null;
+    isExpired.value = !!data && data.status === 'active' && data.expiresAt !== null && new Date(data.expiresAt) <= new Date();
+    subscriptionData.value = data || null;
+
+    const packFeatures = (data as any)?.pack?.features;
+    subscriptionFeatures.value = Array.isArray(packFeatures) ? packFeatures : (Array.isArray((data as any)?.features) ? (data as any).features : []);
+
+    await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
 
     return data;
   };
@@ -57,11 +62,8 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
 
       if (data?.paiement?.id) {
         isAbonnement.value = true;
-        const createdAt = new Date(data.createdAt);
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - createdAt.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        isExpired.value = diffDays > 30 ? true : false;
+        isLifetime.value = data.expiresAt === null;
+        isExpired.value = data.expiresAt !== null && new Date(data.expiresAt) <= new Date();
       }
 
       return data;
@@ -75,12 +77,20 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
       }
   };
 
+  const hasFeature = (key: string): boolean => {
+    return subscriptionFeatures.value.includes(key);
+  };
+
   return {
     myAbonnement,
     updateAbonnement,
     isAdminLogged,
     isAbonnement,
     isExpired,
+    isLifetime,
     iscroll,
+    subscriptionFeatures,
+    subscriptionData,
+    hasFeature,
   };
 });

@@ -14,9 +14,13 @@ export const SettingServices = () => {
   // Fonction utilitaire pour obtenir les en-têtes d'authentification
   const getAuthHeaders = async () => {
     const nToken = await StorageUtils().getStore("nToken");
+    const token = nToken?.value;
+    if (!token) {
+      throw new Error("Token d'authentification manquant");
+    }
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${nToken.value}`,
+      Authorization: `Bearer ${token}`,
     };
   };
 
@@ -24,6 +28,15 @@ export const SettingServices = () => {
     try {
       const headers = await getAuthHeaders();
       const response = await axios.get(Route, { headers });
+      return response.data;
+    } catch (error) {
+      throw new Error("Erreur lors du chargement des données");
+    }
+  };
+
+  const listSettingPublic = async (Route: string): Promise<any> => {
+    try {
+      const response = await axios.get(Route);
       return response.data;
     } catch (error) {
       throw new Error("Erreur lors du chargement des données");
@@ -71,6 +84,7 @@ export const SettingServices = () => {
 
   return {
     listSetting,
+    listSettingPublic,
     createSetting,
     useCreateSetting,
   };

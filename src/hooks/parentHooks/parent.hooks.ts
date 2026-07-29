@@ -25,6 +25,8 @@ interface ParentProfilePayload {
   langue_parler: string[];
   disponibility_du_prestataire: string[];
   mode_de_paiement: string[];
+  taches: string[];
+  criteres_selections: string[];
   informations_complementaires: string;
   userId: string;
 }
@@ -76,12 +78,16 @@ export const useParentHook = () => {
    */
   const handleSuccessResponse = async (result: ApiResponse): Promise<void> => {
     state.success = true;
-    const closeModal = document.querySelector("#closeModelAuthProfil") as HTMLElement;
+    const closeModal = document.querySelector(
+      "#closeModelAuthProfil"
+    ) as HTMLElement;
     if (closeModal) {
       closeModal.click();
     }
-    // await StorageUtils().setStore(STORAGE_KEYS.PROFILE, result.id.toString());
-    location.assign("/auth/sign-in");
+    if (useAuthStore().isUpdateProfil === false) {
+      await StorageUtils().setStore(STORAGE_KEYS.PROFILE, result.id.toString());
+      location.assign("/auth/sign-in");
+    }
   };
 
   /**
@@ -91,9 +97,12 @@ export const useParentHook = () => {
   const handleApiError = (error: unknown): void => {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
-      state.error = (axiosError.response?.data as { message?: string })?.message || axiosError.message;
+      state.error =
+        (axiosError.response?.data as { message?: string })?.message ||
+        axiosError.message;
     } else {
-      state.error = (error as Error).message || "Une erreur inconnue est survenue";
+      state.error =
+        (error as Error).message || "Une erreur inconnue est survenue";
     }
     console.error("Erreur API:", error);
   };
@@ -103,7 +112,10 @@ export const useParentHook = () => {
    * @param formData FormData à remplir
    * @param payload Données du profil
    */
-  const appendFormData = (formData: FormData, payload: ParentProfilePayload): void => {
+  const appendFormData = (
+    formData: FormData,
+    payload: ParentProfilePayload
+  ): void => {
     const jsonFields: (keyof ParentProfilePayload)[] = [
       "besions_specifiques",
       "garde_enfants",
@@ -116,13 +128,15 @@ export const useParentHook = () => {
       "langue_parler",
       "disponibility_du_prestataire",
       "mode_de_paiement",
+      "taches",
+      "criteres_selections",
     ];
 
     Object.entries(payload).forEach(([key, value]) => {
       if (value === undefined || value === null) {
         return;
       }
-      
+
       if (jsonFields.includes(key as keyof ParentProfilePayload)) {
         formData.append(key, JSON.stringify(value));
       } else {
@@ -137,12 +151,11 @@ export const useParentHook = () => {
    */
   const getProfileEndpoint = (): string => {
     const authStore = useAuthStore();
-    
     if (authStore.isUpdateProfil === false) {
       return URL_API_ROUTE.PARENT_CREATE;
     }
-    
-    return `${URL_API_ROUTE.PARENT_UPDATE}/${authStore.isUpdateProfilID}`;
+
+    return URL_API_ROUTE.PARENT_UPDATE;
   };
 
   /**
@@ -151,7 +164,10 @@ export const useParentHook = () => {
    * @param store Store du profil
    */
   const appendImageFiles = (formData: FormData, store: any): void => {
-    if (store.InformationPersonnelle.image_profil && store.InformationPersonnelle.image_profil.length > 0) {
+    if (
+      store.InformationPersonnelle.image_profil &&
+      store.InformationPersonnelle.image_profil.length > 0
+    ) {
       const files = Array.from(store.InformationPersonnelle.image_profil);
       files.forEach((file: any) => {
         formData.append("imageParent", file);
@@ -164,7 +180,7 @@ export const useParentHook = () => {
    */
   const createParentProfile = async (): Promise<void> => {
     const nounuStore = useNounuStore();
-    nounuStore.loading = true;
+    nounuStore.isLoading = true;
     state.loading = true;
     state.error = null;
     state.success = false;
@@ -172,7 +188,7 @@ export const useParentHook = () => {
     try {
       const store = getProfilStore();
       const userId = await getStorageValue(STORAGE_KEYS.USER);
-      
+
       const formData = new FormData();
       const payload: ParentProfilePayload = {
         ...store.InformationPersonnelle,
@@ -181,6 +197,8 @@ export const useParentHook = () => {
         ...store.Localizations,
         ...store.Tarifications,
         ...store.PreferencePourLesSpecifiques,
+        ...store.TachesSpecifiques,
+        ...store.CriteresSelection,
         ...store.ModalitesDePaiement,
         ...store.AutreInformations,
         userId,
@@ -190,23 +208,24 @@ export const useParentHook = () => {
       appendImageFiles(formData, store);
 
       const endpoint = getProfileEndpoint();
-      
-      const { data } = await axios.post<ApiResponse>(
-        endpoint,
-        formData,
-        { headers: { "Content-Type": CONTENT_TYPE_HEADER } }
-      );
+      const authStore = useAuthStore();
+      const method = authStore.isUpdateProfil ? 'put' : 'post';
 
-      if (data) {
-        useAuthStore().isUpdateProfil = false;
-        await handleSuccessResponse(data);
+      const { data } = await axios[method]<ApiResponse>(endpoint, formData, {
+        headers: { "Content-Type": CONTENT_TYPE_HEADER },
+      });
+
+      if (data) {await handleSuccessResponse(data);
+        useAuthStore().setUpdateProfil(false);
+        
       } else {
         throw new Error("Réponse API invalide");
       }
     } catch (error) {
       handleApiError(error);
+      throw error;
     } finally {
-      nounuStore.loading = false;
+      nounuStore.isLoading = false;
       state.loading = false;
     }
   };

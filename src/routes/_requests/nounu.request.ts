@@ -5,6 +5,7 @@ export const apiNounuRoutes = {
     NOUNU_UPDATE: '/nounu/update',
     NOUNU_DELETE: '/nounu/delete',
     NOUNU_FIND_ONE: '/nounu',
+    NOUNU_DETAIL: '/nounu',
     NOUNU_SEARCH: '/nounu/search',
     NOUNU_CERTIFICATE_NOT_ALL: '/nounu/non-certified',
     NOUNU_APPROVE_CERTIFICATION: '/nounu/approve-certification',

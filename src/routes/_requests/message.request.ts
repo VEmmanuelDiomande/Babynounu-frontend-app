@@ -1,17 +1,17 @@
 export const apiMessageRoutes = {
-    MESSAGE_ALL: '/messages',
-    PROPOSAL_STATUS: '/messages/proposal-status',
-    
+    MESSAGE_ALL: '/chat/rooms',
+    PROPOSAL_STATUS: '/chat/rooms',
 
-    MESSAGE_USER: '/chat/list',
-    MESSAGE_ROOM: '/chat/messages',
-    MESSAGE_CREATE: '/messages/create',
-    MESSAGE_UPDATE: '/messages/update',
+    MESSAGE_USER: '/chat/conversations',
+    MESSAGE_ROOM: '/chat/rooms',
+    MESSAGE_CREATE: '/chat/rooms',
+    MESSAGE_UPDATE: '/chat/rooms',
+    UNREAD_COUNT: '/chat/unread-count',
 
     CONVERSATION_ALL: '/chat/conversations',
-    CONVERSATION_ALL_ADMIN: '/chat/conversations/admin',
-    CONVERSATION_ONLY: '/chat/room',
-    CONVERSATION_USER: '/chat/conversations/user',
-    CONVERSATION_CREATE: '/chat/find-or-create-room/',
-    CONVERSATION_UPDATE: '/chat/conversations/update',
+    CONVERSATION_ALL_ADMIN: '/chat/conversations',
+    CONVERSATION_ONLY: '/chat/rooms',
+    CONVERSATION_USER: '/chat/conversations',
+    CONVERSATION_CREATE: '/chat/rooms',
+    CONVERSATION_UPDATE: '/chat/rooms',
 }

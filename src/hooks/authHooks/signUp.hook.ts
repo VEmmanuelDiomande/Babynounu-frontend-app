@@ -17,6 +17,16 @@ export const useAuthSignUpHook = () => {
         openModalID: "open-modal-auth-profil-nounu",
       },
       {
+        name: "Ménagère",
+        actived: false,
+        openModalID: "open-modal-auth-profil-nounu",
+      },
+      {
+        name: "Cuisinière",
+        actived: false,
+        openModalID: "open-modal-auth-profil-nounu",
+      },
+      {
         name: "Parents",
         actived: false,
         openModalID: "open-modal-auth-profil-parent",
@@ -27,36 +37,41 @@ export const useAuthSignUpHook = () => {
     OpenModalParentID: "open-modal-auth-profil-parent",
   });
 
-  const { state: authState } = useAuthStore();
+  const authStore = useAuthStore();
 
   const Register = (data: SIGN_UP) => {
     state.loading = true;
-    authState.in_register = data;
-    authState.in_register.email = useAuthStore().state.email;
-    authState.in_register.type = useProfilStore().state.activeMenu_typeOfProfil;
-    const validate = signUpSchema.safeParse(authState.in_register);
-    useAuthStore().isUpdateProfil = false
+    
+    // Préparer les données d'inscription
+    const registrationData = {
+      ...data,
+      email: authStore.email,
+      type: useProfilStore().state.activeMenu_typeOfProfil
+    };
+    
+    // Utiliser l'action du store pour définir les données d'inscription
+    authStore.setRegistration(registrationData);
+    
+    const validate = signUpSchema.safeParse(authStore.registration);
+    authStore.setUpdateProfil(false)
 
     if (!validate.success) {
-      useAuthStore().state.in_error = {
+      useAuthStore().setError('general', {
         path: validate.error.issues[0].path[0].toString(),
         message: validate.error.issues[0].message,
-      };
+      });
       state.loading = false;
       return;
     }
 
     authService
-      .register(authState.in_register)
+      .register(authStore.registration)
       .then(() => {})
       .finally(() => {
         state.loading = false;
       });
 
-    useAuthStore().state.in_error = {
-      path: "",
-      message: "",
-    };
+    authStore.clearErrors();
   };
 
   const ToggleActiveMenu_typeOfProfil = (index: number) => {
@@ -64,11 +79,8 @@ export const useAuthSignUpHook = () => {
       menu.actived = i === index;
 
       if (menu.actived) {
-        useAuthStore().state.in_register.type = menu?.openModalID;
-        useProfilStore().state.activeMenu_typeOfProfil =
-          i == 0
-            ? "open-modal-auth-profil-nounu"
-            : "open-modal-auth-profil-parent";
+        authStore.setRegistration({ type: menu?.openModalID });
+        useProfilStore().state.activeMenu_typeOfProfil = menu?.openModalID;
       }
     });
   };

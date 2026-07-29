@@ -1,86 +1,42 @@
-// import BasicPage from "@/views/BasicPage.vue";
-import BasicPage from "@/views/BasicPage.vue";
-import DestinationToStart from "@/views/destinationToStart.vue";
-import HomeParentPage from "@/views/home/homeParentPage.vue";
-import Home from "@/views/home/homePage.vue";
-import StarterPage from "@/views/starterPage.vue";
-import TabsPage from "@/views/TabsPage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const HomeRoutes = {
-  path: "/home",
-  component: TabsPage,
-
-  children: [
-    {
-      path: "nounus",
-      meta: {
-        requiresAuth: false,
-        title: `Accueil`,
-        description: "Découvrez les meilleures nounous disponibles pour vos enfants",
-        "og:title": `Baby Nounu - Accueil`,
-        "og:description": "Découvrez les meilleures nounous disponibles pour vos enfants",
-        keywords: `reseau social, nounou, garde d'enfants, baby-sitting`,
-      },
-      name: "HOME",
-      component: Home,
-    }
-  ],
+export const StarterRoutes: RouteRecordRaw = {
+  path: '/starter',
+  name: 'STARTER',
+  component: () => import('@/features/nounus/pages/StarterPage.vue'),
 };
 
-
-export const HomeParentRoutes = {
-  path: "/home",
-  component: TabsPage,
-
-  children: [
-    {
-      path: "jobs",
-      meta: {
-        requiresAuth: false,
-        title: `Accueil`,
-        description: "Trouvez des offres d'emploi pour la garde d'enfants",
-        "og:title": `Baby Nounu - Offres d'emploi`,
-        "og:description": "Trouvez des offres d'emploi pour la garde d'enfants",
-        keywords: `reseau social, emploi, garde d'enfants, nounou`,
-      },
-      name: "HOME_JOBS",
-      component: HomeParentPage,
-    }
-  ],
+export const _HomeRoutes: RouteRecordRaw = {
+  path: '/choose-destination-to-start',
+  name: 'STARTER_DESTINATION',
+  component: () => import('@/features/nounus/pages/ChooseDestinationPage.vue'),
 };
 
+export const RootRedirectRoutes: RouteRecordRaw = {
+  path: '/',
+  redirect: '/starter',
+};
 
-export const _HomeRoutes = {
-  path: "/",
-  redirect: "/starter",
-  component: BasicPage,
-
+export const HomeRoutes: RouteRecordRaw = {
+  path: '/home/jobs',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "starter",
-      meta: {
-        requiresAuth: false,
-        title: `Accueil`,
-        description: "Bienvenue sur Baby Nounu, votre plateforme de garde d'enfants",
-        "og:title": `Baby Nounu - Bienvenue`,
-        "og:description": "Votre plateforme de mise en relation pour la garde d'enfants",
-        keywords: `reseau social, nounou, garde d'enfants, baby-sitting`,
-      },
-      name: "STARTER",
-      component: StarterPage,
+      path: '',
+      name: 'HOME_JOBS',
+      component: () => import('@/features/nounus/pages/JobsPage.vue'),
     },
+  ],
+};
+
+export const HomeParentRoutes: RouteRecordRaw = {
+  path: '/home/nounus',
+  component: () => import('@/layouts/HomeLayout.vue'),
+  children: [
     {
-      path: "choose-destination-to-start",
-      meta: {
-        requiresAuth: false,
-        title: `Choisir votre destination`,
-        description: "Sélectionnez votre profil pour commencer sur Baby Nounu",
-        "og:title": `Baby Nounu - Choisir votre profil`,
-        "og:description": "Êtes-vous un parent ou une nounou ? Sélectionnez votre profil pour commencer",
-        keywords: `reseau social, nounou, parent, inscription, profil`,
-      },
-      name: "STARTER_DESTINATION",
-      component: DestinationToStart,
+      path: '',
+      name: 'HOME',
+      component: () => import('@/features/nounus/pages/HomePage.vue'),
     },
   ],
 };

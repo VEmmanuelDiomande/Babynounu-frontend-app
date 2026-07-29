@@ -38,7 +38,7 @@ export const DetailsMissionSchema = z.object({
 
 // Schéma pour les nounous
 export const NounouSchema = z.object({
-  nombre_enfants: z.string().optional(),
+  nombre_enfants: z.union([z.string(), z.number()]).optional(),
   garde_enfants: z.array(z.any()).optional(),
   besions_specifiques: z.array(z.any()).optional(),
   competance_specifique: z.array(z.any()).optional(),
@@ -54,9 +54,7 @@ export const FemmeDeMenageSchema = z.object({
 // Schéma pour les critères de sélection
 export const CriteresSchema = z.object({
   experience_minimun: z.array(z.any()).min(1, "Sélectionnez une experience minimun"),
-  annee_experience: z
-    .string()
-    .min(1, "Le nombre d'années d'expérience est requis"),
+  annee_experience: z.string().optional(),
   certifications: z.array(z.any()).optional(),
   criteres_selections: z
     .array(z.any())

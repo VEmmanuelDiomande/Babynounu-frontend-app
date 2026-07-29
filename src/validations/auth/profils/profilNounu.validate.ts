@@ -25,7 +25,6 @@ const fileSchema = z.instanceof(File).superRefine((file, ctx) => {
 
 const isUpdateProfil = () => {
   const BtnIsUpdateProfil: any = document.getElementById("is-update-profil");
-  console.log(BtnIsUpdateProfil)
   return BtnIsUpdateProfil?.value == "true" ? true : false;
 };
 
@@ -33,13 +32,17 @@ export const InformationPersonnelleSchema = z.object({
   image_profil:
     isUpdateProfil() == false
       ? z
-          .instanceof(FileList)
+          .any()
+          .refine(
+            (files: any) => files instanceof FileList && files.length > 0,
+            { message: "La photo de profil est requise" }
+          )
           .transform((files: any) => files[0])
           .pipe(fileSchema)
       : z.any().optional(),
 
   fullname: z.string().min(1, "Le nom complet est requis"),
-  age: z.string().min(1, "L'âge est requis"),
+  age: z.coerce.string().min(1, "L'âge est requis"),
   phone: z.string().regex(/^\+?[0-9\s.-]{9,14}$/, {
     message:
       "Numéro de téléphone invalide, format international accepté (+33 6 12 34 56 78)",
@@ -51,7 +54,7 @@ export const InformationPersonnelleSchema = z.object({
 export const InformationPersonnelleUpdateSchema = z.object({
   image_profil: z.any().optional(),
   fullname: z.string().min(1, "Le nom complet est requis"),
-  age: z.string().min(1, "L'âge est requis"),
+  age: z.coerce.string().min(1, "L'âge est requis"),
   phone: z.string().regex(/^\+?[0-9\s.-]{9,14}$/, {
     message:
       "Numéro de téléphone invalide, format international accepté (+33 6 12 34 56 78)",
@@ -60,9 +63,9 @@ export const InformationPersonnelleUpdateSchema = z.object({
 });
 
 export const ExperienceEtCompetencesSchema = z.object({
-  annees_experience: z
+  annees_experience: z.coerce
     .string()
-    .refine((val) => !isNaN(Number(val)), "Doit être un nombre valide"),
+    .refine((val) => !isNaN(parseFloat(val)), "Doit être un nombre valide"),
   tranche_age_enfants: z
     .array(z.any())
     .min(1, "Sélectionnez la tranche d'age des enfants"),
@@ -80,10 +83,10 @@ export const DisponibilitesSchema = z.object({
 });
 
 export const TarificationsSchema = z.object({
-  tarif_horaire: z
+  tarif_horaire: z.coerce
     .string()
     .refine((val) => !isNaN(parseFloat(val)), "Doit être un nombre valide"),
-  tarif_mensuel: z
+  tarif_mensuel: z.coerce
     .string()
     .refine((val) => !isNaN(parseFloat(val)), "Doit être un nombre valide"),
   flexibilite_tarifaire: z

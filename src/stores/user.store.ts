@@ -13,6 +13,7 @@ export const useUserStore = defineStore("USER", () => {
   const typeProfil = ref();
   const isOwner = ref(false);
   const dataProfil = ref();
+  const permissions = ref<string[]>([]);
 
   const _USER = async () => {
     userId.value = (await StorageUtils().getStore("nUser_Id")).value;
@@ -40,8 +41,8 @@ export const useUserStore = defineStore("USER", () => {
   }
 
   const _isAdmin = async () => {
-    const user = await StorageUtils().getStore("nUser_Id");
-    if (user) {
+    const adminId = await StorageUtils().getStore("nAdmin_Id");
+    if (adminId?.value) {
       isAdmin.value = true;
     } else {
       isAdmin.value = false;
@@ -55,11 +56,19 @@ export const useUserStore = defineStore("USER", () => {
   const _isProfil = async () => {
     const profil = (await StorageUtils().getStore("nProfil_1_Id")).value;
     if (profil) {
-      profilId.value = true;
+      profilId.value = profil;
     } else {
-      profilId.value = false;
+      profilId.value = null;
     }
   }
+
+  const hasPermission = (permission: string) => {
+    return permissions.value.includes(permission);
+  };
+
+  const hasAnyPermission = (perms: string[]) => {
+    return perms.some((p) => permissions.value.includes(p));
+  };
 
 
   return {
@@ -78,5 +87,8 @@ export const useUserStore = defineStore("USER", () => {
     _isLogged,
     _isAdmin,
     _pageType,
+    permissions,
+    hasPermission,
+    hasAnyPermission,
   };
 });

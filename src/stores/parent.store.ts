@@ -1,6 +1,5 @@
 // @ts-check
 import { URL_API_ROUTE } from '@/routes/_requests/index.request'
-import { INPUT_ERROR } from '@/types/auth.types'
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
@@ -49,6 +48,7 @@ export const useParentStore = defineStore('PARENTS', () => {
       if(data) {
         isLoading.value = false
         useParentStore().DataParents = data;
+        document.getElementById("closeModelAuthProfil")?.click()
       }
       
     } catch (error) {

@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        love: ["Figtree", "sans-serif"],
-        anton: ["Anton", "sans-serif"],
+        love: ["League Spartan", "sans-serif"],
+        anton: ["League Spartan", "sans-serif"],
       },
       fontSize: {
         xr: [

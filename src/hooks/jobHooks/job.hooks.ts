@@ -63,10 +63,11 @@ export const useJobHook = () => {
     appendData("description", jobState.informationsGenerales.description);
     appendData("adress", jobState.informationsGenerales.adress, true);
     appendData("zone_de_travail", jobState.informationsGenerales.zone_de_travail, true);
-    appendData(
-      "moyens_de_contact", 
-      appendArrayValue("moyens_de_contact", jobState.informationsGenerales.moyens_de_contact)
-    );
+    const contactValues = jobState.informationsGenerales.moyens_de_contact
+      ?.map((x: any) => x.value)
+      .filter(Boolean)
+      .join(", ");
+    appendData("moyens_de_contact", contactValues);
 
     // Type de Service
     appendData("type_services", jobState.typeService.type_services, true);
@@ -165,6 +166,8 @@ export const useJobHook = () => {
    * Crée ou met à jour une offre d'emploi
    */
   const createJob = async (): Promise<void> => {
+    if (jobStore.state.loading || state.loading) return;
+
     // Mettre à jour l'état de chargement
     jobStore.state.loading = true;
     state.loading = true;
@@ -190,6 +193,10 @@ export const useJobHook = () => {
         ? `${URL_API_ROUTE.JOB_UPDATE}/${useJobStore().isUpdateJobID}` 
         : URL_API_ROUTE.JOB_CREATE;
 
+      // Récupérer le token d'authentification
+      const nToken = await StorageUtils().getStore("nToken");
+      const token = nToken?.value;
+
       // Envoyer la requête à l'API
       const { data } = await axios.post<{ id: string }>(
         url,
@@ -197,6 +204,7 @@ export const useJobHook = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }
       );
@@ -209,13 +217,14 @@ export const useJobHook = () => {
       await showToast(message);
       
       // Réinitialiser l'état de mise à jour
-      useJobStore().isUpdateJob = false;
+      useJobStore().setUpdateJob(false);
       state.success = true;
       
       // Rediriger l'utilisateur
-      router.push({ name: "STARTER_DESTINATION" });
+      router.push({ name: "HOME_JOBS" });
     } catch (error) {
       handleApiError(error);
+      throw error;
     } finally {
       // Réinitialiser l'état de chargement
       useJobStore().state.loading = false;

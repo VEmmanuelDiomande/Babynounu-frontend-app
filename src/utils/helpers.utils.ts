@@ -1,6 +1,7 @@
 // src/utils/helpers.ts
 
 import { StorageUtils } from "./store.utils";
+import { buildImageUrl } from "./media.utils";
 
 /**
  * Retarde l'exécution d'une promesse
@@ -44,15 +45,13 @@ export const delay = (ms: number): Promise<void> => {
   /**
    * Formate un montant monétaire
    * @param amount - Montant à formater
-   * @param currency - Devise (EUR par défaut)
+   * @param currency - Devise (FCFA par défaut)
    * @returns Montant formaté
    */
-  export const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
+  export const formatCurrency = (amount: number, currency: string = 'FCFA'): string => {
     return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2
-    }).format(amount);
+      minimumFractionDigits: 0
+    }).format(amount) + ' ' + currency;
   };
   
   /**
@@ -106,15 +105,40 @@ export const delay = (ms: number): Promise<void> => {
    */
   export const getContractStatusConfig = (status: string) => {
     const statusMap: Record<string, { color: string; icon: string; label: string }> = {
-      draft: { color: 'medium', icon: 'document-text-outline', label: 'Brouillon' },
-      pending: { color: 'warning', icon: 'time-outline', label: 'En attente' },
-      active: { color: 'success', icon: 'checkmark-circle-outline', label: 'Actif' },
-      terminated: { color: 'danger', icon: 'close-circle-outline', label: 'Résilié' },
-      cancelled: { color: 'dark', icon: 'ban-outline', label: 'Annulé' }
+      draft: { color: 'medium', icon: 'paragraph', label: 'Brouillon' },
+      pending: { color: 'warning', icon: 'timer-line', label: 'En attente' },
+      active: { color: 'success', icon: 'checkbox-circle-line', label: 'Actif' },
+      terminated: { color: 'danger', icon: 'close-line', label: 'Résilié' },
+      cancelled: { color: 'dark', icon: 'forbid-line', label: 'Annulé' }
     };
   
-    return statusMap[status] || { color: 'primary', icon: 'help-circle-outline', label: 'Inconnu' };
+    return statusMap[status] || { color: 'primary', icon: 'question-line', label: 'Inconnu' };
   };
+
+/**
+ * Parse une chaîne de références (JSON ou texte) en tableau d'objets.
+ * Accepte un JSON stringifié ou un tableau d'objets. Retourne un tableau vide en cas d'erreur.
+ *
+ * @param value - Valeur des références (JSON, texte, etc.)
+ * @returns Tableau de références { fullname, phone, ... }
+ */
+export const parseReferences = (value: any): Array<{ fullname?: string; phone?: string; [key: string]: any }> => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        // fallback: traiter comme texte brut
+      }
+    }
+    return [];
+  }
+  return [];
+};
 
   /**
  * Récupère l'ID utilisateur depuis le stockage
@@ -137,4 +161,15 @@ export const getUserId = async (): Promise<string | null> => {
    */
   export const truncateText = (text: string, length: number = 100): string => {
     return text.length > length ? `${text.substring(0, length)}...` : text;
+  };
+
+  /**
+   * Construit une URL d'image complète à partir d'un chemin potentiellement relatif
+   * @deprecated Utiliser buildImageUrl depuis @/utils/media.utils
+   * @param url - URL ou chemin de l'image (ex: /uploads/profiles/photo.jpg)
+   * @param fallback - URL de fallback si l'image est vide (défaut: /assets/default-avatar.png)
+   * @returns URL complète pointant vers le backend
+   */
+  export const getImageUrl = (url?: string | null, fallback: string = '/assets/default-avatar.png'): string => {
+    return buildImageUrl(url, fallback);
   };

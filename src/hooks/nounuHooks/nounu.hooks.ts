@@ -46,11 +46,14 @@ export const useNounuHook = () => {
     // Informations personnelles
     const { InformationPersonnelle } = nounuStore.state;
     formData.append("fullname", InformationPersonnelle.fullname);
-    formData.append("age", InformationPersonnelle.age);
+    formData.append("age", String(InformationPersonnelle.age));
     formData.append("phone", InformationPersonnelle.phone);
     formData.append("adress", JSON.stringify(InformationPersonnelle.address));
-    
-    if (InformationPersonnelle.image_profil && InformationPersonnelle.image_profil.length > 0) {
+
+    if (
+      InformationPersonnelle.image_profil &&
+      InformationPersonnelle.image_profil.length > 0
+    ) {
       Array.from(InformationPersonnelle.image_profil).forEach((file: any) => {
         formData.append("imageNounu", file);
       });
@@ -81,15 +84,12 @@ export const useNounuHook = () => {
       "horaire_disponible",
       JSON.stringify(Disponibilites.horaire_disponible)
     );
-    formData.append(
-      "urgences",
-      String(Disponibilites.urgences[0]?.id === 1)
-    );
+    formData.append("urgences", String(Disponibilites.urgences[0]?.id === 1));
 
     // Tarifications
     const { Tarifications } = nounuStore.state;
-    formData.append("tarif_horaire", Tarifications.tarif_horaire);
-    formData.append("tarif_mensuel", Tarifications.tarif_mensuel);
+    formData.append("tarif_horaire", String(Tarifications.tarif_horaire));
+    formData.append("tarif_mensuel", String(Tarifications.tarif_mensuel));
     formData.append(
       "flexibilite_tarifaire",
       String(Tarifications.flexibilite_tarifaire[0]?.id === 1)
@@ -97,12 +97,15 @@ export const useNounuHook = () => {
 
     // Références et certifications
     const { VerificationEtReferences } = nounuStore.state;
-    if (VerificationEtReferences.verification_confirmer && VerificationEtReferences.verification_confirmer.length > 0) {
+    if (
+      VerificationEtReferences.verification_confirmer &&
+      VerificationEtReferences.verification_confirmer.length > 0
+    ) {
       VerificationEtReferences.verification_confirmer.forEach((file: any) => {
         formData.append("documents", file);
       });
     }
-    
+
     formData.append(
       "certifications_criteres",
       JSON.stringify(VerificationEtReferences.certifications)
@@ -129,7 +132,10 @@ export const useNounuHook = () => {
 
     // Autres informations
     const { PresentationDuPersonnel } = nounuStore.state;
-    formData.append("courte_biographie", PresentationDuPersonnel.courte_biographie);
+    formData.append(
+      "courte_biographie",
+      PresentationDuPersonnel.courte_biographie
+    );
 
     // Galerie
     const { Galery } = nounuStore.state;
@@ -148,12 +154,12 @@ export const useNounuHook = () => {
    */
   const getProfileEndpoint = (): string => {
     const authStore = useAuthStore();
-    
+
     if (authStore.isUpdateProfil === false) {
       return URL_API_ROUTE.NOUNU_CREATE;
     }
-    
-    return `${URL_API_ROUTE.NOUNU_UPDATE}/${authStore.isUpdateProfilID}`;
+
+    return URL_API_ROUTE.NOUNU_UPDATE;
   };
 
   /**
@@ -161,14 +167,14 @@ export const useNounuHook = () => {
    */
   const createProfile = async (): Promise<void> => {
     const nounuStore = useNounuStore();
-    
+
     try {
-      nounuStore.loading = true;
+      nounuStore.isLoading = true;
       state.loading = true;
       state.error = null;
-      
+
       const userId = await StorageUtils().getStore("nUser_Id");
-      
+
       if (!userId || !userId.value) {
         throw new Error("ID utilisateur non trouvé");
       }
@@ -177,14 +183,14 @@ export const useNounuHook = () => {
       formData.append("userId", userId.value.toString());
 
       const endpoint = getProfileEndpoint();
-      
-      const response = await axios.post(
-        endpoint, 
-        formData, 
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const isUpdate = useAuthStore().isUpdateProfil;
+
+      const response = await axios({
+        method: isUpdate ? 'PUT' : 'POST',
+        url: endpoint,
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       // const response = await fetch(endpoint, {
       //   method: "POST",
@@ -192,31 +198,38 @@ export const useNounuHook = () => {
       // });
 
       if (response.data) {
-        // await StorageUtils().setStore("nProfil_1_Id", response.data.id.toString());
         state.success = true;
-        
+
         // Fermer la modal si elle existe
-        const closeModal = document.querySelector("#closeModelAuthProfil") as HTMLElement;
+        const closeModal = document.querySelector(
+          "#closeModelAuthProfil"
+        ) as HTMLElement;
         if (closeModal) {
           closeModal.click();
         }
-        
-        // Redirection
-        StorageUtils().clearStore();
-        location.assign("/auth/sign-in");
+
+        if (useAuthStore().isUpdateProfil === false) {
+          await StorageUtils().setStore(
+            "nProfil_1_Id",
+            response.data.id.toString()
+          );
+          location.assign("/home/jobs");
+        }
       } else {
         throw new Error("Réponse du serveur invalide");
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
-        state.error = (axiosError.response?.data as { message?: string })?.message || "Erreur de communication avec le serveur";
+        state.error =
+          (axiosError.response?.data as { message?: string })?.message ||
+          "Erreur de communication avec le serveur";
       } else {
         state.error = (error as Error).message || "Erreur inconnue";
       }
       console.error("Erreur création profil:", error);
     } finally {
-      nounuStore.loading = false;
+      nounuStore.isLoading = false;
       state.loading = false;
     }
   };

@@ -1,84 +1,24 @@
-import BasicPage from "@/views/BasicPage.vue";
-import AgencyAuth from "@/views/auth/agencyAuth.vue";
-import DeliveryAuth from "@/views/auth/deliveryAuth.vue";
-import SginInAuth from "@/views/auth/signInAuth.vue";
-import SignAuth from "@/views/auth/signAuth.vue";
-import SignUpAuth from "@/views/auth/signUpAuth.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const AuthRoutes = {
-  path: "/auth",
-  redirect: "/auth/sign",
-  component: BasicPage,
-
+export const AuthRoutes: RouteRecordRaw = {
+  path: '/auth',
+  name: 'AUTH',
+  component: () => import('@/layouts/AuthLayout.vue'),
   children: [
     {
-      path: "sign",
-      meta: {
-        requiresAuth: false,
-        title: `Se connecter`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "SignAuth",
-      component: SignAuth,
-    },
-
-    {
-      path: "sign-in",
-      meta: {
-        requiresAuth: false,
-        title: `Se connecter`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "SginInAuth",
-      component: SginInAuth,
+      path: 'sign-in',
+      name: 'AUTH_SIGN_IN',
+      component: () => import('@/features/nounus/pages/SignInPage.vue'),
     },
     {
-      path: "sign-up",
-      meta: {
-        requiresAuth: false,
-        title: `Se connecter`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "SignUpAuth",
-      component: SignUpAuth,
+      path: 'sign-up',
+      name: 'AUTH_SIGN_UP',
+      component: () => import('@/features/nounus/pages/SignUpPage.vue'),
     },
     {
-      path: "agency",
-      meta: {
-        requiresAuth: false,
-        title: `Se connecter`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "AgencyAuth",
-      component: AgencyAuth,
+      path: 'forgot-password',
+      name: 'AUTH_FORGOT_PASSWORD',
+      component: () => import('@/features/nounus/pages/ForgotPasswordPage.vue'),
     },
-    {
-      path: "delivery",
-      meta: {
-        requiresAuth: false,
-        title: `Se connecter`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "DeliveryAuth",
-      component: DeliveryAuth,
-    },
-   
-
-     
   ],
 };

@@ -1,25 +1,13 @@
-// import BasicPage from "@/views/BasicPage.vue";
-import Notifications from "@/views/notification/notificationPage.vue";
-import TabsPage from "@/views/TabsPage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const NotificationRoutes = {
-  path: "/notifications",
-  redirect: "/notifications",
-  component: TabsPage,
-
+export const NotificationRoutes: RouteRecordRaw = {
+  path: '/notifications',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Notifications`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "NOTIFICATIONS",
-      component: Notifications,
+      path: '',
+      name: 'NOTIFICATIONS',
+      component: () => import('@/features/nounus/pages/NotificationsPage.vue'),
     },
   ],
 };

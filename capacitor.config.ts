@@ -4,9 +4,12 @@ const config: CapacitorConfig = {
   appId: "com.babyNounu.starter",
   appName: "BabyNounu",
   webDir: "dist",
+  server: {
+    androidScheme: "https",
+  },
   plugins: {
     StatusBar: {
-      backgroundColor: "#ffffff", // Couleur de la barre d'état
+      backgroundColor: "#ffffff",
     },
     plugins: {
       PushNotifications: {

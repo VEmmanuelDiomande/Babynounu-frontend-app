@@ -1,42 +1,13 @@
-import BasicPage from "@/views/BasicPage.vue";
-import ContractPage from "@/views/contracts/contractPage.vue";
-import ContractDetailPage from "@/views/contracts/contractDetailPage.vue";
+import { RouteRecordRaw } from 'vue-router';
 
-export const ContractRoutes = {
-  path: "/contract",
-  redirect: "/contract",
-  component: BasicPage,
-
+export const ContractRoutes: RouteRecordRaw = {
+  path: '/contracts',
+  component: () => import('@/layouts/HomeLayout.vue'),
   children: [
-   
     {
-      path: "",
-      meta: {
-        requiresAuth: false,
-        title: `Contract`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "CONTRACT",
-      component: ContractPage,
+      path: '',
+      name: 'CONTRACTS',
+      component: () => import('@/features/nounus/pages/ComingSoonPage.vue'),
     },
-    {
-      path: ":id",
-      meta: {
-        requiresAuth: false,
-        title: `Detail Contract`,
-        description: "",
-        "og:title": ``,
-        "og:description": "",
-        keywords: `reseau social`,
-      },
-      name: "DETAIL_CONTRACT",
-      component: ContractDetailPage,
-    },
-
   ],
 };
-
-

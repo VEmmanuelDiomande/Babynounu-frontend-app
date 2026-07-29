@@ -153,7 +153,6 @@ export const useJobStore = defineStore("AuthJobStore", () => {
   // Validation -------------------------------------------------------------------
   const validateStep = (data: unknown, schema: z.ZodSchema) => {
     const result = schema.safeParse(data);
-    console.log(data, result);
     if (!result.success) {
       const firstError = result.error.issues[0];
       state.in_error = {
@@ -169,10 +168,9 @@ export const useJobStore = defineStore("AuthJobStore", () => {
 
   type ValidationStepKey = keyof Omit<
     JobStoreState,
-    | "stepProfil"
-    | "activeMenu_typeOfProfil"
-    | "image_profil_preview"
+    | "stepJob"
     | "in_error"
+    | "loading"
   >;
 
   // Gestion des étapes ----------------------------------------------------------
@@ -183,20 +181,19 @@ export const useJobStore = defineStore("AuthJobStore", () => {
   ) => {
     if (!validateStep(state[key], schema)) return;
 
-    console.log(isFinalStep);
     if (isFinalStep) {
       try {
         await createJob();
       } catch (error) {
+        const err = error as any;
         state.in_error = {
-          message: "Erreur lors de la création de l'offre",
+          message:
+            err?.response?.data?.message ||
+            err?.message ||
+            "Erreur lors de la création de l'offre",
         };
       }
     } else {
-      console.log(
-        state.typeService.type_services[0]?.slug,
-        state.typeService.combinaison_service[0]?.value, state.stepJob
-      );
       if (
         state.typeService.type_services[0]?.slug == "nounu-type" &&
         state.stepJob == 3 &&
@@ -209,6 +206,11 @@ export const useJobStore = defineStore("AuthJobStore", () => {
         state.typeService.combinaison_service[0]?.value == false
       ) {
         state.stepJob = 5;
+      } else if (
+        state.stepJob == 4 &&
+        state.typeService.type_services[0]?.slug != "menagere"
+      ) {
+        state.stepJob = 6;
       } else {
         state.stepJob = Math.min(state.stepJob + 1, 9);
       }
@@ -251,6 +253,7 @@ export const useJobStore = defineStore("AuthJobStore", () => {
     // state.activeMenu_typeOfProfil = "open-modal-auth-profil-edit";
     state.stepJob = 1;
 
+    isUpdateJob.value = true;
     isUpdateJobID.value = Data.id;
 
     state.informationsGenerales.titre = Data.titre;
@@ -291,6 +294,14 @@ export const useJobStore = defineStore("AuthJobStore", () => {
     
   };
 
+  // Action pour gérer l'état de mise à jour
+  const setUpdateJob = (value: boolean, id?: any) => {
+    isUpdateJob.value = value;
+    if (id !== undefined) {
+      isUpdateJobID.value = id;
+    }
+  };
+
   return {
     state,
     previousStep,
@@ -316,6 +327,7 @@ export const useJobStore = defineStore("AuthJobStore", () => {
     AutresInfosJob: () =>
       handleStepValidation("autresInfos", JobSchemas.AutresInfosSchema, true),
     ChangeInputToEdit,
+    setUpdateJob,
     DataMoyensContact,
     DataCombinationServices,
     DataExperienceMinimum,

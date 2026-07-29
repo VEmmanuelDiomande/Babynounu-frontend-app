@@ -86,6 +86,7 @@ type ValidationStepKey = keyof Omit<
 // Store ------------------------------------------------------------------------
 export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
   const { createProfile } = useNounuHook(); // À implémenter
+  const authStore = useAuthStore();
 
   // État réactif typé
   const GALLERY_PREVIEW = ref<any[]>([]);
@@ -154,16 +155,69 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
     return true;
   };
 
+  // Validation de toutes les étapes avant la finalisation
+  const validateAllSteps = () => {
+    const steps: { key: ValidationStepKey; schema: ZodSchema; step: number }[] = [
+      {
+        key: "InformationPersonnelle",
+        schema: authStore.isUpdateProfil
+          ? InformationPersonnelleUpdateSchema
+          : InformationPersonnelleSchema,
+        step: 1,
+      },
+      {
+        key: "ExperienceEtCompetences",
+        schema: ExperienceEtCompetencesSchema,
+        step: 2,
+      },
+      { key: "Disponibilites", schema: DisponibilitesSchema, step: 3 },
+      { key: "Tarifications", schema: TarificationsSchema, step: 4 },
+      {
+        key: "PresentationDuPersonnel",
+        schema: PresentationDuPersonnelSchema,
+        step: 5,
+      },
+      {
+        key: "DisponibiliteGeographique",
+        schema: DisponibiliteGeographiqueSchema,
+        step: 6,
+      },
+      {
+        key: "VerificationEtReferences",
+        schema: authStore.isUpdateProfil
+          ? VerificationEtReferencesUpdateSchema
+          : VerificationEtReferencesSchema,
+        step: 7,
+      },
+      {
+        key: "Galery",
+        schema: authStore.isUpdateProfil ? GaleryUpdateSchema : GalerySchema,
+        step: 8,
+      },
+    ];
+
+    for (const { key, schema, step } of steps) {
+      if (!validateStep(state[key], schema)) {
+        state.StepProfil = step;
+        return false;
+      }
+    }
+
+    state.in_error = {};
+    return true;
+  };
+
   // Gestion des étapes
   const handleStepValidation = async (
     key: ValidationStepKey,
     schema: ZodSchema,
     isFinalStep = false
   ) => {
-    console.log(state[key]);
     if (!validateStep(state[key], schema)) return;
 
     if (isFinalStep) {
+      if (!validateAllSteps()) return;
+
       try {
         await createProfile();
       } catch (error) {
@@ -172,7 +226,7 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
         };
       }
     } else {
-      state.StepProfil = Math.min(state.StepProfil + 1, 9);
+      state.StepProfil = Math.min(state.StepProfil + 1, 8);
     }
   };
 
@@ -204,7 +258,7 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
   ];
 
   const ChangeInputToEdit = (Data: any) => {
-    useAuthStore().isUpdateProfilID = Data.id;
+    useAuthStore().setUpdateProfil(true, Data.id);
     state.InformationPersonnelle.address = Data.preferences.adress;
     state.InformationPersonnelle.fullname = Data.fullname;
     state.InformationPersonnelle.age = Data.age;
@@ -221,27 +275,29 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
 
     state.Disponibilites.horaire_disponible =
       Data.preferences.horaire_disponible;
-    state.Disponibilites.urgences = DataEMERGENCIES.filter((item) =>
-      item.id == Data.urgences ? 1 : 2
+    state.Disponibilites.urgences = DataEMERGENCIES.filter(
+      (item) => item.id === (Data.urgences ? 1 : 2)
     );
 
     state.Tarifications.tarif_horaire = Data.tarif_horaire;
     state.Tarifications.tarif_mensuel = Data.tarif_mensuel;
     state.Tarifications.flexibilite_tarifaire = DataFlexiblePrice.filter(
-      (item) => (item.id == Data.flexibilite_tarifaire ? 1 : 2)
+      (item) => item.id === (Data.flexibilite_tarifaire ? 1 : 2)
     );
 
     state.VerificationEtReferences.verification_confirmer =
-      Data.verification_confirmer;
-    state.VerificationEtReferences.references = JSON.parse(Data.references);
+      Data.verification_confirmer || [];
+    state.VerificationEtReferences.references = typeof Data.references === 'string'
+      ? (() => { try { return JSON.parse(Data.references); } catch { return []; } })()
+      : (Array.isArray(Data.references) ? Data.references : []);
     state.VerificationEtReferences.certifications =
-      Data.preferences.certifications_criteres;
+      Data.preferences.certifications_criteres || [];
 
-    state.PresentationDuPersonnel.courte_biographie = Data.courte_biographie;
+    state.PresentationDuPersonnel.courte_biographie = Data.courte_biographie || Data.courteBiographie || '';
 
-    state.EvaluationEtAvis.evaluation_precedentes = JSON.parse(
-      Data.evaluation_precedentes
-    );
+    state.EvaluationEtAvis.evaluation_precedentes = typeof Data.evaluation_precedentes === 'string'
+      ? (() => { try { return JSON.parse(Data.evaluation_precedentes); } catch { return []; } })()
+      : (Array.isArray(Data.evaluation_precedentes) ? Data.evaluation_precedentes : []);
 
     state.DisponibiliteGeographique.zone_de_travail =
       Data.preferences.zone_de_travail;

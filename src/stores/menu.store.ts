@@ -1,8 +1,7 @@
 // @ts-check
 import { defineStore } from "pinia";
 
-export const useMenuStore = defineStore({
-  id: "Menu",
+export const useMenuStore = defineStore("Menu", {
   state: () => ({
     XTranslateMenu: 0 || '0',
     ActiveIndexMenu: 0
@@ -11,5 +10,4 @@ export const useMenuStore = defineStore({
   actions: {
 
   }
-   
 });

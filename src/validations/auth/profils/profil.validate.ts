@@ -50,7 +50,7 @@ export type InformationPersonnelle = z.infer<
 >;
 
 export const InformationSurLesEnfantsSchema = z.object({
-  number_of_children: z
+  number_of_children: z.coerce
     .string()
     .min(1, { message: "Le nombre d'enfants ne doit pas d'etre vide" }),
   besions_specifiques: z
@@ -59,6 +59,11 @@ export const InformationSurLesEnfantsSchema = z.object({
 });
 
 export const ServicesRecherchesSchema = z.object({
+  type_services: z
+    .array(z.any())
+    .min(1, {
+      message: "Le type de services ne doit pas d'etre vide",
+    }),
   garde_enfants: z
     .array(z.any())
     .min(1, {
@@ -89,7 +94,7 @@ export const LocalizationsSchema = z.object({
 });
 
 export const TarificationsSchema = z.object({
-  budget_estimated: z
+  budget_estimated: z.coerce
     .string()
     .min(1, { message: "Le budget estimé ne doit pas d'etre vide" }),
 });
@@ -108,6 +113,18 @@ export const PreferencePourLesSpecifiquesSchema = z.object({
     .min(1, {
       message: "La disponibilité du prestataire ne doit pas être vide",
     }),
+});
+
+export const TachesSpecifiquesSchema = z.object({
+  taches: z
+    .array(z.any())
+    .min(1, { message: "Les tâches spécifiques ne doivent pas être vides" }),
+});
+
+export const CriteresSelectionSchema = z.object({
+  criteres_selections: z
+    .array(z.any())
+    .min(1, { message: "Les critères de sélection ne doivent pas être vides" }),
 });
 
 export const ModalitesDePaiementSchema = z.object({

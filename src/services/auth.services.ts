@@ -6,21 +6,31 @@ import { StorageUtils } from "@/utils/store.utils";
 import { useAuthSignUpHook } from "@/hooks/authHooks/signUp.hook";
 import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth.store";
-import { useRouter } from "vue-router";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { useParentHook } from "@/hooks/parentHooks/parent.hooks";
+import router from "@/routes";
+
+async function checkAndStoreSubscription(token: string, userId: string) {
+  try {
+    const { data } = await axios.get(URL_API_ROUTE.ABONNEMENT_HAS_ACTIVE_SUBSCRIPTION, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    const hasActive = !!data && data.status === 'active' && new Date(data.expiresAt) > new Date();
+    await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
+  } catch {
+    await StorageUtils().setStore("nIsAbonnement", "false");
+  }
+}
 
 /**
  * Service d'authentification pour gérer l'inscription, la connexion et autres fonctionnalités liées à l'authentification
  */
 class AuthService {
   private createService;
-  private router;
   private storageUtils;
 
   constructor() {
     this.createService = ApiServices().CreateService;
-    this.router = useRouter();
     this.storageUtils = StorageUtils();
   }
 
@@ -40,8 +50,6 @@ class AuthService {
    */
   async register(signBody: SIGN_UP) {
     try {
-      const openModal: HTMLElement | null = document.querySelector(`#open-modal-auth-profil`);
-      
       const { data } = await this.createService(URL_API_ROUTE.AUTH_REGISTER, {
         email: signBody.email,
         password: signBody.password,
@@ -54,16 +62,20 @@ class AuthService {
         await Promise.all([
           this.storageUtils.setStore("nUser_Id", data.user.id),
           this.storageUtils.setStore("nToken", data.user.access_token),
+          this.storageUtils.setStore("nRefreshToken", data.user.refresh_token),
           this.storageUtils.setStore("nType_Profil", data.user.type_profil.slug),
         ]);
-        
+
         // Mise à jour du store de profil
         useProfilStore().state.activeMenu_typeOfProfil = data.user.type_profil.description;
-        
-        // Ouverture de la modal de profil
-        if (openModal) openModal.click();
+
+        // Redirection vers la création de profil
+        const profileRoute = data.user.type_profil.slug === "parent"
+          ? { name: "AUTH_PROFILE_PARENT" }
+          : { name: "AUTH_PROFILE_NOUNU" };
+        await router.replace(profileRoute);
       }
-      
+
       return data;
     } catch (error: any) {
       this.handleRegistrationError(error);
@@ -77,14 +89,14 @@ class AuthService {
   private handleRegistrationError(error: any) {
     if (error?.response?.data?.statusCode === 400) {
       const authStore = useAuthStore();
-      
-      if (Array.isArray(error?.response.data.message)) {
-        authStore.state.in_error.path = "email";
-        authStore.state.in_error.message = error?.response.data.message[0].message;
-      } else {
-        authStore.state.in_error.path = "email";
-        authStore.state.in_error.message = error?.response.data.message;
-      }
+      const message = Array.isArray(error?.response.data.message)
+        ? error?.response.data.message[0].message
+        : error?.response.data.message;
+
+      authStore.setError('general', {
+        path: 'email',
+        message: message || "Une erreur est survenue lors de l'inscription",
+      });
     }
   }
 
@@ -95,8 +107,6 @@ class AuthService {
    */
   async login(signInBody: SIGN_IN) {
     try {
-      const openModal: HTMLElement | null = document.querySelector(`#open-modal-auth-profil`);
-      
       const { data } = await this.createService(URL_API_ROUTE.AUTH_LOGIN, {
         email: signInBody.email,
         password: signInBody.password,
@@ -106,8 +116,26 @@ class AuthService {
         // Stockage des informations utilisateur
         this.storageUtils.setStore("nUser_Id", data.user?.id);
         this.storageUtils.setStore("nToken", data.user?.access_token);
+        this.storageUtils.setStore("nRefreshToken", data.user?.refresh_token);
         this.storageUtils.setStore("nType_Profil", data.user?.type_profil?.slug);
         this.storageUtils.setStore("nRole", data.user?.role?.slug);
+
+        // Stocker les infos utilisateur pour le paiement
+        const profil = data.user?.profil?.[0];
+        const userData = {
+          id: data.user?.id,
+          email: data.user?.email,
+          fullname: profil?.fullname || profil?.name || '',
+          phone: profil?.phone || profil?.telephone || '',
+        };
+        this.storageUtils.setStore("nUser", JSON.stringify(userData));
+
+        // Vérification du statut d'abonnement avant redirection
+        if (data.user?.role?.slug !== "admin") {
+          await checkAndStoreSubscription(data.user.access_token, data.user.id);
+        } else {
+          await this.storageUtils.setStore("nIsAbonnement", "true");
+        }
 
         // Redirection en fonction du rôle et du profil
         if (data.user?.role?.slug === "admin" || data.user.profil.length !== 0) {
@@ -118,12 +146,16 @@ class AuthService {
           }
           
           const toRedirect = this.getRedirectPath(data.user);
+          await this.storageUtils.setStore("nPageType", toRedirect);
           location.assign(toRedirect);
           return;
         } else {
-          // Ouverture de la modal de profil pour les nouveaux utilisateurs
+          // Redirection vers la création de profil pour les nouveaux utilisateurs
           useProfilStore().state.activeMenu_typeOfProfil = data.user.type_profil.description;
-          if (openModal) openModal.click();
+          const profileRoute = data.user.type_profil.slug === "parent"
+            ? { name: "AUTH_PROFILE_PARENT" }
+            : { name: "AUTH_PROFILE_NOUNU" };
+          await router.replace(profileRoute);
           return;
         }
       }
@@ -140,7 +172,7 @@ class AuthService {
    * @returns Chemin de redirection
    */
   private getRedirectPath(user: any): string {
-    if (user?.type_profil?.slug === "administrateur") return "/admin/chats";
+    if (user?.role?.slug === "admin") return "/admin";
     return user?.type_profil?.slug === "parent" ? "/home/nounus" : "/home/jobs";
   }
 
@@ -150,27 +182,42 @@ class AuthService {
    */
   private handleLoginError(error: any) {
     const authStore = useAuthStore();
-    
-    if (Array.isArray(error?.response?.data?.message)) {
-      authStore.state.in_error_login.path = "email";
-      authStore.state.in_error_login.message = error?.response.data.message[0].message;
-    } else {
-      authStore.state.in_error_login.path = "email";
-      authStore.state.in_error_login.message = error?.response?.data?.message;
-    }
+    const message = Array.isArray(error?.response?.data?.message)
+      ? error?.response.data.message[0].message
+      : error?.response?.data?.message;
+
+    authStore.setError('login', {
+      path: 'email',
+      message: message || 'Une erreur est survenue lors de la connexion',
+    });
   }
 
   /**
    * Déconnecte l'utilisateur
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    try {
+      const nToken = await this.storageUtils.getStore('nToken');
+      if (nToken?.value) {
+        await axios.post(URL_API_ROUTE.AUTH_LOGOUT, {}, {
+          headers: { Authorization: `Bearer ${nToken.value}` },
+        });
+      }
+    } catch {
+      // Ignore errors - we clear local state regardless
+    }
+
     // Supprimer toutes les données de session
     this.storageUtils.removeStore("nUser_Id");
     this.storageUtils.removeStore("nToken");
+    this.storageUtils.removeStore("nRefreshToken");
     this.storageUtils.removeStore("nType_Profil");
     this.storageUtils.removeStore("nRole");
     this.storageUtils.removeStore("nAdmin_Id");
     this.storageUtils.removeStore("nProfil_1_Id");
+    this.storageUtils.removeStore("nPageType");
+    this.storageUtils.removeStore("nIsAbonnement");
+    this.storageUtils.removeStore("nUser");
     localStorage.removeItem("user");
   }
 

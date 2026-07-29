@@ -8,13 +8,11 @@ import { useAbonnementStore } from "@/stores/abonnementStore";
 import { useProfiNounulStore } from "@/stores/authProfilNounuStore";
 import { useJobStore } from "@/stores/jobStore";
 import { useConversationHook } from "../messagerieHooks/conversation.hook";
-import { SocketService } from "@/services/socket.services";
+import { socketService } from "@/services/socket.services";
 import { StorageUtils } from "@/utils/store.utils";
 import { Toast } from "@capacitor/toast";
 import { SettingServices } from "@/services/setting.services";
 import router from "@/routes";
-
-const socketService = new SocketService();
 
 export const useProfilHook = () => {
   const state = reactive({});
@@ -23,7 +21,6 @@ export const useProfilHook = () => {
     const BtnIsUpdateProfil: any = document.getElementById("is-update-profil");
     if (BtnIsUpdateProfil) {
       BtnIsUpdateProfil.value = useAuthStore().isUpdateProfil;
-      console.log(BtnIsUpdateProfil.value);
     }
   };
 
@@ -54,31 +51,31 @@ export const useProfilHook = () => {
 
   const GetIcon = (type: any) => {
     const icons: any = {
-      besions_specifiques: "RiUserHeartLine",
-      budget: "RiMoneyDollarCircleLine",
-      number_of_children: "RiTeamLine",
-      disponibility_du_prestataire: "RiCalendarCheckLine",
-      competance_specifique: "RiStarLine",
-      langue_parler: "RiGlobalLine",
-      frequence_des_services: "RiFileListLine",
-      area: "RiMapPinLine",
-      horaire_souhaites: "RiTimeLine",
-      AgeOfChildrens: "RiChildLine",
-      aide_menagere: "RiHomeLine",
-      fullname: "RiUserLine",
-      phone: "RiPhoneLine",
-      adresse_mail: "RiMailLine",
-      nom: "RiUserLine",
-      note: "RiStickyNoteLine",
-      commentaire: "RiChatQuoteLine",
+      besions_specifiques: "heart",
+      budget: "dollar",
+      number_of_children: "user-multiple-4",
+      disponibility_du_prestataire: "calendar-days",
+      competance_specifique: "star-fat",
+      langue_parler: "globe-1",
+      frequence_des_services: "text-paragraph",
+      area: "map-marker-1",
+      horaire_souhaites: "stopwatch",
+      AgeOfChildrens: "user-4",
+      aide_menagere: "home-2",
+      fullname: "user-4",
+      phone: "phone",
+      adresse_mail: "envelope-1",
+      nom: "user-4",
+      note: "pencil-1",
+      commentaire: "double-quotes-end-1",
 
       // Ajout des icônes manquants
-      tranche_age_enfants: "RiCake2Line",
-      zone_de_travail: "RiMapPinUserLine",
-      horaire_disponible: "RiTimeLine",
-      certifications_criteres: "RiShieldCheckLine",
+      tranche_age_enfants: "cake-1",
+      zone_de_travail: "map-marker-1",
+      horaire_disponible: "stopwatch",
+      certifications_criteres: "shield-2",
     };
-    return icons[type] || "RiUserHeartLine"; // Icône par défaut si non trouvée
+    return icons[type] || "heart"; // Icône par défaut si non trouvée
   };
 
   const GetName = (type: any) => {
@@ -98,7 +95,8 @@ export const useProfilHook = () => {
 
   const OpenEditProfil = (props: any, type: any) => {
     useJobStore().isUpdateJob = true;
-    useAuthStore().isUpdateProfil = true;
+    useAuthStore().setUpdateProfil(true);
+    useProfilStore().state.stepProfil = 1;
     const isUpdateProfil: any = document.getElementById("is-update-profil");
     isUpdateProfil.value = true;
 
