@@ -769,10 +769,18 @@ const applyFallbackParameters = () => {
   ];
 };
 
-onMounted(() => {
+onMounted(async () => {
   fetchParameters();
   if (authStore.isUpdateProfil && nounuStore.IMAGE_PREVIEW) {
     imagePreview.value = typeof nounuStore.IMAGE_PREVIEW === 'string' ? nounuStore.IMAGE_PREVIEW : '';
+  }
+
+  // Pré-remplir le fullname depuis l'inscription si pas en mode édition
+  if (!authStore.isUpdateProfil && !profilStore.state.InformationPersonnelle.fullname) {
+    const storedFullname = await StorageUtils().getStore('nUserFullname');
+    if (storedFullname?.value) {
+      profilStore.state.InformationPersonnelle.fullname = storedFullname.value;
+    }
   }
 });
 

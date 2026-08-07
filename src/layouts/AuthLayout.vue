@@ -27,9 +27,11 @@
     <div class="flex-1 flex flex-col px-6 sm:px-0 mx-auto w-full pt-16">
       <PullToRefresh :refreshing="isRefreshing" @refresh="handleRefresh">
         <router-view v-slot="{ Component }">
-          <keep-alive>
-            <component :is="Component" />
-          </keep-alive>
+          <Transition name="page" mode="out-in">
+            <keep-alive>
+              <component :is="Component" :key="route.path" />
+            </keep-alive>
+          </Transition>
         </router-view>
       </PullToRefresh>
     </div>

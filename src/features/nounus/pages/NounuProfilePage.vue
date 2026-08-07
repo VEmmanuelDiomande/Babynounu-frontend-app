@@ -656,8 +656,16 @@ const fetchParameters = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   fetchParameters();
+
+  // Pré-remplir le fullname depuis l'inscription si pas en mode édition
+  if (!authStore.isUpdateProfil && !nounuStore.state.InformationPersonnelle.fullname) {
+    const storedFullname = await StorageUtils().getStore('nUserFullname');
+    if (storedFullname?.value) {
+      nounuStore.state.InformationPersonnelle.fullname = storedFullname.value;
+    }
+  }
 });
 
 const quitWizard = async () => {

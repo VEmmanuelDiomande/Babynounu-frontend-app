@@ -307,10 +307,13 @@ const onConversationsUpdated = () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   adminStore.fetchStats();
-  notificationStore.NCountChats();
-  notificationStore.NCountNotification();
+  const nToken = (await StorageUtils().getStore('nToken'))?.value;
+  if (nToken) {
+    notificationStore.NCountChats();
+    notificationStore.NCountNotification();
+  }
   socketService.on('conversationsUpdated', onConversationsUpdated);
 });
 

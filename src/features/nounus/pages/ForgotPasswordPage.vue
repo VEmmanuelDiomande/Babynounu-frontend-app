@@ -273,8 +273,12 @@ const handleVerifyCode = async () => {
 };
 
 const handleResetPassword = async () => {
-  if (password.value.length < 6) {
-    errorMessage.value = 'Le mot de passe doit contenir au moins 6 caractères.';
+  if (password.value.length < 8) {
+    errorMessage.value = 'Le mot de passe doit contenir au moins 8 caractères.';
+    return;
+  }
+  if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password.value)) {
+    errorMessage.value = 'Le mot de passe doit contenir au moins 1 majuscule, 1 minuscule et 1 chiffre.';
     return;
   }
   if (password.value !== confirmPassword.value) {

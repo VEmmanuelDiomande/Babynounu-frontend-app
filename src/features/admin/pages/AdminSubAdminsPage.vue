@@ -94,7 +94,7 @@
           />
         </div>
         <div>
-          <label class="block text-xs font-love font-medium text-gray-500 mb-1">Mot de passe (min. 6 caractères)</label>
+          <label class="block text-xs font-love font-medium text-gray-500 mb-1">Mot de passe (min. 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre)</label>
           <input
             v-model="formPassword"
             type="password"
@@ -147,7 +147,7 @@
         <div class="flex items-center gap-3">
           <button
             @click="submitCreate"
-            :disabled="adminStore.isLoading || !formEmail || !formPassword || formPassword.length < 6 || !formRoleId"
+            :disabled="adminStore.isLoading || !formEmail || !formPassword || formPassword.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formPassword) || !formRoleId"
             class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-love font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
           >
             {{ adminStore.isLoading ? 'Création...' : 'Créer le sous-admin' }}
@@ -203,7 +203,7 @@ const closeCreateModal = () => {
 };
 
 const submitCreate = async () => {
-  if (!formEmail.value || !formPassword.value || formPassword.value.length < 6 || !formRoleId.value) return;
+  if (!formEmail.value || !formPassword.value || formPassword.value.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formPassword.value) || !formRoleId.value) return;
   formError.value = '';
   formSuccess.value = false;
   try {

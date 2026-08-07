@@ -54,25 +54,30 @@ export const useNounuStore = defineStore('NOUNU', () => {
         langue_parler: preferencesIds().langue_parler
       });
 
-      if (data?.data) {
+      // Backend retourne { success, data: { data: [...], pagination } } via TransformInterceptor
+      const payload = data?.data?.data || data?.data || data;
+      const pagination = data?.data?.pagination || data?.pagination;
+
+      if (Array.isArray(payload)) {
         if (append) {
           const seen = new Set(useNounuStore().DataNounus.map((n: any) => n.id));
-          const deduped = data.data.filter((n: any) => !seen.has(n.id));
+          const deduped = payload.filter((n: any) => !seen.has(n.id));
           useNounuStore().DataNounus = [...useNounuStore().DataNounus, ...deduped];
         } else {
-          useNounuStore().DataNounus = data.data;
+          useNounuStore().DataNounus = payload;
           document.getElementById("closeModelAuthProfil")?.click()
         }
         currentPage.value = parseInt(page);
-        hasNextPage.value = data?.pagination?.hasNextPage ?? false;
+        hasNextPage.value = pagination?.hasNextPage ?? false;
         isLoading.value = false
         isLoadingMore.value = false
       }
     } catch (error) {
       isError.value = true
+      console.error("Erreur lors de la recherche de nounou:", error);
+    } finally {
       isLoading.value = false
       isLoadingMore.value = false
-      console.error("Erreur lors de la recherche de nounou:", error);
     }
   };
 

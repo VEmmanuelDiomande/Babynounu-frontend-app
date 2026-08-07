@@ -68,11 +68,20 @@ const props = withDefaults(
     fileName?: string;
     aspectRatio?: number;
     stencilType?: 'circle' | 'rectangle';
+    /** Largeur maximale de sortie en pixels (défaut: 1200) */
+    maxWidth?: number;
+    /** Hauteur maximale de sortie en pixels (défaut: 1200) */
+    maxHeight?: number;
+    /** Qualité JPEG 1-100 (défaut: 80) */
+    quality?: number;
   }>(),
   {
     fileName: 'image.jpg',
     aspectRatio: 1,
     stencilType: 'rectangle',
+    maxWidth: 1200,
+    maxHeight: 1200,
+    quality: 80,
   }
 );
 
@@ -87,20 +96,51 @@ const close = () => {
   emit('update:modelValue', false);
 };
 
+/**
+ * Redimensionne un canvas pour respecter les dimensions maximales
+ * tout en conservant le ratio. Retourne un nouveau canvas.
+ */
+const resizeCanvas = (source: HTMLCanvasElement, maxWidth: number, maxHeight: number): HTMLCanvasElement => {
+  const { width, height } = source;
+  if (width <= maxWidth && height <= maxHeight) {
+    return source; // Pas besoin de redimensionner
+  }
+
+  const ratio = Math.min(maxWidth / width, maxHeight / height);
+  const newWidth = Math.round(width * ratio);
+  const newHeight = Math.round(height * ratio);
+
+  const resized = document.createElement('canvas');
+  resized.width = newWidth;
+  resized.height = newHeight;
+
+  const ctx = resized.getContext('2d');
+  if (!ctx) return source;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(source, 0, 0, newWidth, newHeight);
+
+  return resized;
+};
+
 const confirm = () => {
   const result = cropperRef.value?.getResult();
   const canvas = result?.canvas;
   if (!canvas) return;
 
-  canvas.toBlob(
+  // Redimensionner le canvas avant export pour limiter la taille
+  const resizedCanvas = resizeCanvas(canvas, props.maxWidth, props.maxHeight);
+
+  resizedCanvas.toBlob(
     (blob: Blob | null) => {
       if (!blob) return;
       const file = new File([blob], props.fileName, { type: blob.type || 'image/jpeg' });
-      const dataUrl = canvas.toDataURL('image/jpeg');
+      const dataUrl = resizedCanvas.toDataURL('image/jpeg', props.quality / 100);
       emit('crop', { file, dataUrl });
     },
     'image/jpeg',
-    0.92
+    props.quality / 100
   );
 };
 </script>

@@ -1,9 +1,5 @@
 <template>
-  <router-view v-slot="{ Component }">
-    <keep-alive>
-      <component :is="Component" />
-    </keep-alive>
-  </router-view>
+  <router-view />
   <ToastContainer />
 </template>
 
@@ -50,9 +46,13 @@ onMounted(() => {
   initRealtime();
 
   if (Capacitor.isNativePlatform()) {
-    StatusBar.setOverlaysWebView({ overlay: false });
-    StatusBar.setStyle({ style: Style.Light });
-    StatusBar.setBackgroundColor({ color: '#ffffff' });
+    // StatusBar transparent : le contenu du WebView s'affiche sous la status bar.
+    // SystemBars (capacitor.config.ts, style "LIGHT") garde les icones sombres
+    // (heure/batterie) visibles sur le fond clair de l'app.
+    // Aucun background defini par Capacitor : la status bar montre le contenu
+    // du WebView (rose-50 ou blanc selon la page).
+    // StatusBar.setOverlaysWebView({ overlay: true });
+    // StatusBar.setStyle({ style: Style.Dark });
 
     App.addListener('appUrlOpen', ({ url }) => {
       if (!url) return;

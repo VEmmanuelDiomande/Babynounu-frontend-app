@@ -336,7 +336,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import RatingModal from '@/features/nounus/components/RatingModal.vue';
 import { Drawer } from '@/components/ui';
 import { useAllContracts } from '@/features/contracts/hooks/useContracts';
-import { useCreateReview, useCheckReviewById } from '@/features/reviews/hooks/useReviews';
+import { useCreateReview, useCheckReviewsBatch } from '@/features/reviews/hooks/useReviews';
 import { getAvatarUrl } from '@/utils/media.utils';
 import { StorageUtils } from '@/utils/store.utils';
 
@@ -433,6 +433,25 @@ const ratingPrestation = ref<Prestation | null>(null);
 const ratingModalRef = ref<any>(null);
 const showDetailDrawer = ref(false);
 const selectedPrestation = ref<Prestation | null>(null);
+
+// Batch check reviews for past prestations (replaces N+1 pattern)
+// Uses useQueries at setup level - proper TanStack Query pattern
+const pastContractIds = computed(() =>
+  prestations.value
+    .filter(p => (p.contractStatus === 'Accepted' || p.contractStatus === 'Completed') && isPastDate(p.date))
+    .map(p => p.id.toString())
+);
+const { reviewedMap } = useCheckReviewsBatch(pastContractIds);
+
+// Sync batch results into reviewedContracts set
+watch(reviewedMap, (map) => {
+  if (!map || map.size === 0) return;
+  const newSet = new Set(reviewedContracts.value);
+  for (const [contractId, hasReviewed] of map.entries()) {
+    if (hasReviewed) newSet.add(Number(contractId));
+  }
+  reviewedContracts.value = newSet;
+}, { deep: true });
 
 const tabs = computed(() => [
   { id: 'agenda', label: 'Agenda', count: upcomingPrestations.value.length },
@@ -578,23 +597,6 @@ const submitReview = async (data: { rating: number; comment: string }) => {
   }
 };
 
-const checkReviewedPrestations = async () => {
-  const past = prestations.value.filter(p => (p.contractStatus === 'Accepted' || p.contractStatus === 'Completed') && isPastDate(p.date));
-  if (past.length === 0) return;
-
-  for (const p of past) {
-    try {
-      const { data: checkData } = useCheckReviewById(p.id.toString());
-      if (checkData.value?.hasReviewed) {
-        reviewedContracts.value.add(p.id);
-      }
-    } catch {}
-  }
-};
-
-watch(activeTab, (val) => {
-  if (val === 'past' && reviewedContracts.value.size === 0) {
-    checkReviewedPrestations();
-  }
-});
+// Note: checkReviewedPrestations() has been replaced by useCheckReviewsBatch above
+// (proper TanStack Query pattern, no more N+1 HTTP requests)
 </script>

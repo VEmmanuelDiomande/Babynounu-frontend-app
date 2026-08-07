@@ -187,6 +187,19 @@
         :job="job"
         @click="goToJobDetail"
       />
+
+      <!-- Load more -->
+      <div v-if="hasNextPage" class="flex justify-center pt-2 pb-4">
+        <button
+          @click="fetchNextPage()"
+          :disabled="isFetchingNextPage"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold text-white bg-primary hover:bg-primary/90 active:scale-95 transition-all shadow-sm disabled:opacity-60"
+        >
+          <div v-if="isFetchingNextPage" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          <i v-else class="ri ri-arrow-down-line" style="font-size: 18px;"></i>
+          {{ isFetchingNextPage ? 'Chargement...' : 'Charger plus' }}
+        </button>
+      </div>
     </div>
 
     <!-- Empty state -->
@@ -220,7 +233,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import JobCard from '@/features/nounus/components/JobCard.vue';
 import { Drawer } from '@/components/ui';
-import { useAllJobs } from '@/features/jobs/hooks/useJobs';
+import { useInfiniteJobs } from '@/features/jobs/hooks/useJobs';
 import { useAbonnementStore } from '@/stores/abonnementStore';
 
 const router = useRouter();
@@ -228,11 +241,18 @@ const abonnementStore = useAbonnementStore();
 
 const hasAdvancedSearch = computed(() => abonnementStore.hasFeature('advanced_search'));
 
-const PAGE_LIMIT = 100;
+const PAGE_LIMIT = 20;
 const params = ref<Record<string, any>>({ page: 1, limit: PAGE_LIMIT });
 
-// TanStack Query for jobs
-const { data: allJobsData, isFetching: loading, error: jobsError } = useAllJobs(params);
+// TanStack Query for jobs (infinite scroll)
+const {
+  data: allJobsData,
+  isFetching: loading,
+  error: jobsError,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteJobs(params);
 
 const searchQuery = ref('');
 const hasSearched = ref(false);
@@ -381,8 +401,23 @@ const resetAll = () => {
 };
 
 const jobs = computed(() => {
-  const result = allJobsData.value;
-  return Array.isArray(result) ? result : (result?.data || []);
+  const pages = allJobsData.value?.pages;
+  if (!pages || pages.length === 0) return [];
+  // Aggregate all pages, dedup by id
+  const seen = new Set();
+  const all: any[] = [];
+  for (const page of pages) {
+    // Backend retourne { success, data: { data: [...], pagination } } via TransformInterceptor
+    const inner = page?.data?.data || page?.data || page;
+    const items = Array.isArray(inner) ? inner : [];
+    for (const item of items) {
+      if (item?.id && !seen.has(item.id)) {
+        seen.add(item.id);
+        all.push(item);
+      }
+    }
+  }
+  return all;
 });
 
 const filteredResults = computed(() => {

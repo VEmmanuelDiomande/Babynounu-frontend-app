@@ -234,6 +234,7 @@ import { reactive, ref, computed } from 'vue';
 import { useAuthSignUpHook } from '@/hooks/authHooks/signUp.hook';
 import { useAuthStore } from '@/stores/auth.store';
 import { useProfilStore } from '@/stores/authProfilStore';
+import { StorageUtils } from '@/utils/store.utils';
 
 const { state, Register, ToggleActiveMenu_typeOfProfil } = useAuthSignUpHook();
 const authStore = useAuthStore();
@@ -256,9 +257,14 @@ const selectProfileType = (type: 'nounu' | 'parent') => {
   ToggleActiveMenu_typeOfProfil(index);
 };
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   authStore.clearErrors();
   authStore.setEmail(form.email);
+
+  // Stocker le fullname pour pré-remplir la page de création de profil
+  if (form.fullname.trim()) {
+    await StorageUtils().setStore('nUserFullname', form.fullname.trim());
+  }
 
   Register({
     email: form.email,

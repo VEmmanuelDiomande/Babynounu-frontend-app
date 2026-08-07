@@ -1,13 +1,5 @@
 <template>
-  <div class="min-h-screen bg-rose-50 flex flex-col">
-    <!-- Top bar -->
-    <div class="flex items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-2">
-        <img src="/images/logos/bn_logo.png" alt="BabyNounu" class="h-8 w-8 object-contain" />
-        <span class="font-anton text-lg text-gray-900">BabyNounu</span>
-      </div>
-    </div>
-
+  <div class="flex-1 flex flex-col">
     <!-- Content -->
     <div class="flex-1 flex flex-col px-6 py-6">
       <div class="max-w-md mx-auto w-full">

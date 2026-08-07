@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { StorageUtils } from '@/utils/store.utils';
 import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 import axios from 'axios';
@@ -26,6 +26,31 @@ export function useAllJobs(params?: MaybeRefOrGetter<Record<string, any>>) {
       });
       return response.data;
     },
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useInfiniteJobs(params?: MaybeRefOrGetter<Record<string, any>>) {
+  return useInfiniteQuery({
+    queryKey: computed(() => [...queryKeys.jobs.lists(), toValue(params)]),
+    queryFn: async ({ pageParam = 1 }) => {
+      const nToken = await StorageUtils().getStore('nToken');
+      const token = nToken?.value;
+      const response = await axios.get(`${URL_API_ROUTE.JOB_ALL}`, {
+        params: { ...toValue(params), page: pageParam },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      return response.data;
+    },
+    getNextPageParam: (lastPage: any) => {
+      // Backend retourne { success, data: { data, pagination } } via TransformInterceptor
+      const pagination = lastPage?.data?.pagination || lastPage?.pagination;
+      if (pagination?.hasNextPage) {
+        return pagination.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     staleTime: 1000 * 60 * 2,
   });
 }

@@ -229,14 +229,17 @@ onMounted(async () => {
       const subscription = response.data;
       const hasActiveSubscription = subscription &&
         subscription.status === 'active' &&
-        new Date(subscription.expiresAt) > new Date();
+        (subscription.expiresAt === null || new Date(subscription.expiresAt) > new Date());
       if (!hasActiveSubscription) {
         router.push({ name: 'PackSubscrible' });
         return;
       }
     } catch (error) {
-      // If subscription check fails, allow access (fail open)
+      // Fail closed: if subscription check fails, redirect to subscription page
+      // (prevents paywall bypass via network error manipulation)
       console.error('Subscription check failed:', error);
+      router.push({ name: 'PackSubscrible' });
+      return;
     }
   }
 

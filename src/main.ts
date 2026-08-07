@@ -17,7 +17,8 @@ import { createPinia } from "pinia";
 import VueLazyLoad from "vue3-lazyload";
 
 // Vue Query configuration
-import { VueQueryPlugin, QueryClient } from "@tanstack/vue-query";
+import { VueQueryPlugin } from "@tanstack/vue-query";
+import { queryClient } from "./lib/query/query-client";
 
 // Fonction d'authentification personnalisée
 import { authentificateApp } from "./routes/authenticate/authorization.authenticate";
@@ -32,9 +33,6 @@ import { useNotificationStore } from "./stores/notificationStore";
 // Initialisation de dayjs avec la locale et le plugin
 dayjs.extend(relativeTime);
 dayjs.locale("fr");
-
-// Création d'une instance QueryClient
-const queryClient = new QueryClient();
 
 // Création de l'application Vue
 const app = createApp(App)

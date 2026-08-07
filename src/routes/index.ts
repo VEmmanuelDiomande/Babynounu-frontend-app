@@ -4,11 +4,9 @@ import {
   RouteLocationNormalized,
 } from "vue-router";
 import {
-  StarterRoutes,
-  _HomeRoutes,
+  StarterFlowRoutes,
   HomeParentRoutes,
   HomeRoutes,
-  RootRedirectRoutes,
 } from "@/routes/_routers/home.routes";
 import { AuthRoutes } from "./_routers/auth.routes";
 import { ProfileSetupRoutes } from "./_routers/profile-setup.routes";
@@ -29,7 +27,7 @@ import { SettingRoutes } from "./_routers/setting.routes";
 import { setupKeepScroll } from "@/composables/useKeepScroll";
 
 // Regrouper les routes par domaine fonctionnel
-const publicRoutes: Array<RouteRecordRaw> = [RootRedirectRoutes, StarterRoutes, _HomeRoutes, AuthRoutes, ProfileSetupRoutes];
+const publicRoutes: Array<RouteRecordRaw> = [StarterFlowRoutes, AuthRoutes, ProfileSetupRoutes];
 
 const userRoutes: Array<RouteRecordRaw> = [
   HomeRoutes,

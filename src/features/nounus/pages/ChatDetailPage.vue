@@ -110,7 +110,7 @@
           <button @click="fileInput?.click()" class="h-10 w-10 rounded-full hover:bg-rose-50 flex items-center justify-center transition-colors flex-shrink-0 text-gray-500">
             <i class="ri ri-attachment-2" style="font-size: 22px;"></i>
           </button>
-          <input ref="fileInput" type="file" class="hidden" @change="handleFileSelect" />
+          <input ref="fileInput" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.mp4,.webm" class="hidden" @change="handleFileSelect" />
           <div class="flex-1 relative">
             <input
               v-model="messageInput"
@@ -444,14 +444,17 @@ onMounted(async () => {
       const subscription = response.data;
       const hasActiveSubscription = subscription &&
         subscription.status === 'active' &&
-        new Date(subscription.expiresAt) > new Date();
+        (subscription.expiresAt === null || new Date(subscription.expiresAt) > new Date());
       if (!hasActiveSubscription) {
         router.push({ name: 'PackSubscrible' });
         return;
       }
     } catch (error) {
-      // If subscription check fails, allow access (fail open)
+      // Fail closed: if subscription check fails, redirect to subscription page
+      // (prevents paywall bypass via network error manipulation)
       console.error('Subscription check failed:', error);
+      router.push({ name: 'PackSubscrible' });
+      return;
     }
   }
 

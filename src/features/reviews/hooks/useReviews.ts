@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { StorageUtils } from '@/utils/store.utils';
 import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 import axios from 'axios';
 import { queryKeys } from '@/lib/query/query-keys';
+import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 
 const getAuthHeaders = async () => {
   const nToken = await StorageUtils().getStore('nToken');
@@ -49,6 +50,42 @@ export function useCheckReviewById(contractId: string) {
     enabled: !!contractId,
     staleTime: 1000 * 60 * 5,
   });
+}
+
+/**
+ * Batch check reviews for multiple contract IDs.
+ * Uses useQueries (proper TanStack Query pattern) instead of calling useQuery in a loop.
+ * Returns a map of contractId -> hasReviewed for easy lookup.
+ */
+export function useCheckReviewsBatch(contractIds: MaybeRefOrGetter<string[]>) {
+  const ids = computed(() => toValue(contractIds));
+  const queries = useQueries({
+    queries: computed(() =>
+      ids.value.map((id) => ({
+        queryKey: [...queryKeys.nounus.reviews(id), 'check'],
+        queryFn: async () => {
+          const response = await axios.get(`${URL_API_ROUTE.REVIEW_CHECK}/${id}`);
+          return response.data;
+        },
+        enabled: !!id,
+        staleTime: 1000 * 60 * 5,
+      }))
+    ),
+  });
+
+  const reviewedMap = computed(() => {
+    const map = new Map<string, boolean>();
+    const queryResults = (queries as unknown) as any[];
+    ids.value.forEach((id, i) => {
+      const data = queryResults[i]?.data?.value;
+      if (data?.hasReviewed) {
+        map.set(id, true);
+      }
+    });
+    return map;
+  });
+
+  return { reviewedMap };
 }
 
 export function useCreateReview() {

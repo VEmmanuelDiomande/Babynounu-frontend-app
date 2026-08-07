@@ -47,7 +47,9 @@ export const useParentStore = defineStore('PARENTS', () => {
 
       if(data) {
         isLoading.value = false
-        useParentStore().DataParents = data;
+        // Backend retourne { success, data: { data: [...], pagination } } via TransformInterceptor
+        const payload = data?.data?.data || data?.data || data;
+        useParentStore().DataParents = Array.isArray(payload) ? payload : [];
         document.getElementById("closeModelAuthProfil")?.click()
       }
       

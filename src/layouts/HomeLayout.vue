@@ -209,9 +209,11 @@ onMounted(async () => {
     abonnementStore.myAbonnement().catch(() => {});
   }
 
-  // Initialize notification and message counts via WebSocket
-  notificationStore.NCountChats();
-  notificationStore.NCountNotification();
+  // Initialize notification and message counts via WebSocket (only if logged in)
+  if (nToken) {
+    notificationStore.NCountChats();
+    notificationStore.NCountNotification();
+  }
   
   // Sync TanStack Query data with store for UI compatibility
   if (chatUnreadCount.value !== undefined) {

@@ -1,20 +1,24 @@
 import { RouteRecordRaw } from 'vue-router';
 
-export const StarterRoutes: RouteRecordRaw = {
-  path: '/starter',
-  name: 'STARTER',
-  component: () => import('@/features/nounus/pages/StarterPage.vue'),
-};
-
-export const _HomeRoutes: RouteRecordRaw = {
-  path: '/choose-destination-to-start',
-  name: 'STARTER_DESTINATION',
-  component: () => import('@/features/nounus/pages/ChooseDestinationPage.vue'),
-};
-
-export const RootRedirectRoutes: RouteRecordRaw = {
+export const StarterFlowRoutes: RouteRecordRaw = {
   path: '/',
-  redirect: '/starter',
+  component: () => import('@/layouts/StarterLayout.vue'),
+  children: [
+    {
+      path: '',
+      redirect: '/starter',
+    },
+    {
+      path: 'starter',
+      name: 'STARTER',
+      component: () => import('@/features/nounus/pages/StarterPage.vue'),
+    },
+    {
+      path: 'choose-destination-to-start',
+      name: 'STARTER_DESTINATION',
+      component: () => import('@/features/nounus/pages/ChooseDestinationPage.vue'),
+    },
+  ],
 };
 
 export const HomeRoutes: RouteRecordRaw = {

@@ -17,7 +17,9 @@ export const useChatStore = defineStore('chat', () => {
       isLoading.value = true;
       error.value = null;
       const data = await chatServices.getConversations();
-      conversations.value = Array.isArray(data) ? data : (data?.data || []);
+      // Backend retourne { data: [...], total } via TransformInterceptor { success, data: { data, total } }
+      const payload = data?.data?.data || data?.data || data;
+      conversations.value = Array.isArray(payload) ? payload : [];
     } catch (e: any) {
       error.value = e.message;
     } finally {

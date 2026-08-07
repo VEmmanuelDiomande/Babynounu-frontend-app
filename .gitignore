@@ -33,3 +33,12 @@ npm-debug.log*
 /plugins
 /www
 
+# Vite local env overrides (ne pas committer)
+.env*.local
+# Fichiers d'environnement contenant des secrets (clé crypto, etc.)
+.env
+.env.development
+.env.production
+
+
+scripts/_tunnel.cjs

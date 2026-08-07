@@ -175,7 +175,9 @@ const jobCategories = [
 ];
 
 const normalizeJobs = (result: any) => {
-  const raw = Array.isArray(result) ? result : (result?.data || []);
+  // Backend retourne { success, data: { data: [...], pagination } } via TransformInterceptor
+  const inner = result?.data?.data || result?.data || result;
+  const raw = Array.isArray(inner) ? inner : [];
   const seen = new Set();
   return raw.filter((job: any) => {
     if (seen.has(job.id)) return false;
@@ -187,7 +189,8 @@ const normalizeJobs = (result: any) => {
 watch(allJobsData, (data) => {
   if (!data) return;
   const newJobs = normalizeJobs(data);
-  hasNextPage.value = data?.pagination?.hasNextPage ?? false;
+  const pagination = data?.data?.pagination || data?.pagination;
+  hasNextPage.value = pagination?.hasNextPage ?? false;
   if (currentPage.value === 1) {
     allLoadedJobs.value = newJobs;
   } else {

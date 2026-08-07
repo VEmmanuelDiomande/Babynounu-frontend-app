@@ -7,7 +7,7 @@
         </div>
         <h3 class="font-anton text-lg text-gray-900">{{ title }}</h3>
       </div>
-      <p class="text-sm text-gray-600 font-love" v-html="message"></p>
+      <p class="text-sm text-gray-600 font-love">{{ message }}</p>
       <div class="flex items-center gap-3 pt-2">
         <button
           @click="onCancel"

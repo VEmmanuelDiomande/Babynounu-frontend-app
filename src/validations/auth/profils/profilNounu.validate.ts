@@ -199,7 +199,6 @@ export const GalerySchema = z.object({
     isUpdateProfil() == false
       ? z
           .array(z.instanceof(File))
-          .min(1, { message: "Au moins une image est requise" })
           .refine((files) => files.every((file) => file.size > 0), {
             message: "Les images ne doivent pas être vides.",
           })

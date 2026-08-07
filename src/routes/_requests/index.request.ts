@@ -24,7 +24,11 @@ const MODE_APP_DEFINED = <T>(developpement: T, production: T): T => {
   return MODE_APP === "prod" ? production : developpement;
 };
 
-console.log(MODE_APP);
+// Override optionnel de l'URL du backend via VITE_API_BASE_URL
+// (utile pour pointer vers l'IP locale du PC depuis un device/emulateur Android)
+const API_BASE_URL_OVERRIDE = import.meta.env.VITE_API_BASE_URL as
+  | string
+  | undefined;
 
 // Domaines de base
 const API_DOMAIN_DEV = "http://localhost";
@@ -38,10 +42,9 @@ export const URL_PROVIDER_APP = PROVIDER_DOMAIN;
 
 const BASE_URL = MODE_APP_DEFINED(API_DOMAIN_DEV, `${API_DOMAIN_PROD}`);
 
-export const BASE_URL_CENTER = MODE_APP_DEFINED(
-  `${BASE_URL}:3000`,
-  API_DOMAIN_PROD
-);
+export const BASE_URL_CENTER =
+  API_BASE_URL_OVERRIDE ||
+  MODE_APP_DEFINED(`${BASE_URL}:3000`, API_DOMAIN_PROD);
 
 export const HOST_URL = MODE_APP_DEFINED(MAIN_DOMAIN_DEV, MAIN_DOMAIN_PROD);
 
