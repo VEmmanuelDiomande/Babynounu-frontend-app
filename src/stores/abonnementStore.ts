@@ -32,7 +32,18 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
     subscriptionData.value = data || null;
 
     const packFeatures = data?.pack?.features;
-    subscriptionFeatures.value = Array.isArray(packFeatures) ? packFeatures : (Array.isArray(data?.features) ? data.features : []);
+    let featuresArr: string[] = [];
+    if (Array.isArray(packFeatures)) {
+      featuresArr = packFeatures as string[];
+    } else if (typeof packFeatures === 'string') {
+      try {
+        const parsed = JSON.parse(packFeatures);
+        featuresArr = Array.isArray(parsed) ? parsed : [];
+      } catch { /* not JSON */ }
+    } else if (Array.isArray(data?.features)) {
+      featuresArr = data.features as string[];
+    }
+    subscriptionFeatures.value = featuresArr;
 
     await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
 

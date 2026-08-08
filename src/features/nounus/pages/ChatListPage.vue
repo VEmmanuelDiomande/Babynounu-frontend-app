@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-3xl mx-auto">
     <!-- Sticky header with search -->
-    <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rose-50 px-4 sm:px-6 py-3">
+    <div class="fixed pt-14 w-full top- z-20 bg-white/95 backdrop-blur-md border-b border-rose-50 px-4 sm:px-6 py-3">
       <div class="flex items-center justify-between gap-4 mb-3">
         <div class="flex items-center gap-2">
           <h1 class="font-anton text-xl text-gray-900">Messages</h1>
@@ -43,13 +43,13 @@
     </div>
 
     <!-- Conversations list -->
-    <div v-else-if="filteredConversations.length > 0" class="px-4 sm:px-6 pt-4 space-y-3">
+    <div v-else-if="filteredConversations.length > 0" class="px-0 sm:px-0 pt-36 space-y-1">
       <div
         v-for="room in filteredConversations"
         :key="room.id"
         @click="goToConversation(room.id)"
         :class="[
-          'flex items-center gap-3 p-4 rounded-2xl shadow-sm transition-all cursor-pointer',
+          'flex items-center gap-3 p-4 shadow-sm transition-all cursor-pointer',
           getUnreadCount(room) > 0 ? 'bg-white border border-rose-100 hover:border-rose-200' : 'bg-white hover:bg-rose-50/50'
         ]"
       >
@@ -114,14 +114,11 @@ import { useChatStore } from '@/stores/chatStore';
 import { socketService } from '@/services/socket.services';
 import { StorageUtils } from '@/utils/store.utils';
 import { buildImageUrl, findMediaByType } from '@/utils/media.utils';
-import axios from 'axios';
-import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 
 const router = useRouter();
 const chatStore = useChatStore();
 const searchQuery = ref('');
 const currentUserId = ref<string | null>(null);
-const userRole = ref<string | null>(null);
 
 const filteredConversations = computed(() => {
   if (!searchQuery.value) return chatStore.conversations;
@@ -215,34 +212,11 @@ const onConversationsUpdated = () => {
 onMounted(async () => {
   const userIdResult = await StorageUtils().getStore('nUser_Id');
   currentUserId.value = userIdResult?.value || null;
-  
-  const roleResult = await StorageUtils().getStore('nRole');
-  userRole.value = roleResult?.value || null;
 
-  // Check subscription for parents
-  if (userRole.value === 'parent' && currentUserId.value) {
-    try {
-      const nToken = await StorageUtils().getStore('nToken');
-      const response = await axios.get(URL_API_ROUTE.ABONNEMENT_USER, {
-        headers: { Authorization: `Bearer ${nToken?.value}` }
-      });
-      // TransformInterceptor wraps responses as { success, data }
-      const subscription = response.data?.data ?? response.data;
-      const hasActiveSubscription = subscription &&
-        subscription.status === 'active' &&
-        (subscription.expiresAt === null || new Date(subscription.expiresAt) > new Date());
-      if (!hasActiveSubscription) {
-        router.push({ name: 'PackSubscrible' });
-        return;
-      }
-    } catch (error) {
-      // Fail closed: if subscription check fails, redirect to subscription page
-      // (prevents paywall bypass via network error manipulation)
-      console.error('Subscription check failed:', error);
-      router.push({ name: 'PackSubscrible' });
-      return;
-    }
-  }
+  // La vérification d'abonnement est gérée par le route guard (routes/index.ts)
+  // et par le ChatLayout via useHasActiveSubscription (TanStack Query).
+  // Ne pas refaire une vérification HTTP ici : en cas d'erreur réseau,
+  // l'utilisateur était incorrectement redirigé vers PackSubscrible.
 
   await chatStore.fetchConversations();
 

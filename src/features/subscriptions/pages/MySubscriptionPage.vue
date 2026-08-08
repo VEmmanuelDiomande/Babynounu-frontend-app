@@ -5,6 +5,22 @@
       <div class="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
     </div>
 
+    <!-- Error -->
+    <div v-else-if="loadError" class="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-3xl border border-red-100">
+      <div class="h-16 w-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+        <i class="ri ri-error-warning-line text-red-400" style="font-size: 32px;"></i>
+      </div>
+      <h2 class="font-anton text-lg text-gray-900 mb-2">Erreur de chargement</h2>
+      <p class="text-sm text-gray-500 font-love text-center mb-6 max-w-sm">{{ loadError }}</p>
+      <button
+        @click="reload"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold text-white bg-primary hover:bg-primary/90 active:scale-95 transition-all shadow-sm"
+      >
+        <i class="ri ri-refresh-line" style="font-size: 18px;"></i>
+        Réessayer
+      </button>
+    </div>
+
     <!-- Has subscription -->
     <div v-else-if="subscription" class="space-y-5">
       <!-- Pack card -->
@@ -30,38 +46,53 @@
           <span
             :class="[
               'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-love font-semibold flex-shrink-0',
-              isExpired ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+              statusBadgeClass
             ]"
           >
-            <span :class="['h-1.5 w-1.5 rounded-full', isExpired ? 'bg-red-500' : 'bg-green-500']"></span>
-            {{ isExpired ? 'Expiré' : 'Actif' }}
+            <span :class="['h-1.5 w-1.5 rounded-full', statusDotClass]"></span>
+            {{ statusLabel }}
           </span>
         </div>
 
-        <!-- Expiry / duration -->
-        <div class="flex items-center gap-2 text-sm font-love text-gray-600 bg-gray-50 rounded-xl px-4 py-3 mb-3">
-          <i class="ri ri-calendar-line text-primary" style="font-size: 18px;"></i>
-          <template v-if="isLifetime">
-            <span class="inline-flex items-center gap-1.5">
-              <i class="ri ri-infinity-line text-green-600" style="font-size: 16px;"></i>
-              Abonnement à vie
-            </span>
-          </template>
-          <template v-else>
-            <span v-if="isExpired" class="text-red-600">
-              Expiré le {{ formatDate(subscription.expiresAt) }}
-            </span>
-            <span v-else>
-              Expire le {{ formatDate(subscription.expiresAt) }}
-              <span class="text-gray-400">({{ daysRemaining }} jours restants)</span>
-            </span>
-          </template>
+        <!-- Expiry / duration with progress bar -->
+        <div class="bg-gray-50 rounded-xl px-4 py-3 mb-3">
+          <div class="flex items-center gap-2 text-sm font-love text-gray-600 mb-2">
+            <i class="ri ri-calendar-line text-primary" style="font-size: 18px;"></i>
+            <template v-if="isLifetime">
+              <span class="inline-flex items-center gap-1.5">
+                <i class="ri ri-infinity-line text-green-600" style="font-size: 16px;"></i>
+                Abonnement à vie
+              </span>
+            </template>
+            <template v-else>
+              <span v-if="isExpired" class="text-red-600">
+                Expiré le {{ formatDate(subscription.expiresAt) }}
+              </span>
+              <span v-else>
+                Expire le {{ formatDate(subscription.expiresAt) }}
+                <span class="text-gray-400">({{ daysRemaining }} jours restants)</span>
+              </span>
+            </template>
+          </div>
+          <!-- Progress bar -->
+          <div v-if="!isLifetime && subscription.expiresAt" class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              :class="['h-full rounded-full transition-all duration-500', progressColor]"
+              :style="{ width: progressPercent + '%' }"
+            ></div>
+          </div>
         </div>
 
-        <!-- Subscription date -->
-        <div class="flex items-center gap-2 text-xs font-love text-gray-500 px-1">
-          <i class="ri ri-time-line" style="font-size: 14px;"></i>
-          Souscrit le {{ formatDate(subscription.createdAt) }}
+        <!-- Subscription date + reference -->
+        <div class="flex items-center justify-between text-xs font-love text-gray-500 px-1">
+          <span class="inline-flex items-center gap-1.5">
+            <i class="ri ri-time-line" style="font-size: 14px;"></i>
+            Souscrit le {{ formatDate(subscription.createdAt) }}
+          </span>
+          <span v-if="subscription.id" class="inline-flex items-center gap-1.5 text-gray-400">
+            <i class="ri ri-hash-line" style="font-size: 12px;"></i>
+            <span class="font-mono">{{ shortId }}</span>
+          </span>
         </div>
       </div>
 
@@ -80,7 +111,7 @@
           <!-- Method -->
           <div>
             <p class="text-gray-400 text-xs mb-0.5">Méthode</p>
-            <p class="text-gray-900 font-semibold capitalize">{{ paymentMethodLabel }}</p>
+            <p class="text-gray-900 font-semibold">{{ paymentMethodLabel }}</p>
           </div>
           <!-- Date -->
           <div>
@@ -98,7 +129,7 @@
             </p>
           </div>
           <!-- Transaction ID -->
-          <div class="col-span-2">
+          <div v-if="payment.transactionId" class="col-span-2">
             <p class="text-gray-400 text-xs mb-0.5">Référence transaction</p>
             <p class="text-gray-700 font-mono text-xs break-all bg-gray-50 rounded-lg px-3 py-2">{{ payment.transactionId }}</p>
           </div>
@@ -126,26 +157,21 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex justify-center gap-3">
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
         <button
           v-if="isExpired"
           @click="goSubscribe"
-          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold text-white bg-primary hover:bg-primary/90 active:scale-95 transition-all shadow-sm"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold text-white bg-primary hover:bg-primary/90 active:scale-95 transition-all shadow-sm"
         >
           <i class="ri ri-refresh-line" style="font-size: 18px;"></i>
           Renouveler
         </button>
         <button
           @click="goSubscribe"
-          :class="[
-            'inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold border active:scale-95 transition-all',
-            isExpired
-              ? 'text-primary border-primary/10 hover:bg-primary/10'
-              : 'text-primary border-primary/10 hover:bg-primary/10'
-          ]"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-love font-semibold text-primary border border-primary/10 hover:bg-primary/10 active:scale-95 transition-all"
         >
           <i class="ri ri-swap-line" style="font-size: 18px;"></i>
-          {{ isExpired ? 'Changer de pack' : 'Changer de pack' }}
+          Changer de pack
         </button>
       </div>
     </div>
@@ -157,7 +183,7 @@
       </div>
       <h2 class="font-anton text-lg text-gray-900 mb-2">Aucun abonnement actif</h2>
       <p class="text-sm text-gray-500 font-love text-center mb-6 max-w-sm">
-        Souscrivez à un pack pour accéder aux profils des nounous et profiter de toutes les fonctionnalités.
+        Souscrivez à un pack pour profiter de toutes les fonctionnalités de BabyNounu.
       </p>
       <button
         @click="goSubscribe"
@@ -180,18 +206,49 @@ const router = useRouter();
 const abonnementStore = useAbonnementStore();
 
 const loading = ref(true);
+const loadError = ref<string | null>(null);
 
 const subscription = computed(() => abonnementStore.subscriptionData);
 const isLifetime = computed(() => abonnementStore.isLifetime);
 const isExpired = computed(() => {
   const sub = subscription.value;
   if (!sub) return false;
-  // Expiré = status active mais date dépassée (le backend garde 'active' même expiré)
   if (sub.status !== 'active') return false;
   if (sub.expiresAt === null || sub.expiresAt === undefined) return false;
   return new Date(sub.expiresAt) <= new Date();
 });
 const features = computed(() => abonnementStore.subscriptionFeatures);
+
+// Statut global de l'abonnement (badge)
+const statusLabel = computed(() => {
+  const sub = subscription.value;
+  if (!sub) return '—';
+  if (sub.status === 'cancelled') return 'Annulé';
+  if (sub.status === 'suspended') return 'Suspendu';
+  if (sub.status === 'inactive') return 'Inactif';
+  if (isExpired.value) return 'Expiré';
+  if (sub.status === 'active') return 'Actif';
+  return sub.status;
+});
+const statusBadgeClass = computed(() => {
+  const sub = subscription.value;
+  if (!sub) return 'bg-gray-100 text-gray-700';
+  if (sub.status === 'cancelled') return 'bg-gray-100 text-gray-600';
+  if (sub.status === 'suspended') return 'bg-yellow-100 text-yellow-700';
+  if (sub.status === 'inactive') return 'bg-gray-100 text-gray-600';
+  if (isExpired.value) return 'bg-red-100 text-red-700';
+  if (sub.status === 'active') return 'bg-green-100 text-green-700';
+  return 'bg-gray-100 text-gray-700';
+});
+const statusDotClass = computed(() => {
+  const sub = subscription.value;
+  if (!sub) return 'bg-gray-400';
+  if (sub.status === 'cancelled' || sub.status === 'inactive') return 'bg-gray-400';
+  if (sub.status === 'suspended') return 'bg-yellow-500';
+  if (isExpired.value) return 'bg-red-500';
+  if (sub.status === 'active') return 'bg-green-500';
+  return 'bg-gray-400';
+});
 
 // Données du pack (depuis subscription.pack)
 const pack = computed(() => subscription.value?.pack || null);
@@ -211,7 +268,7 @@ const packDurationLabel = computed(() => {
 // Données de paiement (depuis subscription.payment)
 const payment = computed(() => subscription.value?.payment || null);
 const paymentMethodLabel = computed(() => {
-  const method = payment.value?.paymentMethod || '';
+  const method = payment.value?.paymentMethod || payment.value?.paymentType || '';
   const map: Record<string, string> = {
     mobile_money: 'Mobile Money',
     card: 'Carte bancaire',
@@ -256,6 +313,28 @@ const daysRemaining = computed(() => {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 });
 
+// Barre de progression (pourcentage de temps écoulé)
+const progressPercent = computed(() => {
+  const sub = subscription.value;
+  if (!sub?.expiresAt || !sub.createdAt) return 0;
+  const total = new Date(sub.expiresAt).getTime() - new Date(sub.createdAt).getTime();
+  if (total <= 0) return 100;
+  const elapsed = Date.now() - new Date(sub.createdAt).getTime();
+  return Math.min(100, Math.max(0, (elapsed / total) * 100));
+});
+const progressColor = computed(() => {
+  if (isExpired.value) return 'bg-red-500';
+  if (progressPercent.value >= 80) return 'bg-yellow-500';
+  return 'bg-green-500';
+});
+
+// ID court pour référence
+const shortId = computed(() => {
+  const id = subscription.value?.id;
+  if (!id) return '';
+  return id.substring(0, 8).toUpperCase();
+});
+
 const getFeatureLabel = (key: string): string => FEATURE_LABELS[key] || key;
 
 const formatDate = (date: string | null) => {
@@ -271,13 +350,23 @@ const goSubscribe = () => {
   router.push({ name: 'PackSubscrible' });
 };
 
-onMounted(async () => {
+const reload = () => {
+  loading.value = true;
+  loadError.value = null;
+  loadSubscription();
+};
+
+const loadSubscription = async () => {
   try {
     await abonnementStore.myAbonnement();
-  } catch (e) {
-    console.error('Failed to load subscription:', e);
+  } catch (e: any) {
+    loadError.value = e?.message || 'Impossible de charger votre abonnement. Vérifiez votre connexion.';
   } finally {
     loading.value = false;
   }
+};
+
+onMounted(() => {
+  loadSubscription();
 });
 </script>

@@ -10,7 +10,7 @@ import {
 } from "@/routes/_routers/home.routes";
 import { AuthRoutes } from "./_routers/auth.routes";
 import { ProfileSetupRoutes } from "./_routers/profile-setup.routes";
-import { _ChatRoutes, ChatRoutes } from "./_routers/messagerie.routes";
+import { ChatRoutes } from "./_routers/messagerie.routes";
 import { NotificationRoutes } from "./_routers/notification.routes";
 import {
   _ProfilRoutes,
@@ -42,7 +42,6 @@ const userRoutes: Array<RouteRecordRaw> = [
 
 const communicationRoutes: Array<RouteRecordRaw> = [
   ChatRoutes,
-  _ChatRoutes,
   NotificationRoutes,
 ];
 
@@ -133,8 +132,12 @@ const verifyRouteAccess = async (to: RouteLocationNormalized) => {
     return { name: "AUTH_SIGN_IN" };
   }
 
+  // Seuls les parents nécessitent un abonnement actif pour accéder
+  // aux routes protégées (chat, notifications, profils). Les nounous et
+  // les admins y ont accès sans abonnement.
   if (
     nToken &&
+    nType === 'parent' &&
     nIsAbonnement !== 'true' &&
     routesThatRequireSubcrible.includes(to.name as string)
   ) {

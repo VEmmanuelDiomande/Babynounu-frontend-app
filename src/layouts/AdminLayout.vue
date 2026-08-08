@@ -1,136 +1,30 @@
 <template>
-  <div :class="[isFullPage ? 'h-screen' : 'min-h-screen', 'bg-gradient-to-br from-primary/5 via-white to-secondary/10 flex flex-col relative']">
+  <div class="h-screen overflow-hidden bg-gradient-to-br from-primary/5 via-white to-secondary/10 flex flex-col relative">
 
-    <!-- Mobile Sidebar Drawer -->
-    <Transition
-      enter-active-class="transition-opacity duration-300 ease-out"
-      leave-active-class="transition-opacity duration-200 ease-in"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="sidebarOpen"
-        @click="sidebarOpen = false"
-        class="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm"
-      ></div>
-    </Transition>
-    <Transition
-      enter-active-class="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      leave-active-class="transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      enter-from-class="-translate-x-full"
-      enter-to-class="translate-x-0"
-      leave-from-class="translate-x-0"
-      leave-to-class="-translate-x-full"
-    >
-      <aside
-        v-if="sidebarOpen"
-        class="fixed top-0 left-0 z-[60] h-screen bg-white w-[280px] flex-shrink-0 flex flex-col shadow-2xl"
-      >
-      <div class="h-16 flex items-center justify-between px-4 border-b border-primary/10">
-        <div class="flex items-center gap-3">
-          <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
-            <img src="/images/logos/bn_logo.png" alt="BabyNounu" class="h-5 w-5 object-contain" />
-          </div>
-          <span class="font-anton text-base text-gray-900">BabyNounu</span>
-        </div>
-        <button @click="sidebarOpen = false" class="h-8 w-8 rounded-lg hover:bg-gray-100 flex items-center justify-center">
-          <i class="ri ri-close-line text-gray-600" style="font-size: 20px;"></i>
-        </button>
-      </div>
-      <nav class="flex-1 overflow-y-auto py-3 px-3 no-scrollbar">
-        <template v-for="group in navGroups" :key="group.label">
-          <div class="px-3 pt-4 pb-1.5">
-            <span class="text-[10px] font-love font-bold uppercase tracking-wider text-primary/60">{{ group.label }}</span>
-          </div>
-          <router-link
-            v-for="item in group.items"
-            :key="item.name"
-            :to="{ name: item.route }"
-            @click="sidebarOpen = false"
-            :class="[
-              'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-love transition-all duration-200 mb-1',
-              isActive(item.route)
-                ? 'bg-primary text-white shadow-md shadow-primary/25 font-semibold'
-                : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
-            ]"
-          >
-            <i class="ri flex-shrink-0" :class="`ri-${item.icon}`" style="font-size: 18px;"></i>
-            <span class="flex-1">{{ item.label }}</span>
-            <span
-              v-if="item.badge && pendingCount > 0"
-              class="bg-white text-primary text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center"
-            >
-              {{ pendingCount }}
-            </span>
-            <span
-              v-else-if="item.badgeType === 'message' && adminStore.chatsTotalUnread > 0"
-              class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center"
-            >
-              {{ adminStore.chatsTotalUnread > 9 ? '9+' : adminStore.chatsTotalUnread }}
-            </span>
-            <span
-              v-else-if="item.badgeType === 'notification' && notificationStore.state.countNotification > 0"
-              class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center"
-            >
-              {{ notificationStore.state.countNotification > 9 ? '9+' : notificationStore.state.countNotification }}
-            </span>
-          </router-link>
-        </template>
-      </nav>
-      <div class="border-t border-primary/10 p-3">
-        <button
-          @click="logout"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-love font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-        >
-          <i class="ri ri-logout-box-line" style="font-size: 18px;"></i>
-          <span>Déconnexion</span>
-        </button>
-      </div>
-    </aside>
-    </Transition>
+    <!-- Sidebar drawer -->
+    <AdminSidebar
+      :open="sidebarOpen"
+      :nav-groups="navGroups"
+      :pending-count="pendingCount"
+      :chats-total-unread="adminStore.chatsTotalUnread"
+      :notification-count="notificationStore.state.countNotification"
+      @close="sidebarOpen = false"
+      @logout="logout"
+    />
 
     <!-- Main content -->
-    <div :class="['flex-1 flex flex-col min-w-0', isFullPage ? 'pb-0' : 'pb-20']">
+    <div :class="['flex-1 flex flex-col min-w-0 min-h-0', isFullPage ? 'pb-0' : 'pb-20']">
       <!-- Header -->
-      <header v-if="!isFullPage" class="fixed top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-xl border-b border-primary/10 h-16 flex items-center justify-between px-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <button
-            @click="sidebarOpen = !sidebarOpen"
-            class="h-10 w-10 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center transition-colors"
-          >
-            <i class="ri ri-menu-line" style="font-size: 20px;"></i>
-          </button>
-          <div>
-            <h1 class="font-anton text-lg text-gray-900">{{ currentPageTitle }}</h1>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <router-link
-            v-if="pendingCount > 0"
-            :to="{ name: 'ADMIN_NOUNUS' }"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-love font-semibold hover:bg-primary/20 transition-colors"
-          >
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            {{ pendingCount }} en attente
-          </router-link>
-          <router-link
-            :to="{ name: 'ADMIN_PROFILE' }"
-            class="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 hover:from-primary/30 hover:to-secondary/30 flex items-center justify-center transition-colors border border-primary/20"
-          >
-            <span class="font-anton text-sm text-primary">A</span>
-          </router-link>
-        </div>
-      </header>
+      <AdminHeader
+        :title="currentPageTitle"
+        :pending-count="pendingCount"
+        :hidden="isFullPage"
+        @menu="sidebarOpen = !sidebarOpen"
+      />
 
       <!-- Page content -->
-      <main data-scroll-container :class="['flex-1 overflow-y-auto', isFullPage ? 'overflow-hidden p-0 pt-0' : 'pt-20 p-4']">
-        <div :class="isFullPage ? 'h-full' : 'min-h-full'">
+      <main data-scroll-container :class="['flex-1 min-h-0', isFullPage ? 'overflow-hidden p-0 pt-0' : 'overflow-y-auto pt-20 p-4']">
+        <div :class="isFullPage ? 'h-full' : 'min-h-full pt-10'">
           <router-view v-slot="{ Component }">
             <keep-alive>
               <component :is="Component" />
@@ -140,48 +34,14 @@
       </main>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <nav v-if="!isFullPage" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-primary/10 px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-      <div class="flex items-center justify-around h-16">
-        <router-link
-          v-for="item in bottomNavItems"
-          :key="item.route"
-          :to="{ name: item.route }"
-          :class="[
-            'flex flex-col items-center justify-center gap-1 min-w-0 flex-1 py-2 rounded-xl transition-all duration-200',
-            isActive(item.route)
-              ? 'text-primary'
-              : 'text-gray-400 hover:text-gray-600'
-          ]"
-        >
-          <div :class="[
-            'relative flex items-center justify-center h-8 w-8 rounded-xl transition-all duration-200',
-            isActive(item.route) ? 'bg-primary/10' : ''
-          ]">
-            <i class="ri" :class="`ri-${item.icon}`" style="font-size: 20px;"></i>
-            <span
-              v-if="item.badge && pendingCount > 0"
-              class="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-primary text-white text-[9px] font-bold rounded-full border-2 border-white"
-            >
-              {{ pendingCount > 9 ? '9+' : pendingCount }}
-            </span>
-            <span
-              v-else-if="item.badgeType === 'message' && adminStore.chatsTotalUnread > 0"
-              class="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-primary text-white text-[9px] font-bold rounded-full border-2 border-white"
-            >
-              {{ adminStore.chatsTotalUnread > 9 ? '9+' : adminStore.chatsTotalUnread }}
-            </span>
-            <span
-              v-else-if="item.badgeType === 'notification' && notificationStore.state.countNotification > 0"
-              class="absolute -top-0.5 -right-0.5 h-4 min-w-[16px] px-1 flex items-center justify-center bg-primary text-white text-[9px] font-bold rounded-full border-2 border-white"
-            >
-              {{ notificationStore.state.countNotification > 9 ? '9+' : notificationStore.state.countNotification }}
-            </span>
-          </div>
-          <span class="text-[10px] font-love font-medium truncate max-w-full px-1">{{ item.label }}</span>
-        </router-link>
-      </div>
-    </nav>
+    <!-- Bottom navigation -->
+    <AdminBottomNav
+      :items="bottomNavItems"
+      :pending-count="pendingCount"
+      :chats-total-unread="adminStore.chatsTotalUnread"
+      :notification-count="notificationStore.state.countNotification"
+      :visible="!isFullPage"
+    />
   </div>
 </template>
 
@@ -192,8 +52,8 @@ import { useAdminStore } from '@/stores/admin.store';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { socketService } from '@/services/socket.services';
 import { StorageUtils } from '@/utils/store.utils';
-import { PullToRefresh } from '@/components/ui';
-import { getRefreshHandler } from '@/composables/usePullToRefresh';
+import { AdminHeader, AdminSidebar, AdminBottomNav } from '@/components/ui';
+import type { NavItem, NavGroup } from '@/components/ui/AdminSidebar/admin-nav.types';
 
 const route = useRoute();
 const adminStore = useAdminStore();
@@ -202,16 +62,7 @@ const notificationStore = useNotificationStore();
 const sidebarOpen = ref(false);
 const isFullPage = computed(() => route.name === 'ADMIN_CHAT_DETAIL');
 
-interface NavItem {
-  name: string;
-  label: string;
-  route: string;
-  icon: string;
-  badge?: boolean;
-  badgeType?: string;
-}
-
-const navGroups: { label: string; items: NavItem[] }[] = [
+const navGroups: NavGroup[] = [
   {
     label: 'Principal',
     items: [
@@ -273,24 +124,7 @@ const currentPageTitle = computed(() => {
   return 'Administration';
 });
 
-
-const isRefreshing = ref(false);
-
-async function handleRefresh() {
-  const handler = getRefreshHandler(route.name as string);
-  if (handler) {
-    isRefreshing.value = true;
-    try {
-      await handler();
-    } finally {
-      isRefreshing.value = false;
-    }
-  }
-}
-
-const isActive = (routeName: string) => {
-  return route.name === routeName;
-};
+const isActive = (routeName: string) => route.name === routeName;
 
 const logout = async () => {
   const storageUtils = StorageUtils();
@@ -301,10 +135,14 @@ const logout = async () => {
   location.assign("/choose-destination-to-start");
 };
 
+let conversationsUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 const onConversationsUpdated = () => {
-  if (route.name !== 'ADMIN_CHATS' && !adminStore.chats.length) {
+  if (route.name === 'ADMIN_CHATS' || adminStore.chats.length) return;
+  if (conversationsUpdateTimer) clearTimeout(conversationsUpdateTimer);
+  conversationsUpdateTimer = setTimeout(() => {
     adminStore.fetchChats(1, 20);
-  }
+    conversationsUpdateTimer = null;
+  }, 3000);
 };
 
 onMounted(async () => {
@@ -318,15 +156,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  if (conversationsUpdateTimer) clearTimeout(conversationsUpdateTimer);
   socketService.off('conversationsUpdated', onConversationsUpdated);
 });
 </script>
-
-<style scoped>
-.shadow-soft {
-  box-shadow: 4px 0 24px rgba(247, 124, 61, 0.06);
-}
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-</style>

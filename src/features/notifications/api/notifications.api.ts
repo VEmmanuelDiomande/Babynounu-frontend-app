@@ -15,7 +15,11 @@ export const notificationsApi = {
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.userId) queryParams.append('userId', params.userId);
 
-    return apiClient.get(`${URL_API_ROUTE.NOTIFICATION_USER}?${queryParams.toString()}`);
+    const res = await apiClient.get<any>(`${URL_API_ROUTE.NOTIFICATION_USER}?${queryParams.toString()}`);
+    // TransformInterceptor wraps as { success, data: { data: [...], pagination: {...} } }
+    // Unwrap to match NotificationResponse { data: [...], pagination: {...} }
+    const unwrapped = res?.data ?? res;
+    return unwrapped as NotificationResponse;
   },
 };
 

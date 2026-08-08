@@ -45,6 +45,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
   };
 
   const chatsTotalUnread = computed(() => {
+    if (!Array.isArray(chats.value)) return 0;
     return chats.value.reduce((total: number, room: any) => {
       const nounu = getRoomNounuUser(room);
       if (!nounu?.id) return total;
@@ -57,11 +58,25 @@ export const useAdminStore = defineStore("ADMIN", () => {
 
   const adminService = AdminServices();
 
+  // Helper : extrait data + total d'une réponse paginée wrappée par TransformInterceptor.
+  // L'API retourne { success: true, data: { data: [...], pagination: { total, ... } } }.
+  const extractPaginated = (result: any): { data: any[]; total: number } => {
+    const raw = result?.data ?? result;
+    const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+    const total = raw?.pagination?.total ?? result?.pagination?.total ?? raw?.total ?? 0;
+    return { data: arr, total };
+  };
+
+  // Helper : extrait data d'une réponse simple wrappée par TransformInterceptor.
+  // L'API retourne { success: true, data: { ... } }.
+  const extractData = (result: any) => result?.data ?? result;
+
   const fetchStats = async () => {
     try {
       isLoading.value = true;
       error.value = null;
-      stats.value = await adminService.getStats();
+      const res = await adminService.getStats();
+      stats.value = extractData(res);
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -74,9 +89,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getUsers(page, limit, roleId, search);
-      const fetched = result.data || [];
+      const { data: fetched, total } = extractPaginated(result);
       users.value = append ? [...users.value, ...fetched] : fetched;
-      usersTotal.value = result.pagination?.total ?? result.total ?? 0;
+      usersTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -88,7 +103,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       error.value = null;
       const result = await adminService.getUsers(page, limit, undefined, search);
-      return result.data || [];
+      return extractPaginated(result).data;
     } catch (e: any) {
       error.value = e.message;
       return [];
@@ -100,9 +115,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getPendingNounus(page, limit);
-      const fetched = result.data || [];
+      const { data: fetched, total } = extractPaginated(result);
       pendingNounus.value = append ? [...pendingNounus.value, ...fetched] : fetched;
-      pendingNounusTotal.value = result.pagination?.total ?? result.total ?? 0;
+      pendingNounusTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -151,7 +166,8 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      settings.value = await adminService.getSettings();
+      const res = await adminService.getSettings();
+      settings.value = extractData(res);
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -163,7 +179,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      settings.value = await adminService.updateSettings(data);
+      settings.value = extractData(await adminService.updateSettings(data));
     } catch (e: any) {
       error.value = e.message;
       throw e;
@@ -178,8 +194,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getTypeParameters(page, limit);
-      typeParameters.value = result.data || [];
-      typeParametersTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      typeParameters.value = data;
+      typeParametersTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -235,8 +252,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getParameters(page, limit, typeParameterId);
-      parameters.value = result.data || [];
-      parametersTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      parameters.value = data;
+      parametersTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -292,8 +310,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getPermissions(page, limit);
-      permissions.value = result.data || [];
-      permissionsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      permissions.value = data;
+      permissionsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -348,7 +367,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      rolePermissions.value = await adminService.getRolePermissions(roleId);
+      rolePermissions.value = extractData(await adminService.getRolePermissions(roleId));
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -390,8 +409,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getJobs(page, limit);
-      jobs.value = result.data || [];
-      jobsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      jobs.value = data;
+      jobsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -403,7 +423,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      jobDetail.value = await adminService.getJob(id);
+      jobDetail.value = extractData(await adminService.getJob(id));
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -466,8 +486,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getParents(page, limit);
-      parents.value = result.data || [];
-      parentsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      parents.value = data;
+      parentsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -525,8 +546,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getPayments(page, limit, status);
-      payments.value = result.data || [];
-      paymentsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      payments.value = data;
+      paymentsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -569,13 +591,14 @@ export const useAdminStore = defineStore("ADMIN", () => {
   };
 
   // ── Chats ──
-  const fetchChats = async (page = 1, limit = 20) => {
+  const fetchChats = async (page = 1, limit = 20, append = false) => {
     try {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getChats(page, limit);
-      chats.value = result.data || [];
-      chatsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      chats.value = append ? [...chats.value, ...data] : data;
+      chatsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -587,7 +610,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      currentChat.value = await adminService.getChat(id);
+      currentChat.value = extractData(await adminService.getChat(id));
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -600,7 +623,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       await adminService.deleteChat(id);
-      chats.value = chats.value.filter((c) => c.id !== id);
+      chats.value = Array.isArray(chats.value) ? chats.value.filter((c) => c.id !== id) : [];
     } catch (e: any) {
       error.value = e.message;
       throw e;
@@ -615,8 +638,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getNounusList(page, limit, certif);
-      nounusList.value = result.data || [];
-      nounusListTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      nounusList.value = data;
+      nounusListTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -629,7 +653,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      userDetail.value = await adminService.getUserDetail(id);
+      userDetail.value = extractData(await adminService.getUserDetail(id));
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -643,8 +667,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getSubscriptions(page, limit, status);
-      subscriptions.value = result.data || [];
-      subscriptionsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      subscriptions.value = data;
+      subscriptionsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -730,7 +755,8 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      nounuPayments.value = await adminService.getNounuPayments(nounuId);
+      const result = await adminService.getNounuPayments(nounuId);
+      nounuPayments.value = extractPaginated(result).data;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -758,7 +784,7 @@ export const useAdminStore = defineStore("ADMIN", () => {
     try {
       isLoading.value = true;
       error.value = null;
-      nounuDetail.value = await adminService.getNounuDetails(id);
+      nounuDetail.value = extractData(await adminService.getNounuDetails(id));
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -772,8 +798,9 @@ export const useAdminStore = defineStore("ADMIN", () => {
       isLoading.value = true;
       error.value = null;
       const result = await adminService.getPacks(page, limit);
-      packs.value = result.data || [];
-      packsTotal.value = result.pagination?.total || 0;
+      const { data, total } = extractPaginated(result);
+      packs.value = data;
+      packsTotal.value = total;
     } catch (e: any) {
       error.value = e.message;
     } finally {
@@ -888,9 +915,11 @@ export const useAdminStore = defineStore("ADMIN", () => {
           ...clearedRoom,
         };
       }
-      chats.value = chats.value.map((room: any) =>
-        room.id === roomId ? { ...room, ...clearedRoom } : room
-      );
+      chats.value = Array.isArray(chats.value)
+        ? chats.value.map((room: any) =>
+            room.id === roomId ? { ...room, ...clearedRoom } : room
+          )
+        : [];
     } catch (e: any) {
       error.value = e.message;
       throw e;

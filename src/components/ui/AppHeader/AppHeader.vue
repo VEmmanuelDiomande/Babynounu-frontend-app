@@ -1,7 +1,7 @@
 <template>
   <header
     v-if="mode !== 'hidden'"
-    class="fixed w-full top-0 z-30 bg-white/80 backdrop-blur-md border-b border-rose-100"
+    class="fixed w-full pt-8 top-0 z-30 bg-white/80 backdrop-blur-md border-b border-rose-100"
   >
     <div :class="[
       'flex items-center justify-between h-16',
@@ -20,7 +20,7 @@
 
         <!-- Logo (logo mode) -->
         <template v-if="mode === 'logo'">
-          <img src="/images/logos/bn_logo.png" alt="BabyNounu" class="h-8 w-8 object-contain flex-shrink-0" />
+          <img src="/images/logos/logo_babynounu_1.png" alt="BabyNounu" class="h-8 w-8 object-contain flex-shrink-0" />
           <span class="font-anton text-lg text-gray-900">BabyNounu</span>
           <nav class="hidden sm:flex items-center gap-1 ml-2">
             <router-link
@@ -42,7 +42,7 @@
 
         <!-- Logo + title (close mode) -->
         <template v-if="mode === 'close'">
-          <img src="/images/logos/bn_logo.png" alt="BabyNounu" class="h-8 w-8 object-contain flex-shrink-0" />
+          <img src="/images/logos/logo_babynounu_1.png" alt="BabyNounu" class="h-8 w-8 object-contain flex-shrink-0" />
           <span class="font-anton text-lg text-gray-900">{{ title }}</span>
         </template>
 

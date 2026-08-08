@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-rose-50 flex flex-col">
+  <div class="min-h-screen pb-8 bg-rose-50 flex flex-col">
     <!-- Adaptive header -->
     <AppHeader
       :mode="headerConfig.mode"
@@ -53,7 +53,7 @@
     </AppHeader>
 
     <!-- Page content -->
-    <main :class="['flex-1', showBottomNav ? 'pb-20' : 'pt-16']">
+    <main :class="['flex-1', showBottomNav ? 'pb-20 pt-24' : 'pt-24']">
       <PullToRefresh :refreshing="isRefreshing" @refresh="handleRefresh">
         <router-view v-slot="{ Component }">
           <Transition name="page" mode="out-in">
@@ -206,20 +206,19 @@ const headerConfig = computed<{ mode: HeaderMode; title?: string; subtitle?: str
     PRESTATIONS: { mode: 'title', title: 'Prestations', subtitle: 'Votre état financier et votre agenda', icon: 'wallet-line' },
     CONTRACTS: { mode: 'title', title: 'Contrats', subtitle: 'Vos contrats et engagements', icon: 'file-list-3-line' },
     PackSubscrible: { mode: 'back', title: 'Abonnement', subtitle: 'Choisissez votre formule' },
+    MySubscription: { mode: 'back', title: 'Mon abonnement', subtitle: 'Détails de votre souscription' },
     MY_JOBS: { mode: 'back', title: 'Mes annonces', subtitle: 'Gérez vos offres' },
     CREATE_JOB: { mode: 'back', title: 'Publier une offre', subtitle: 'Remplissez les informations' },
     JOB_DETAIL: { mode: 'back', title: "Détail de l'offre" },
     SETTINGS: { mode: 'back', title: 'Paramètres', subtitle: 'Gérez votre compte et préférences' },
     PROFIL_PARENT: { mode: 'back', title: 'Profil' },
-    CHAT_MESSAGE: { mode: 'hidden' },
-    CHAT_MESSAGE_DETAIL: { mode: 'hidden' },
   };
   return configs[route.name as string] || { mode: 'logo' };
 });
 
 const showBottomNav = computed(() => {
   if (route.name === 'PROFIL') return true;
-  return route.name !== 'CHAT_MESSAGE_DETAIL' && route.name !== 'SETTINGS' && route.name !== 'PROFIL_PARENT' && route.name !== 'CREATE_JOB' && route.name !== 'JOB_DETAIL' && route.name !== 'MY_JOBS' && route.name !== 'PackSubscrible';
+  return route.name !== 'SETTINGS' && route.name !== 'PROFIL_PARENT' && route.name !== 'CREATE_JOB' && route.name !== 'JOB_DETAIL' && route.name !== 'MY_JOBS' && route.name !== 'PackSubscrible' && route.name !== 'MySubscription';
 });
 
 const isRefreshing = ref(false);
@@ -237,7 +236,7 @@ async function handleRefresh() {
 }
 
 const handleBack = () => {
-  if (route.name === 'PackSubscrible') {
+  if (route.name === 'PackSubscrible' || route.name === 'MySubscription') {
     router.push({ name: userType.value === 'parent' ? 'HOME' : 'HOME_JOBS' });
   } else {
     router.back();

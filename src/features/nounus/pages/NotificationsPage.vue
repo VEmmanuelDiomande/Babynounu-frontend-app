@@ -48,8 +48,8 @@
               </div>
             </div>
             <p class="text-sm text-gray-600 font-love mt-0.5">{{ notif.message }}</p>
-            <div v-if="notif.profil?.fullname" class="text-xs text-gray-400 font-love mt-1">
-              par {{ notif.profil.fullname }}
+            <div v-if="getSenderName(notif)" class="text-xs text-gray-400 font-love mt-1">
+              par {{ getSenderName(notif) }}
             </div>
           </div>
           <span v-if="!notif.isRead" class="h-2 w-2 rounded-full bg-rose-400 flex-shrink-0 mt-1"></span>
@@ -218,6 +218,15 @@ const handleNotificationClick = async (notif: any) => {
 };
 
 const hasUnreadNotifications = () => notifications.value.some(n => !n.isRead);
+
+const getSenderName = (notif: any) => {
+  const sender = notif.sender || notif.profil;
+  if (!sender) return '';
+  if (sender.fullname) return sender.fullname;
+  if (sender.nounus?.[0]?.fullname) return sender.nounus[0].fullname;
+  if (sender.parents?.[0]?.fullname) return sender.parents[0].fullname;
+  return sender.email?.split('@')[0] || '';
+};
 
 const formatDate = (date: string) => {
   if (!date) return '';

@@ -35,6 +35,19 @@ class ApiClient {
         if (error.response?.status === 401) {
           await this.storageUtils.removeStore('nToken');
         }
+        if (error.response?.status === 429) {
+          const retryAfter = error.response.headers?.['retry-after'];
+          const delaySec = retryAfter ? parseInt(retryAfter, 10) : 5;
+          const originalRequest = error.config;
+          if (originalRequest && !originalRequest._throttledRetry) {
+            originalRequest._throttledRetry = true;
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(this.instance(originalRequest));
+              }, delaySec * 1000);
+            });
+          }
+        }
         return Promise.reject(error);
       }
     );

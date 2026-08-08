@@ -384,7 +384,7 @@
 
         <div v-else class="flex flex-col items-center justify-center py-8 text-center">
           <div class="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-            <i class="ri ri-chat-star-line text-gray-300" style="font-size: 28px;"></i>
+            <i class="ri ri-star-line text-gray-300" style="font-size: 28px;"></i>
           </div>
           <p class="font-love text-sm text-gray-400">Aucun avis pour le moment</p>
         </div>

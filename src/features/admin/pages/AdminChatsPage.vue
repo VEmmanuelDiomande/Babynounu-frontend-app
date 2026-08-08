@@ -39,11 +39,13 @@
           class="w-full flex items-center gap-4 px-4 sm:px-5 py-4 text-left hover:bg-secondary/5 transition-colors"
         >
           <div class="flex -space-x-2 flex-shrink-0">
-            <div class="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center border-2 border-white">
-              <span class="font-anton text-xs text-secondary">{{ getInitials(room.sender) }}</span>
+            <div class="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center border-2 border-white overflow-hidden">
+              <img v-if="getNounuAvatar(room)" :src="getNounuAvatar(room)" alt="" class="h-full w-full object-cover" />
+              <span v-else class="font-anton text-xs text-secondary">{{ getInitials(getNounuUser(room)) }}</span>
             </div>
-            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white">
-              <span class="font-anton text-xs text-primary">{{ getInitials(room.receiver) }}</span>
+            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white overflow-hidden">
+              <img v-if="getParentAvatar(room)" :src="getParentAvatar(room)" alt="" class="h-full w-full object-cover" />
+              <span v-else class="font-anton text-xs text-primary">{{ getInitials(getParentUser(room)) }}</span>
             </div>
           </div>
           <div class="min-w-0 flex-1">
@@ -72,8 +74,8 @@
       </div>
 
       <!-- Load more -->
-      <div class="flex items-center justify-center pt-2">
-        <button @click="loadMore" :disabled="adminStore.chats.length < limit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-love font-semibold text-secondary bg-white border border-primary/10 hover:bg-secondary/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+      <div v-if="adminStore.chats.length < adminStore.chatsTotal" class="flex items-center justify-center pt-2">
+        <button @click="loadMore" :disabled="adminStore.isLoading" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-love font-semibold text-secondary bg-white border border-primary/10 hover:bg-secondary/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
           <i class="ri ri-add-line" style="font-size: 16px;"></i>
           Voir plus
         </button>
@@ -116,6 +118,7 @@ import { useAdminStore } from '@/stores/admin.store';
 import { socketService } from '@/services/socket.services';
 import { ConfirmModal } from '@/components/ui';
 import { useConfirmModal } from '@/composables/useConfirmModal';
+import { buildImageUrl, findMediaByType } from '@/utils/media.utils';
 
 const router = useRouter();
 const adminStore = useAdminStore();
@@ -205,6 +208,15 @@ const getInitials = (user: any) => {
   return name.substring(0, 2).toUpperCase();
 };
 
+const getUserAvatar = (user: any): string => {
+  const medias = (user?.medias || []).filter((m: any) => !m.deletedAt);
+  const photo = findMediaByType(medias, 'photo_profil') || findMediaByType(medias, 'profil') || medias.find((m: any) => m.path || m.originalUrl);
+  return buildImageUrl(photo?.path || photo?.originalUrl);
+};
+
+const getNounuAvatar = (room: any) => getUserAvatar(getNounuUser(room));
+const getParentAvatar = (room: any) => getUserAvatar(getParentUser(room));
+
 const getUserName = (user: any) => {
   if (user?.nounus?.[0]?.fullname) return user.nounus[0].fullname;
   if (user?.parents?.[0]?.fullname) return user.parents[0].fullname;
@@ -268,10 +280,15 @@ const getProposalLabel = (status: string) => {
   }
 };
 
-const loadMore = () => { currentPage.value++; adminStore.fetchChats(currentPage.value, limit); };
+const loadMore = () => { currentPage.value++; adminStore.fetchChats(currentPage.value, limit, true); };
 
+let conversationsUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 const onConversationsUpdated = () => {
-  adminStore.fetchChats(1, currentPage.value * limit);
+  if (conversationsUpdateTimer) clearTimeout(conversationsUpdateTimer);
+  conversationsUpdateTimer = setTimeout(() => {
+    adminStore.fetchChats(1, currentPage.value * limit);
+    conversationsUpdateTimer = null;
+  }, 3000);
 };
 
 onMounted(() => {
@@ -280,6 +297,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (conversationsUpdateTimer) clearTimeout(conversationsUpdateTimer);
   socketService.off('conversationsUpdated', onConversationsUpdated);
 });
 </script>

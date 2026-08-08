@@ -106,7 +106,7 @@
         <div class="space-y-4">
           <div class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
             <div class="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-              <img src="/images/logos/bn_logo.png" alt="BabyNounu" class="h-6 w-6 object-contain" />
+              <img src="/images/logos/logo_babynounu_1.png" alt="BabyNounu" class="h-6 w-6 object-contain" />
             </div>
             <div class="min-w-0">
               <div class="text-sm font-semibold text-gray-900 font-love truncate">{{ form.appName || 'BabyNounu' }}</div>

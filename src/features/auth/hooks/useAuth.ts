@@ -6,6 +6,7 @@ import { useProfilStore } from '@/stores/authProfilStore';
 import { useAuthStore } from '@/stores/auth.store';
 import router from '@/routes';
 import { SIGN_UP, SIGN_IN } from '@/types/auth.types';
+import { parseAuthError } from '@/utils/authError.utils';
 
 export function useRegister() {
   return useMutation({
@@ -37,17 +38,8 @@ export function useRegister() {
       }
     },
     onError: (error: any) => {
-      if (error?.response?.data?.statusCode === 400) {
-        const authStore = useAuthStore();
-        const message = Array.isArray(error?.response.data.message)
-          ? error?.response.data.message[0].message
-          : error?.response.data.message;
-
-        authStore.setError('general', {
-          path: 'email',
-          message: message || "Une erreur est survenue lors de l'inscription",
-        });
-      }
+      const authStore = useAuthStore();
+      authStore.setError('general', parseAuthError(error));
     },
   });
 }
@@ -92,14 +84,7 @@ export function useLogin() {
     },
     onError: (error: any) => {
       const authStore = useAuthStore();
-      const message = Array.isArray(error?.response?.data?.message)
-        ? error?.response?.data?.message[0].message
-        : error?.response?.data?.message;
-
-      authStore.setError('login', {
-        path: 'email',
-        message: message || 'Une erreur est survenue lors de la connexion',
-      });
+      authStore.setError('login', parseAuthError(error));
     },
   });
 }

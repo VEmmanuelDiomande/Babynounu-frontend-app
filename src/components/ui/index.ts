@@ -14,3 +14,6 @@ export { default as FieldError } from './FieldError/FieldError.vue';
 export { default as PullToRefresh } from './PullToRefresh/PullToRefresh.vue';
 export { default as ToastContainer } from './Toast/ToastContainer.vue';
 export { default as ImageModal } from './ImageModal/ImageModal.vue';
+export { default as AdminHeader } from './AdminHeader/AdminHeader.vue';
+export { default as AdminSidebar } from './AdminSidebar/AdminSidebar.vue';
+export { default as AdminBottomNav } from './AdminBottomNav/AdminBottomNav.vue';

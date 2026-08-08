@@ -107,6 +107,19 @@ const setupAxiosInterceptor = () => {
         }
       }
 
+      if (error.response?.status === 429) {
+        const retryAfter = error.response.headers?.['retry-after'];
+        const delaySec = retryAfter ? parseInt(retryAfter, 10) : 5;
+        if (!originalRequest._throttledRetry) {
+          originalRequest._throttledRetry = true;
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(axios(originalRequest));
+            }, delaySec * 1000);
+          });
+        }
+      }
+
       return Promise.reject(error);
     }
   );

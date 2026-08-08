@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center gap-3 px-3 sm:px-4 py-2.5 bg-white border-b border-rose-50 flex-shrink-0 shadow-sm">
+  <div class="flex items-center fixed pt-10 z-20 top-0 w-full gap-3 px-3 sm:px-4 py-2.5 bg-white border-b border-rose-50 flex-shrink-0 shadow-sm">
     <button @click="$emit('back')" class="h-9 w-9 rounded-full hover:bg-rose-50 flex items-center justify-center transition-colors flex-shrink-0">
       <i class="ri ri-arrow-left-line text-gray-600" style="font-size: 20px;"></i>
     </button>

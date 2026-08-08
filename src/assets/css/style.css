@@ -18,7 +18,7 @@
    Capacitor 8 (SystemBars plugin, insetsHandling "css") injecte les variables
    --safe-area-inset-* sur document.documentElement. On utilise var() avec
    env() en fallback pour compatibilite maximale. */
-.pt-safe {
+/* .pt-safe {
   padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
 }
 
@@ -46,7 +46,7 @@
 }
 .h-safe-bottom {
   height: calc(100% + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
-}
+} */
 
 /* Capacitor 8 SystemBars (insetsHandling "css") gere deja le padding du WebView
    pour l'edge-to-edge Android 15+/16. NE PAS ajouter de padding safe-area sur

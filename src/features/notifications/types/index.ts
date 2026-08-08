@@ -18,8 +18,9 @@ export interface Notification {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
-  profil: NotificationProfile;
-  photo: NotificationPhoto;
+  sender?: NotificationProfile & { nounus?: NotificationProfile[]; parents?: NotificationProfile[]; email?: string };
+  profil?: NotificationProfile;
+  photo?: NotificationPhoto;
   tolinkId?: number;
 }
 

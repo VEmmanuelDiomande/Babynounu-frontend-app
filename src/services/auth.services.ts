@@ -10,6 +10,7 @@ import { useProfilStore } from "@/stores/authProfilStore";
 import { useParentHook } from "@/hooks/parentHooks/parent.hooks";
 import router from "@/routes";
 import { unwrap, isSubscriptionActive } from "@/utils/helpers.utils";
+import { parseAuthError } from "@/utils/authError.utils";
 
 async function checkAndStoreSubscription(token: string, userId: string) {
   try {
@@ -21,7 +22,9 @@ async function checkAndStoreSubscription(token: string, userId: string) {
     const hasActive = isSubscriptionActive(subscription);
     await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
   } catch {
-    await StorageUtils().setStore("nIsAbonnement", "false");
+    // Ne PAS forcer nIsAbonnement à 'false' en cas d'erreur réseau :
+    // cela bloquerait l'utilisateur à tort. La vérification sera
+    // re-faite par le layout via useHasActiveSubscription (TanStack Query).
   }
 }
 
@@ -90,17 +93,9 @@ class AuthService {
    * @param error Erreur survenue
    */
   private handleRegistrationError(error: any) {
-    if (error?.response?.data?.statusCode === 400) {
-      const authStore = useAuthStore();
-      const message = Array.isArray(error?.response.data.message)
-        ? error?.response.data.message[0].message
-        : error?.response.data.message;
-
-      authStore.setError('general', {
-        path: 'email',
-        message: message || "Une erreur est survenue lors de l'inscription",
-      });
-    }
+    const authStore = useAuthStore();
+    const parsed = parseAuthError(error);
+    authStore.setError('general', parsed);
   }
 
   /**
@@ -212,14 +207,8 @@ class AuthService {
    */
   private handleLoginError(error: any) {
     const authStore = useAuthStore();
-    const message = Array.isArray(error?.response?.data?.message)
-      ? error?.response.data.message[0].message
-      : error?.response?.data?.message;
-
-    authStore.setError('login', {
-      path: 'email',
-      message: message || 'Une erreur est survenue lors de la connexion',
-    });
+    const parsed = parseAuthError(error);
+    authStore.setError('login', parsed);
   }
 
   /**

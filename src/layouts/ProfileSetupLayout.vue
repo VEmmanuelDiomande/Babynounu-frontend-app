@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 flex py-8 flex-col overflow-hidden bg-gradient-to-b from-rose-50/30 to-white w-full">
+  <div class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-rose-50/30 to-white w-full">
     <!-- Header -->
     <AppHeader
       mode="close"
@@ -9,7 +9,7 @@
     />
 
     <!-- Step indicator -->
-    <div class="flex items-center justify-center gap-2 py-3 bg-white border-b border-rose-50">
+    <div class="flex items-center justify-center mt-8 gap-2 py-3 bg-white border-b border-rose-50">
       <div v-for="s in totalSteps" :key="s" :class="['h-1.5 rounded-full transition-all duration-300', s <= currentStep ? 'w-8 bg-rose-400' : 'w-4 bg-rose-100']"></div>
     </div>
 
