@@ -233,16 +233,18 @@ const { data: rawNounu, isLoading } = useNounu(nounuId);
 
 const nounu = computed<DisplayNounu | undefined>(() => {
   if (!rawNounu.value) return undefined;
-  const raw = rawNounu.value;
+  // TransformInterceptor wraps responses as { success, data } (apiClient returns response.data)
+  const raw = rawNounu.value as any;
+  const unwrapped: any = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
   return {
-    ...raw,
-    city: getPrefNames(raw, ['adress'])[0] || 'Abidjan',
-    hourlyRate: Number(raw.tarif_horaire) || 0,
-    experience: Number(raw.annees_experience) || 0,
-    specialties: getPrefNames(raw, ['type_services', 'competance_specifique', 'competences_specifiques']),
-    languages: getPrefNames(raw, ['langues_parlees', 'langue_parler']),
-    certifications: getPrefNames(raw, ['certifications']),
-    availability: raw.status === 'disponible' ? 'available' : raw.status === 'busy' ? 'busy' : 'unavailable',
+    ...unwrapped,
+    city: getPrefNames(unwrapped, ['adress'])[0] || 'Abidjan',
+    hourlyRate: Number(unwrapped.tarif_horaire) || 0,
+    experience: Number(unwrapped.annees_experience) || 0,
+    specialties: getPrefNames(unwrapped, ['type_services', 'competance_specifique', 'competences_specifiques']),
+    languages: getPrefNames(unwrapped, ['langues_parlees', 'langue_parler']),
+    certifications: getPrefNames(unwrapped, ['certifications']),
+    availability: unwrapped.status === 'disponible' ? 'available' : unwrapped.status === 'busy' ? 'busy' : 'unavailable',
   };
 });
 

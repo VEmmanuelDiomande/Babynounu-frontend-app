@@ -45,6 +45,7 @@
               <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="handlePhotoUpload" />
             </div>
             <p class="font-love text-xs text-gray-400">Photo de profil</p>
+            <FieldError :message="fieldError('image_profil')" />
           </div>
 
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-rose-50 space-y-4">
@@ -56,9 +57,13 @@
                   v-model="profilStore.state.InformationPersonnelle.fullname"
                   type="text"
                   placeholder="Jeanne Dupont"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('fullname') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('fullname')" />
             </div>
             <div>
               <label class="block font-love text-xs font-medium text-gray-700 mb-1.5">Adresse email</label>
@@ -68,9 +73,13 @@
                   v-model="profilStore.state.InformationPersonnelle.adresse_mail"
                   type="email"
                   placeholder="jeanne.dupont@email.com"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('adresse_mail') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('adresse_mail')" />
             </div>
             <div>
               <label class="block font-love text-xs font-medium text-gray-700 mb-1.5">Téléphone</label>
@@ -80,9 +89,13 @@
                   v-model="profilStore.state.InformationPersonnelle.phone"
                   type="tel"
                   placeholder="+225 07 00 00 00"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('phone') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('phone')" />
             </div>
           </div>
         </div>
@@ -107,9 +120,13 @@
                   v-model="profilStore.state.InformationSurLesEnfants.number_of_children"
                   type="number"
                   placeholder="2"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('number_of_children') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('number_of_children')" />
             </div>
 
             <div>
@@ -117,7 +134,7 @@
                 <i class="ri ri-heart-line text-rose-400" style="font-size: 14px;"></i>
                 Besoins spécifiques
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('besions_specifiques') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in specificNeeds"
                   :key="item.id || item.name"
@@ -134,6 +151,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('besions_specifiques')" />
             </div>
           </div>
         </div>
@@ -155,7 +173,7 @@
                 <i class="ri ri-service-line text-rose-400" style="font-size: 14px;"></i>
                 Type de services
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('type_services') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in typeServices"
                   :key="item.id || item.name"
@@ -172,6 +190,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('type_services')" />
             </div>
 
             <div>
@@ -179,7 +198,7 @@
                 <i class="ri ri-parent-line text-rose-400" style="font-size: 14px;"></i>
                 Garde d'enfants
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('garde_enfants') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in childCareTypes"
                   :key="item.id || item.name"
@@ -196,6 +215,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('garde_enfants')" />
             </div>
 
             <div>
@@ -203,7 +223,7 @@
                 <i class="ri ri-home-gear-line text-rose-400" style="font-size: 14px;"></i>
                 Aide ménagère
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('aide_menagere') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in housekeeperTypes"
                   :key="item.id || item.name"
@@ -220,6 +240,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('aide_menagere')" />
             </div>
 
             <div>
@@ -227,7 +248,7 @@
                 <i class="ri ri-repeat-line text-rose-400" style="font-size: 14px;"></i>
                 Fréquence des services
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('frequence_des_services') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in serviceFrequencies"
                   :key="item.id || item.name"
@@ -244,6 +265,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('frequence_des_services')" />
             </div>
 
             <div>
@@ -251,7 +273,7 @@
                 <i class="ri ri-time-line text-rose-400" style="font-size: 14px;"></i>
                 Horaires souhaités
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('horaire_souhaites') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in desiredTimes"
                   :key="item.id || item.name"
@@ -268,6 +290,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('horaire_souhaites')" />
             </div>
           </div>
         </div>
@@ -289,7 +312,7 @@
                 <i class="ri ri-home-4-line text-rose-400" style="font-size: 14px;"></i>
                 Adresse
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('adress') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in addresses"
                   :key="item.id || item.name"
@@ -306,6 +329,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('adress')" />
             </div>
 
             <div>
@@ -313,7 +337,7 @@
                 <i class="ri ri-map-pin-2-line text-rose-400" style="font-size: 14px;"></i>
                 Zones géographiques du prestataire
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('zone_geographique_prestataire') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in zoneGeographies"
                   :key="item.id || item.name"
@@ -330,6 +354,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('zone_geographique_prestataire')" />
             </div>
           </div>
         </div>
@@ -354,9 +379,13 @@
                   v-model="profilStore.state.Tarifications.budget_estimated"
                   type="number"
                   placeholder="50000"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('budget_estimated') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('budget_estimated')" />
             </div>
           </div>
         </div>
@@ -378,7 +407,7 @@
                 <i class="ri ri-star-smile-line text-rose-400" style="font-size: 14px;"></i>
                 Compétences spécifiques recherchées
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('competance_specifique') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in specificSkills"
                   :key="item.id || item.name"
@@ -395,6 +424,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('competance_specifique')" />
             </div>
 
             <div>
@@ -402,7 +432,7 @@
                 <i class="ri ri-translate-2 text-rose-400" style="font-size: 14px;"></i>
                 Langues parlées
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('langue_parler') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in languages"
                   :key="item.id || item.name"
@@ -419,6 +449,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('langue_parler')" />
             </div>
 
             <div>
@@ -426,7 +457,7 @@
                 <i class="ri ri-flashlight-line text-rose-400" style="font-size: 14px;"></i>
                 Disponibilité du prestataire
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('disponibility_du_prestataire') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in providerAvailabilities"
                   :key="item.id || item.name"
@@ -443,6 +474,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('disponibility_du_prestataire')" />
             </div>
           </div>
         </div>
@@ -463,7 +495,7 @@
               <i class="ri ri-wallet-line text-rose-400" style="font-size: 14px;"></i>
               Modes de paiement
             </label>
-            <div class="flex flex-wrap gap-2">
+            <div :class="['flex flex-wrap gap-2', fieldError('mode_de_paiement') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
               <button
                 v-for="item in paymentTerms"
                 :key="item.id || item.name"
@@ -480,6 +512,7 @@
                 {{ item.name }}
               </button>
             </div>
+            <FieldError :message="fieldError('mode_de_paiement')" />
           </div>
         </div>
 
@@ -499,7 +532,7 @@
               <i class="ri ri-task-line text-rose-400" style="font-size: 14px;"></i>
               Tâches
             </label>
-            <div class="flex flex-wrap gap-2">
+            <div :class="['flex flex-wrap gap-2', fieldError('taches') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
               <button
                 v-for="item in taches"
                 :key="item.id || item.name"
@@ -516,6 +549,7 @@
                 {{ item.name }}
               </button>
             </div>
+            <FieldError :message="fieldError('taches')" />
           </div>
         </div>
 
@@ -535,7 +569,7 @@
               <i class="ri ri-filter-3-line text-rose-400" style="font-size: 14px;"></i>
               Critères
             </label>
-            <div class="flex flex-wrap gap-2">
+            <div :class="['flex flex-wrap gap-2', fieldError('criteres_selections') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
               <button
                 v-for="item in criteresSelections"
                 :key="item.id || item.name"
@@ -552,6 +586,7 @@
                 {{ item.name }}
               </button>
             </div>
+            <FieldError :message="fieldError('criteres_selections')" />
           </div>
         </div>
 
@@ -575,8 +610,12 @@
               v-model="profilStore.state.AutreInformations.informations_complementaires"
               rows="6"
               placeholder="Décrivez vos besoins, vos attentes, vos contraintes..."
-              class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 px-4 py-3.5 placeholder:text-gray-400 resize-none transition-all"
+              :class="[
+                'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 px-4 py-3.5 placeholder:text-gray-400 resize-none transition-all',
+                fieldError('informations_complementaires') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+              ]"
             ></textarea>
+            <FieldError :message="fieldError('informations_complementaires')" />
             <div class="flex items-center justify-between mt-2">
               <p class="font-love text-xs text-gray-400">
                 {{ profilStore.state.AutreInformations.informations_complementaires.length }} / 1000 caractères
@@ -591,9 +630,9 @@
           </div>
         </div>
 
-    <!-- Error display -->
+    <!-- Generic error display (API / root errors only) -->
     <div
-      v-if="profilStore.state.in_error.message"
+      v-if="profilStore.state.in_error.message && fieldError('_root')"
       class="mt-4 rounded-2xl bg-red-50 border border-red-100 px-4 py-3 flex items-center gap-3"
     >
       <i class="ri ri-error-warning-line text-red-500" style="font-size: 20px;"></i>
@@ -606,6 +645,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ProfileSetupLayout from '@/layouts/ProfileSetupLayout.vue';
+import { FieldError } from '@/components/ui';
 import { useProfilStore } from '@/stores/authProfilStore';
 import { useProfiNounulStore } from '@/stores/authProfilNounuStore';
 import { useAuthStore } from '@/stores/auth.store';
@@ -618,6 +658,10 @@ const router = useRouter();
 const profilStore = useProfilStore();
 const nounuStore = useProfiNounulStore();
 const authStore = useAuthStore();
+
+// Per-field validation errors (Zod path -> message)
+const fieldErrors = computed(() => profilStore.state.in_error.errors || {} as Record<string, string>);
+const fieldError = (key: string) => fieldErrors.value[key] || null;
 
 // TanStack Query for settings
 const { data: settingsData } = useAllSettings();
@@ -645,8 +689,10 @@ const criteresSelections = ref<any[]>([]);
 
 const fetchParameters = async () => {
   try {
-    const data = settingsData.value;
-    const items = Array.isArray(data) ? data : (data?.data ?? []);
+    const raw = settingsData.value;
+    // TransformInterceptor wraps responses as { success, data }
+    const unwrapped = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
+    const items = Array.isArray(unwrapped) ? unwrapped : (unwrapped?.data ?? []);
     const bySlug = (slug: string) => items.filter((p: any) => p?.typeParameter?.slug === slug);
     specificNeeds.value = bySlug('besoins');
     typeServices.value = bySlug('type_service');
@@ -905,6 +951,8 @@ const toggleArrayItem = (arr: any[], item: any) => {
 
 // Step actions ----------------------------------------------------------------
 const handleNext = async () => {
+  // Garde anti-double-clic : vérification synchrone avant mise à jour DOM.
+  if (loading.value) return;
   loading.value = true;
 
   const currentStep = profilStore.state.stepProfil;
@@ -931,6 +979,7 @@ const handleNext = async () => {
 
   if (currentStep === totalSteps) {
     router.push({ name: 'PROFIL' });
+    return;
   }
 
   loading.value = false;

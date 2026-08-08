@@ -40,18 +40,21 @@ export const useAuthSignUpHook = () => {
   const authStore = useAuthStore();
 
   const Register = (data: SIGN_UP) => {
+    // Garde anti-double-clic : si une inscription est déjà en cours,
+    // on ignore les clics suivants pour éviter les requêtes dupliquées.
+    if (state.loading) return;
     state.loading = true;
-    
+
     // Préparer les données d'inscription
     const registrationData = {
       ...data,
       email: authStore.email,
       type: useProfilStore().state.activeMenu_typeOfProfil
     };
-    
+
     // Utiliser l'action du store pour définir les données d'inscription
     authStore.setRegistration(registrationData);
-    
+
     const validate = signUpSchema.safeParse(authStore.registration);
     authStore.setUpdateProfil(false)
 

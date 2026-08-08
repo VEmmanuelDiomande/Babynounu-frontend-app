@@ -364,7 +364,10 @@ const fetchPreferenceOptions = async () => {
     return;
   }
   try {
-    const data = settingsData.value;
+    const raw = settingsData.value;
+    // TransformInterceptor wraps responses as { success, data }
+    const data = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
+    const items = Array.isArray(data) ? data : (data?.data ?? []);
     const grouped: Record<PrefKey, PrefItem[]> = {
       adress: [],
       zone_de_travail: [],
@@ -373,7 +376,7 @@ const fetchPreferenceOptions = async () => {
       competance_specifique: [],
       langue_parler: [],
     };
-    (data || []).forEach((p: any) => {
+    items.forEach((p: any) => {
       const slug = p?.typeParameter?.slug;
       const key = slugToPrefKey[slug];
       if (key) grouped[key].push({ id: p.id, name: p.name });

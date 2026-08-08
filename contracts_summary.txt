@@ -1,0 +1,10 @@
+﻿Contract 1: status=Canceled parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 2: status=Pending parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 3: status=Pending parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 4: status=Pending parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 5: status=Pending parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 6: status=Canceled parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 7: status=Canceled parent=Koffi Brou nounu=Aïcha Koné montant=194045 content=Parfait, je propose 100000 FCFA/mois. Ça vous convient ? periode=semaine propStatus=Pending propExpired=2026-07-14
+Contract 303: status=Pending parent=Serge Yao nounu=Aïcha Koné montant=157363 content=Je propose 157363 FCFA/jour pour Garde de nuit pour nourrisson. Horaire: 8h-17h. periode=jour propStatus=Pending propExpired=2026-07-31
+Contract 304: status=Accepted parent=Famille Bille nounu=Aïcha Koné montant=222893 content=Je propose 222893 FCFA/mois pour Garde enfants 3 et 5 ans — Cocody. Horaire: 18h-22h. periode=mois propStatus=Accepted propExpired=2026-07-21
+Contract 305: status=Accepted parent=Aya N'Guessan nounu=Aïcha Koné montant=118850 content=Je propose 118850 FCFA/jour pour Cuisinière + aide à domicile. Horaire: 7h-18h. periode=jour propStatus=Accepted propExpired=2026-07-10

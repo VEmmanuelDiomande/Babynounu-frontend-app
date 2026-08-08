@@ -2,6 +2,7 @@ export const apiProfilRoutes = {
     NOUNU_ME: '/profile/nounu/me',
     NOUNU_CREATE: '/profile/nounu',
     NOUNU_UPDATE: '/profile/nounu',
+    NOUNU_UPDATE_STATUS: '/profile/nounu/status',
 
     PARENT_ME: '/profile/parent/me',
     PARENT_CREATE: '/profile/parent',

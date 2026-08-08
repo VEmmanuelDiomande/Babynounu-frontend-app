@@ -1,7 +1,7 @@
 <template>
   <header
     v-if="mode !== 'hidden'"
-    class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-rose-100"
+    class="fixed w-full top-0 z-30 bg-white/80 backdrop-blur-md border-b border-rose-100"
   >
     <div :class="[
       'flex items-center justify-between h-16',

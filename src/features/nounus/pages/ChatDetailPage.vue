@@ -441,7 +441,8 @@ onMounted(async () => {
       const response = await axios.get(URL_API_ROUTE.ABONNEMENT_USER, {
         headers: { Authorization: `Bearer ${nToken?.value}` }
       });
-      const subscription = response.data;
+      // TransformInterceptor wraps responses as { success, data }
+      const subscription = response.data?.data ?? response.data;
       const hasActiveSubscription = subscription &&
         subscription.status === 'active' &&
         (subscription.expiresAt === null || new Date(subscription.expiresAt) > new Date());

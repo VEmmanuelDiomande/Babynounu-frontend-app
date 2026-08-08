@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-rose-50 flex flex-col">
+  <div class="min-h-screen py-8 bg-rose-50 flex flex-col">
     <!-- Shared header (never animated) -->
     <div class="flex items-center justify-between px-6 py-4">
       <div class="flex items-center gap-2">

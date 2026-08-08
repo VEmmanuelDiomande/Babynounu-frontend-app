@@ -53,7 +53,7 @@
     </AppHeader>
 
     <!-- Page content -->
-    <main :class="['flex-1', showBottomNav ? 'pb-20' : '']">
+    <main :class="['flex-1', showBottomNav ? 'pb-20' : 'pt-16']">
       <PullToRefresh :refreshing="isRefreshing" @refresh="handleRefresh">
         <router-view v-slot="{ Component }">
           <Transition name="page" mode="out-in">
@@ -66,77 +66,15 @@
     </main>
 
     <!-- Bottom navigation -->
-    <nav v-if="showBottomNav" class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-rose-100">
-      <div class="max-w-5xl mx-auto flex items-center justify-around h-16 px-2">
-        <!-- Left tabs -->
-        <button
-          v-for="tab in leftTabs"
-          :key="tab.name"
-          @click="router.push({ name: tab.route })"
-          :class="[
-            'flex flex-col items-center gap-0.5 transition-colors px-2 py-1.5 rounded-xl flex-1',
-            isActiveTab(tab) ? 'text-rose-400' : 'text-gray-400 hover:text-gray-600'
-          ]"
-        >
-          <div :class="['relative flex items-center justify-center h-7 w-7 rounded-lg transition-colors', isActiveTab(tab) && 'bg-rose-100']">
-            <i class="ri" :class="`ri-${tab.icon}`" style="font-size: 20px;"></i>
-            <span
-              v-if="tab.name === 'chat' && notificationStore.state.countMessage > 0"
-              class="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center"
-            >
-              {{ notificationStore.state.countMessage > 99 ? '99+' : notificationStore.state.countMessage }}
-            </span>
-            <span
-              v-else-if="tab.name === 'notifications' && notificationStore.state.countNotification > 0"
-              class="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center"
-            >
-              {{ notificationStore.state.countNotification > 99 ? '99+' : notificationStore.state.countNotification }}
-            </span>
-          </div>
-          <span class="font-love text-[10px] font-medium">{{ tab.label }}</span>
-        </button>
-
-        <!-- Center create button (parent only) -->
-        <button
-          v-if="userType === 'parent'"
-          @click="router.push({ name: 'CREATE_JOB' })"
-          :class="[
-            'flex flex-col items-center justify-center -mt-6 mx-1 h-14 w-14 rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-90 flex-shrink-0',
-            isActiveCreateBtn ? 'bg-rose-600 text-white ring-4 ring-rose-100' : 'bg-rose-400 text-white hover:bg-rose-500'
-          ]"
-        >
-          <i class="ri ri-add-line" style="font-size: 26px;"></i>
-        </button>
-
-        <!-- Right tabs -->
-        <button
-          v-for="tab in rightTabs"
-          :key="tab.name"
-          @click="router.push({ name: tab.route })"
-          :class="[
-            'flex flex-col items-center gap-0.5 transition-colors px-2 py-1.5 rounded-xl flex-1',
-            isActiveTab(tab) ? 'text-rose-400' : 'text-gray-400 hover:text-gray-600'
-          ]"
-        >
-          <div :class="['relative flex items-center justify-center h-7 w-7 rounded-lg transition-colors', isActiveTab(tab) && 'bg-rose-100']">
-            <i class="ri" :class="`ri-${tab.icon}`" style="font-size: 20px;"></i>
-            <span
-              v-if="tab.name === 'chat' && notificationStore.state.countMessage > 0"
-              class="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center"
-            >
-              {{ notificationStore.state.countMessage > 99 ? '99+' : notificationStore.state.countMessage }}
-            </span>
-            <span
-              v-else-if="tab.name === 'notifications' && notificationStore.state.countNotification > 0"
-              class="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center"
-            >
-              {{ notificationStore.state.countNotification > 99 ? '99+' : notificationStore.state.countNotification }}
-            </span>
-          </div>
-          <span class="font-love text-[10px] font-medium">{{ tab.label }}</span>
-        </button>
-      </div>
-    </nav>
+    <BottomNav
+      :visible="showBottomNav"
+      :user-type="userType"
+      :count-message="notificationStore.state.countMessage"
+      :count-notification="notificationStore.state.countNotification"
+      :active-route-name="route.name ? String(route.name) : null"
+      :active-path="route.path"
+      @navigate="router.push({ name: $event })"
+    />
   </div>
 </template>
 
@@ -147,12 +85,13 @@ import axios from 'axios';
 import { StorageUtils } from '@/utils/store.utils';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useUserStore } from '@/stores/user.store';
-import { AppHeader, PullToRefresh } from '@/components/ui';
+import { AppHeader, BottomNav, PullToRefresh } from '@/components/ui';
 import { getRefreshHandler } from '@/composables/usePullToRefresh';
 import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 import { getAvatarUrl } from '@/utils/media.utils';
 import { useChatUnreadCount, useNotificationUnreadCount } from '@/features/notifications/hooks/useNotificationCounts';
 import { useParentProfile, useNounuProfile } from '@/features/profile/hooks/useProfile';
+import { useHasActiveSubscription } from '@/features/subscriptions/hooks/useAbonnement';
 import { useAbonnementStore } from '@/stores/abonnementStore';
 
 const router = useRouter();
@@ -162,18 +101,53 @@ const userStore = useUserStore();
 const abonnementStore = useAbonnementStore();
 
 const userType = ref<string | null>(null);
+const isLoggedIn = ref(false);
 
-// TanStack Query hooks for counts
-const { data: chatUnreadCount } = useChatUnreadCount();
-const { data: notificationUnreadCount } = useNotificationUnreadCount();
+// TanStack Query hooks for counts — uniquement si l'utilisateur est connecté.
+// La mise en cache TanStack (staleTime 2 min) évite les appels HTTP dupliqués
+// lors des remontages du layout (HomeLayout est utilisé par 14 route records).
+const { data: chatUnreadCount } = useChatUnreadCount(computed(() => isLoggedIn.value));
+const { data: notificationUnreadCount } = useNotificationUnreadCount(computed(() => isLoggedIn.value));
 
 // TanStack Query hooks for profiles (conditionally enabled based on user type)
 const { data: parentProfileData } = useParentProfile(computed(() => userType.value === 'parent'));
 const { data: nounuProfileData } = useNounuProfile(computed(() => userType.value === 'nounu'));
 
+// Subscription status via TanStack Query (staleTime 5 min) — évite l'appel HTTP
+// direct de abonnementStore.myAbonnement() qui se dupliquait à chaque remontage.
+// Le store est synchronisé via le watcher ci-dessous.
+const { data: subscriptionData } = useHasActiveSubscription(computed(() => isLoggedIn.value));
+
+// Sync abonnement store depuis la query TanStack (évite l'appel HTTP direct)
+// useHasActiveSubscription retourne déjà l'objet subscription déwrappé (ou null).
+watch(subscriptionData, (data) => {
+  // data peut être null (pas d'abonnement) — il faut quand même mettre à jour
+  // le store pour refléter l'état "non abonné".
+  const hasActive = !!data && data.status === 'active' && (
+    data.expiresAt === null || new Date(data.expiresAt) > new Date()
+  );
+  abonnementStore.isAbonnement = hasActive;
+  abonnementStore.isLifetime = !!data && data.expiresAt === null;
+  abonnementStore.isExpired = !!data && data.status === 'active' && data.expiresAt !== null && new Date(data.expiresAt) <= new Date();
+  abonnementStore.subscriptionData = data || null;
+  const packFeatures = data?.pack?.features;
+  abonnementStore.subscriptionFeatures = Array.isArray(packFeatures) ? packFeatures : (Array.isArray(data?.features) ? data.features : []);
+  StorageUtils().setStore('nIsAbonnement', hasActive ? 'true' : 'false');
+}, { immediate: true });
+
+// Sync notification store depuis les queries TanStack
+watch(chatUnreadCount, (val) => {
+  if (val !== undefined) notificationStore.state.countMessage = val;
+}, { immediate: true });
+watch(notificationUnreadCount, (val) => {
+  if (val !== undefined) notificationStore.state.countNotification = val;
+}, { immediate: true });
+
 // Computed avatar that reacts to profile data changes
 const userAvatar = computed(() => {
-  const profileData = userType.value === 'parent' ? parentProfileData.value : nounuProfileData.value;
+  const raw = userType.value === 'parent' ? parentProfileData.value : nounuProfileData.value;
+  // TransformInterceptor wraps responses as { success, data }
+  const profileData = raw && typeof raw === 'object' && 'success' in raw && 'data' in raw ? raw.data : raw;
   const medias = profileData?.user?.medias || [];
   return getAvatarUrl(medias);
 });
@@ -203,113 +177,21 @@ onMounted(async () => {
   // Check if user is logged in
   await userStore._isLogged();
 
-  // Sync subscription status from backend
+  // Détermine si l'utilisateur est connecté pour activer les queries TanStack
   const nToken = (await StorageUtils().getStore('nToken'))?.value;
-  if (nToken) {
-    abonnementStore.myAbonnement().catch(() => {});
-  }
+  isLoggedIn.value = !!nToken;
 
   // Initialize notification and message counts via WebSocket (only if logged in)
+  // Ces appels socket ne sont plus dupliqués avec main.ts (supprimés de main.ts).
   if (nToken) {
     notificationStore.NCountChats();
     notificationStore.NCountNotification();
-  }
-  
-  // Sync TanStack Query data with store for UI compatibility
-  if (chatUnreadCount.value !== undefined) {
-    notificationStore.state.countMessage = chatUnreadCount.value;
-  }
-  if (notificationUnreadCount.value !== undefined) {
-    notificationStore.state.countNotification = notificationUnreadCount.value;
   }
 });
 
 watch(() => route.path, () => {
   determineUserType();
 });
-
-const allTabs = [
-  {
-    name: 'home',
-    label: 'Accueil',
-    route: 'HOME',
-    icon: 'home-line',
-    profiles: ['parent'],
-  },
-  {
-    name: 'jobs',
-    label: 'Jobs',
-    route: 'HOME_JOBS',
-    icon: 'briefcase-line',
-    profiles: ['nounu'],
-  },
-  {
-    name: 'create-job',
-    label: 'Publier',
-    route: 'CREATE_JOB',
-    icon: 'add-line',
-    profiles: ['parent'],
-    isCenter: true,
-  },
-  {
-    name: 'chat',
-    label: 'Messages',
-    route: 'CHAT_MESSAGE',
-    icon: 'chat-3-line',
-    profiles: ['parent'],
-  },
-  {
-    name: 'search',
-    label: 'Recherche',
-    route: 'SEARCH_NOUNUS',
-    icon: 'search-line',
-    profiles: ['nounu'],
-  },
-  {
-    name: 'prestations',
-    label: 'Prestations',
-    route: 'PRESTATIONS',
-    icon: 'wallet-line',
-    profiles: ['nounu'],
-  },
-  {
-    name: 'notifications',
-    label: 'Notifs',
-    route: 'NOTIFICATIONS',
-    icon: 'notification-3-line',
-    profiles: ['parent', 'nounu'],
-  },
-  {
-    name: 'profile',
-    label: 'Profil',
-    route: 'PROFIL',
-    icon: 'user-3-line',
-    profiles: ['parent', 'nounu'],
-  },
-];
-
-const navTabs = computed(() => {
-  if (!userType.value) return allTabs.filter((tab) => tab.profiles.includes('nounu') && !tab.isCenter);
-  return allTabs.filter((tab) => tab.profiles.includes(userType.value as string) && !tab.isCenter);
-});
-
-const hasCenterBtn = computed(() => userType.value === 'parent');
-
-const leftTabs = computed(() => {
-  const tabs = navTabs.value;
-  if (!hasCenterBtn.value) return tabs;
-  const mid = Math.ceil(tabs.length / 2);
-  return tabs.slice(0, mid);
-});
-
-const rightTabs = computed(() => {
-  const tabs = navTabs.value;
-  if (!hasCenterBtn.value) return [];
-  const mid = Math.ceil(tabs.length / 2);
-  return tabs.slice(mid);
-});
-
-const isActiveCreateBtn = computed(() => route.name === 'CREATE_JOB');
 
 type HeaderMode = 'logo' | 'title' | 'back' | 'close' | 'hidden';
 
@@ -360,15 +242,5 @@ const handleBack = () => {
   } else {
     router.back();
   }
-};
-
-const isActiveTab = (tab: any) => {
-  if (tab.route === 'HOME') return route.name === 'HOME' || route.path === '/home/nounus';
-  if (tab.route === 'HOME_JOBS') return route.name === 'HOME_JOBS' || route.path === '/home/jobs';
-  if (tab.route === 'CREATE_JOB') return route.name === 'CREATE_JOB';
-  if (tab.route === 'CHAT_MESSAGE') return route.name === 'CHAT_MESSAGE' || route.name === 'CHAT_MESSAGE_DETAIL';
-  if (tab.route === 'SEARCH_NOUNUS') return route.name === 'SEARCH_NOUNUS' || route.name === 'SEARCH_JOBS';
-  if (tab.route === 'PRESTATIONS') return route.name === 'PRESTATIONS';
-  return route.name === tab.route;
 };
 </script>

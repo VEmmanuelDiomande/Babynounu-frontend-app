@@ -45,6 +45,7 @@
               <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="handlePhotoUpload" />
             </div>
             <p class="font-love text-xs text-gray-400">Photo de profil</p>
+            <FieldError :message="fieldError('image_profil')" />
           </div>
 
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-rose-50 space-y-4">
@@ -56,9 +57,13 @@
                   v-model="nounuStore.state.InformationPersonnelle.fullname"
                   type="text"
                   placeholder="Jeanne Dupont"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('fullname') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('fullname')" />
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -69,9 +74,13 @@
                     v-model="nounuStore.state.InformationPersonnelle.age"
                     type="number"
                     placeholder="28"
-                    class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                      fieldError('age') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
                 </div>
+                <FieldError :message="fieldError('age')" />
               </div>
               <div>
                 <label class="block font-love text-xs font-medium text-gray-700 mb-1.5">Téléphone</label>
@@ -81,9 +90,13 @@
                     v-model="nounuStore.state.InformationPersonnelle.phone"
                     type="tel"
                     placeholder="+225 07 00 00 00"
-                    class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                      fieldError('phone') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
                 </div>
+                <FieldError :message="fieldError('phone')" />
               </div>
             </div>
             <div>
@@ -94,9 +107,13 @@
                   v-model="addressInput"
                   type="text"
                   placeholder="Cocody, Abidjan"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('address') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('address')" />
             </div>
           </div>
         </div>
@@ -121,9 +138,13 @@
                   v-model="nounuStore.state.ExperienceEtCompetences.annees_experience"
                   type="number"
                   placeholder="5"
-                  class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                  :class="[
+                    'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                    fieldError('annees_experience') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                  ]"
                 />
               </div>
+              <FieldError :message="fieldError('annees_experience')" />
             </div>
 
             <div>
@@ -131,7 +152,7 @@
                 <i class="ri ri-emotion-happy-line text-rose-400" style="font-size: 14px;"></i>
                 Tranche d'âge des enfants
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('tranche_age_enfants') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="range in ageRanges"
                   :key="range"
@@ -148,6 +169,7 @@
                   {{ range }}
                 </button>
               </div>
+              <FieldError :message="fieldError('tranche_age_enfants')" />
             </div>
 
             <div>
@@ -155,7 +177,7 @@
                 <i class="ri ri-star-smile-line text-rose-400" style="font-size: 14px;"></i>
                 Compétences spécifiques
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('competance_specifique') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="skill in competences"
                   :key="skill"
@@ -172,6 +194,7 @@
                   {{ skill }}
                 </button>
               </div>
+              <FieldError :message="fieldError('competance_specifique')" />
             </div>
 
             <div>
@@ -179,7 +202,7 @@
                 <i class="ri ri-translate-2 text-rose-400" style="font-size: 14px;"></i>
                 Langues parlées
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('langue_parler') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="lang in languages"
                   :key="lang"
@@ -196,6 +219,7 @@
                   {{ lang }}
                 </button>
               </div>
+              <FieldError :message="fieldError('langue_parler')" />
             </div>
           </div>
         </div>
@@ -217,7 +241,7 @@
                 <i class="ri ri-time-line text-rose-400" style="font-size: 14px;"></i>
                 Horaires disponibles
               </label>
-              <div class="grid grid-cols-2 gap-2.5">
+              <div :class="['grid grid-cols-2 gap-2.5', fieldError('horaire_disponible') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="slot in timeSlots"
                   :key="slot"
@@ -234,6 +258,7 @@
                   {{ slot }}
                 </button>
               </div>
+              <FieldError :message="fieldError('horaire_disponible')" />
             </div>
 
             <div>
@@ -241,7 +266,7 @@
                 <i class="ri ri-flashlight-line text-rose-400" style="font-size: 14px;"></i>
                 Missions urgentes
               </label>
-              <div class="space-y-2.5">
+              <div :class="['space-y-2.5', fieldError('urgences') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in nounuStore.DataEMERGENCIES"
                   :key="item.id"
@@ -267,6 +292,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('urgences')" />
             </div>
           </div>
         </div>
@@ -292,9 +318,13 @@
                     v-model="nounuStore.state.Tarifications.tarif_horaire"
                     type="number"
                     placeholder="2500"
-                    class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                      fieldError('tarif_horaire') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
                 </div>
+                <FieldError :message="fieldError('tarif_horaire')" />
               </div>
               <div>
                 <label class="block font-love text-xs font-medium text-gray-700 mb-1.5">Tarif mensuel (FCFA)</label>
@@ -304,9 +334,13 @@
                     v-model="nounuStore.state.Tarifications.tarif_mensuel"
                     type="number"
                     placeholder="150000"
-                    class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 pl-11 pr-4 py-3.5 placeholder:text-gray-400 transition-all',
+                      fieldError('tarif_mensuel') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
                 </div>
+                <FieldError :message="fieldError('tarif_mensuel')" />
               </div>
             </div>
 
@@ -315,7 +349,7 @@
                 <i class="ri ri-hand-heart-line text-rose-400" style="font-size: 14px;"></i>
                 Flexibilité tarifaire
               </label>
-              <div class="space-y-2.5">
+              <div :class="['space-y-2.5', fieldError('flexibilite_tarifaire') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="item in nounuStore.DataFlexiblePrice"
                   :key="item.id"
@@ -341,6 +375,7 @@
                   {{ item.name }}
                 </button>
               </div>
+              <FieldError :message="fieldError('flexibilite_tarifaire')" />
             </div>
           </div>
         </div>
@@ -365,8 +400,12 @@
               v-model="nounuStore.state.PresentationDuPersonnel.courte_biographie"
               rows="6"
               placeholder="Bonjour, je m'appelle... J'ai X années d'expérience dans la garde d'enfants..."
-              class="w-full font-love text-sm bg-rose-50/40 border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 px-4 py-3.5 placeholder:text-gray-400 resize-none transition-all"
+              :class="[
+                'w-full font-love text-sm bg-rose-50/40 border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 px-4 py-3.5 placeholder:text-gray-400 resize-none transition-all',
+                fieldError('courte_biographie') ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+              ]"
             ></textarea>
+            <FieldError :message="fieldError('courte_biographie')" />
             <div class="flex items-center justify-between mt-2">
               <p class="font-love text-xs text-gray-400">
                 {{ nounuStore.state.PresentationDuPersonnel.courte_biographie.length }} / 1000 caractères
@@ -397,7 +436,7 @@
               <i class="ri ri-map-pin-2-line text-rose-400" style="font-size: 14px;"></i>
               Zones de travail
             </label>
-            <div class="flex flex-wrap gap-2">
+            <div :class="['flex flex-wrap gap-2', fieldError('zone_de_travail') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
               <button
                 v-for="zone in workZones"
                 :key="zone"
@@ -414,6 +453,7 @@
                 {{ zone }}
               </button>
             </div>
+            <FieldError :message="fieldError('zone_de_travail')" />
           </div>
         </div>
 
@@ -456,6 +496,7 @@
                 </div>
               </div>
               <input ref="verificationInputRef" type="file" accept="image/*" multiple class="hidden" @change="handleVerificationUpload" />
+              <FieldError :message="fieldError('verification_confirmer')" />
             </div>
 
             <!-- Certifications -->
@@ -464,7 +505,7 @@
                 <i class="ri ri-award-line text-rose-400" style="font-size: 14px;"></i>
                 Certifications
               </label>
-              <div class="flex flex-wrap gap-2">
+              <div :class="['flex flex-wrap gap-2', fieldError('certifications') && 'ring-2 ring-red-200 rounded-2xl p-2 -m-2']">
                 <button
                   v-for="cert in certifications"
                   :key="cert"
@@ -481,6 +522,7 @@
                   {{ cert }}
                 </button>
               </div>
+              <FieldError :message="fieldError('certifications')" />
             </div>
 
             <!-- References -->
@@ -523,16 +565,25 @@
                     v-model="ref.fullname"
                     type="text"
                     placeholder="Nom du contact"
-                    class="w-full font-love text-sm bg-white border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 px-4 py-2.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-white border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 px-4 py-2.5 placeholder:text-gray-400 transition-all',
+                      fieldError(`references.${i}.fullname`) ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
+                  <FieldError :message="fieldError(`references.${i}.fullname`)" />
                   <input
                     v-model="ref.phone"
                     type="tel"
                     placeholder="Téléphone"
-                    class="w-full font-love text-sm bg-white border border-rose-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 px-4 py-2.5 placeholder:text-gray-400 transition-all"
+                    :class="[
+                      'w-full font-love text-sm bg-white border rounded-2xl focus:outline-none focus:ring-2 focus:border-rose-300 px-4 py-2.5 placeholder:text-gray-400 transition-all',
+                      fieldError(`references.${i}.phone`) ? 'border-red-400 focus:ring-red-200' : 'border-rose-100 focus:ring-rose-200'
+                    ]"
                   />
+                  <FieldError :message="fieldError(`references.${i}.phone`)" />
                 </div>
               </div>
+              <FieldError :message="fieldError('references')" />
             </div>
           </div>
         </div>
@@ -580,12 +631,13 @@
             <p class="font-love text-xs text-gray-400 mt-4 text-center">
               {{ galleryPreviews.length }} photo(s) ajoutée(s)
             </p>
+            <FieldError :message="fieldError('gallery')" />
           </div>
         </div>
 
-    <!-- Error display -->
+    <!-- Generic error display (API / root errors only) -->
     <div
-      v-if="nounuStore.state.in_error.message"
+      v-if="nounuStore.state.in_error.message && fieldError('_root')"
       class="mt-4 rounded-2xl bg-red-50 border border-red-100 px-4 py-3 flex items-center gap-3"
     >
       <i class="ri ri-error-warning-line text-red-500" style="font-size: 20px;"></i>
@@ -598,6 +650,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ProfileSetupLayout from '@/layouts/ProfileSetupLayout.vue';
+import { FieldError } from '@/components/ui';
 import { useProfiNounulStore } from '@/stores/authProfilNounuStore';
 import { useAuthStore } from '@/stores/auth.store';
 import { URL_API_ROUTE } from '@/routes/_requests/index.request';
@@ -608,6 +661,10 @@ import { StorageUtils } from '@/utils/store.utils';
 const router = useRouter();
 const nounuStore = useProfiNounulStore();
 const authStore = useAuthStore();
+
+// Per-field validation errors (Zod path -> message)
+const fieldErrors = computed(() => nounuStore.state.in_error.errors || {} as Record<string, string>);
+const fieldError = (key: string) => fieldErrors.value[key] || null;
 
 // TanStack Query for settings
 const { data: settingsData } = useAllSettings();
@@ -640,8 +697,10 @@ const applyFallbackParameters = () => {
 
 const fetchParameters = async () => {
   try {
-    const data = settingsData.value;
-    const items = Array.isArray(data) ? data : (data?.data ?? []);
+    const raw = settingsData.value;
+    // TransformInterceptor wraps responses as { success, data }
+    const unwrapped = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
+    const items = Array.isArray(unwrapped) ? unwrapped : (unwrapped?.data ?? []);
     const bySlug = (slug: string) => items.filter((p: any) => p?.typeParameter?.slug === slug).map((p: any) => p.name);
     ageRanges.value = bySlug('tranche_age');
     competences.value = bySlug('competence');
@@ -876,6 +935,10 @@ const removeGalleryImage = (index: number) => {
 };
 
 const handleNext = async () => {
+  // Garde anti-double-clic : loading est vérifié de façon synchrone avant
+  // que Vue ne mette à jour le DOM (disabled du bouton). Sans ce garde, un
+  // double-clic rapide déclenche handleNext deux fois -> requête dupliquée.
+  if (loading.value) return;
   loading.value = true;
 
   // Sync address input to store array
@@ -894,9 +957,21 @@ const handleNext = async () => {
     8: nounuStore.Galery,
   };
 
-  const action = stepActions[nounuStore.state.StepProfil];
+  const currentStep = nounuStore.state.StepProfil;
+  const action = stepActions[currentStep];
   if (action) await action();
 
-  loading.value = false;
+  // En cas d'erreur de validation, réactiver le bouton pour permettre
+  // à l'utilisateur de corriger et de soumettre à nouveau.
+  if (nounuStore.state.in_error.message) {
+    loading.value = false;
+    return;
+  }
+
+  // Sur l'étape finale, createProfile() navigue vers /home/jobs ; le
+  // composant se démonte, inutile de réactiver le bouton.
+  if (currentStep < totalSteps) {
+    loading.value = false;
+  }
 };
 </script>

@@ -603,8 +603,11 @@ const slugToKey: Record<string, string> = {
 
 const fetchPreferences = async () => {
   try {
-    const data = settingsData.value;
-    (data || []).forEach((p: any) => {
+    const raw = settingsData.value;
+    // TransformInterceptor wraps responses as { success, data }
+    const data = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
+    const items = Array.isArray(data) ? data : (data?.data ?? []);
+    items.forEach((p: any) => {
       const slug = p?.typeParameter?.slug;
       const key = slugToKey[slug];
       if (key) preferenceOptions[key].push({ id: p.id, name: p.name, slug: p.slug });

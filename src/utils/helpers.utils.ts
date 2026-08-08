@@ -4,6 +4,38 @@ import { StorageUtils } from "./store.utils";
 import { buildImageUrl } from "./media.utils";
 
 /**
+ * Déwrappe la réponse du TransformInterceptor backend.
+ * Le backend wrap toutes les réponses dans { success: true, data: ... }.
+ * Cette fonction extrait le `data` interne, ou retourne la réponse telle quelle
+ * si elle n'est pas au format attendu (rétrocompatibilité).
+ *
+ * @param resp - La réponse axios (response.data) ou n'importe quel objet
+ * @returns Le contenu de `data` si la réponse est wrappée, sinon l'objet original
+ */
+export const unwrap = (resp: any): any =>
+  resp && typeof resp === 'object' && !Array.isArray(resp) && 'success' in resp && 'data' in resp
+    ? resp.data
+    : resp;
+
+/**
+ * Vérifie si un objet subscription représente un abonnement actif.
+ * Gère le cas null (pas d'abonnement) et les abonnements à vie (expiresAt null).
+ *
+ * @param subscription - L'objet subscription (déwrappé) ou null
+ * @returns true si l'abonnement est actif et non expiré
+ */
+export const isSubscriptionActive = (subscription: any): boolean => {
+  if (!subscription) return false;
+  if (subscription.status !== 'active') return false;
+  // Abonnement à vie : expiresAt null ou undefined
+  if (subscription.expiresAt === null || subscription.expiresAt === undefined) return true;
+  // Abonnement limité : vérifier la date d'expiration
+  const expiry = new Date(subscription.expiresAt);
+  if (isNaN(expiry.getTime())) return false;
+  return expiry > new Date();
+};
+
+/**
  * Retarde l'exécution d'une promesse
  * @param ms - Temps en millisecondes
  * @returns Une promesse qui se résout après le délai

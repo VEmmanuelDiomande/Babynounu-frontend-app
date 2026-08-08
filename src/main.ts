@@ -27,8 +27,6 @@ import { authentificateApp } from "./routes/authenticate/authorization.authentic
 import dayjs from "dayjs";
 import "dayjs/locale/fr"; // Import de la locale française
 import relativeTime from "dayjs/plugin/relativeTime";
-import { StorageUtils } from "./utils/store.utils";
-import { useNotificationStore } from "./stores/notificationStore";
 
 // Initialisation de dayjs avec la locale et le plugin
 dayjs.extend(relativeTime);
@@ -49,11 +47,8 @@ const app = createApp(App)
 router.isReady().then(async() => {
   await authentificateApp(); // Appel de la fonction d'authentification avant le montage
   app.mount("#app");
-
-  const token = (await StorageUtils().getStore("nToken")).value;
-  if (token) {
-    const notificationStore = useNotificationStore();
-    await notificationStore.NCountChats();
-    await notificationStore.NCountNotification();
-  }
+  // Les compteurs de notifications/messages (socket + HTTP) sont désormais
+  // initialisés par HomeLayout.vue onMounted, ce qui évite les appels
+  // dupliqués (NCountChats/NCountNotification étaient appelés à la fois
+  // ici et dans HomeLayout).
 });

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-5xl mx-auto px-4 sm:px-6">
     <!-- Loading -->
-    <div v-if="loading" class="space-y-4">
+    <div v-if="isLoading" class="space-y-4">
       <div class="bg-white rounded-3xl overflow-hidden shadow-sm animate-pulse">
         <div class="h-32 bg-gray-200"></div>
         <div class="p-6">
@@ -31,7 +31,9 @@
             alt="Bannière"
             class="h-full w-full object-cover"
           />
-          <div v-else class="h-full w-full bg-gradient-to-r from-rose-200 via-rose-100 to-rose-50"></div>
+          <div v-else class="h-full w-full bg-gradient-to-r from-rose-200 via-rose-100 to-rose-50 flex items-center justify-center">
+            <i class="ri ri-bear-smile-line text-rose-300/60" style="font-size: 56px;"></i>
+          </div>
           <!-- Banner upload button (own profile only) -->
           <button
             v-if="!isViewMode"
@@ -62,7 +64,7 @@
               </button>
               <input v-if="!isViewMode" ref="avatarInputRef" type="file" accept="image/*" class="hidden" @change="handleAvatarUpload" />
             </div>
-            <div class="flex-1 min-w-0 pt-2">
+            <div class="flex-1 min-w-0 pt-6">
               <h1 class="font-anton text-xl text-gray-900 leading-tight truncate">{{ profile.fullname }}</h1>
               <p class="font-love text-xs text-gray-400 mt-0.5">{{ profile.age }} ans · {{ profile.anneesExperience || 0 }} ans d'expérience</p>
             </div>
@@ -526,14 +528,22 @@ const viewModeId = computed(() => (route.params.id as string) || '');
 const isViewMode = computed(() => !!viewModeId.value);
 
 // TanStack Query for profile data
-const { data: profileData, isLoading: profileLoading, refetch: refetchProfile } = useNounuProfile();
-const { data: viewModeProfileData } = useNounuProfileById(viewModeId.value);
-const { data: reviewsData } = useNounuReviews(viewModeId.value);
+// useNounuProfile (propre profil) est désactivé en mode vue pour éviter
+// une requête inutile quand on consulte le profil d'un autre nounu.
+const { data: profileData, isLoading: profileLoading, refetch: refetchProfile } = useNounuProfile(
+  computed(() => !isViewMode.value)
+);
+// Passage d'un getter (au lieu de .value) pour que la query soit réactive
+// aux changements du paramètre de route (navigation entre profils).
+const { data: viewModeProfileData } = useNounuProfileById(() => viewModeId.value);
+const { data: reviewsData } = useNounuReviews(() => viewModeId.value);
 
 const profile = ref<any>(null);
 const userMedias = ref<any[]>([]);
 const loading = ref(false);
 const fetchingProfile = ref(false);
+
+const isLoading = computed(() => loading.value || (!isViewMode.value && profileLoading.value));
 
 const reviewData = reactive({
   reviews: [] as any[],
@@ -544,6 +554,14 @@ const reviewData = reactive({
 });
 const reviewsLoading = ref(false);
 
+// ── Unwrap API response (TransformInterceptor wraps as { success, data }) ──
+const unwrap = (resp: any) => {
+  if (resp && typeof resp === 'object' && !Array.isArray(resp) && 'success' in resp && 'data' in resp) {
+    return resp.data;
+  }
+  return resp;
+};
+
 const fetchProfile = async () => {
   if (fetchingProfile.value) return;
   try {
@@ -552,14 +570,15 @@ const fetchProfile = async () => {
     mediaError.value = null;
 
     if (isViewMode.value) {
-      const data = viewModeProfileData.value;
+      const data = unwrap(viewModeProfileData.value);
       profile.value = data;
       userMedias.value = data?.user?.medias || [];
     } else {
       // Use TanStack Query data for own profile
       if (profileData.value) {
-        profile.value = profileData.value;
-        userMedias.value = profileData.value?.user?.medias || [];
+        const data = unwrap(profileData.value);
+        profile.value = data;
+        userMedias.value = data?.user?.medias || [];
       }
     }
   } catch (e: any) {
@@ -789,8 +808,9 @@ onMounted(async () => {
   } else {
     // Use TanStack Query data for own profile
     if (profileData.value) {
-      profile.value = profileData.value;
-      userMedias.value = profileData.value?.user?.medias || [];
+      const data = unwrap(profileData.value);
+      profile.value = data;
+      userMedias.value = data?.user?.medias || [];
     }
   }
 });
@@ -798,8 +818,9 @@ onMounted(async () => {
 // Watch for TanStack Query data changes (for own profile)
 watch(profileData, (newData) => {
   if (!isViewMode.value && newData) {
-    profile.value = newData;
-    userMedias.value = newData?.user?.medias || [];
+    const data = unwrap(newData);
+    profile.value = data;
+    userMedias.value = data?.user?.medias || [];
   }
 });
 
@@ -807,15 +828,18 @@ const fetchReviews = async (page = 1, append = false) => {
   if (!viewModeId.value) return;
   try {
     reviewsLoading.value = true;
-    const data = reviewsData.value;
+    const raw = reviewsData.value;
+    // TransformInterceptor wraps responses as { success, data }
+    const data = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
     if (data) {
+      const reviews = Array.isArray(data) ? data : (data?.data || data?.reviews || []);
       if (append) {
-        reviewData.reviews = [...reviewData.reviews, ...(Array.isArray(data) ? data : (data?.data || []))];
+        reviewData.reviews = [...reviewData.reviews, ...reviews];
       } else {
-        reviewData.reviews = Array.isArray(data) ? data : (data?.data || []);
+        reviewData.reviews = reviews;
       }
       reviewData.averageRating = data?.averageRating || 0;
-      reviewData.totalReviews = data?.totalReviews || 0;
+      reviewData.totalReviews = data?.totalReviews || reviews.length;
       reviewData.hasNextPage = data?.pagination?.hasNextPage ?? false;
       reviewData.currentPage = page;
     }

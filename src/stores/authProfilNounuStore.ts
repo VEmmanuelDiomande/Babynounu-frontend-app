@@ -63,6 +63,7 @@ interface NounuProfileState {
   in_error: {
     path?: string;
     message?: string;
+    errors?: Record<string, string>;
   };
 }
 
@@ -144,9 +145,17 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
 
     if (!result.success) {
       const firstError = result.error.issues[0];
+      const errorsMap: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path.join(".") || "_root";
+        if (!errorsMap[key]) {
+          errorsMap[key] = issue.message;
+        }
+      }
       state.in_error = {
         path: firstError.path.join("."),
         message: firstError.message,
+        errors: errorsMap,
       };
       return false;
     }
@@ -223,6 +232,7 @@ export const useProfiNounulStore = defineStore("AuthProfilNounuStore", () => {
       } catch (error) {
         state.in_error = {
           message: "Erreur lors de la création du profil",
+          errors: { _root: "Erreur lors de la création du profil" },
         };
       }
     } else {

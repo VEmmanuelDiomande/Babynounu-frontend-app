@@ -1,5 +1,6 @@
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { StorageUtils } from "@/utils/store.utils";
+import { unwrap, isSubscriptionActive } from "@/utils/helpers.utils";
 import axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -16,21 +17,22 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
     const nToken = await StorageUtils().getStore("nToken");
     const token = nToken?.value;
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-    const { data } = await axios.get(
+    const { data: raw } = await axios.get(
       URL_API_ROUTE.ABONNEMENT_HAS_ACTIVE_SUBSCRIPTION,
       { headers }
     );
 
-    const hasActive = !!data && data.status === 'active' && (
-      data.expiresAt === null || new Date(data.expiresAt) > new Date()
-    );
+    // Unwrap TransformInterceptor response
+    const data = unwrap(raw) as any;
+
+    const hasActive = isSubscriptionActive(data);
     isAbonnement.value = hasActive;
     isLifetime.value = !!data && data.expiresAt === null;
     isExpired.value = !!data && data.status === 'active' && data.expiresAt !== null && new Date(data.expiresAt) <= new Date();
     subscriptionData.value = data || null;
 
-    const packFeatures = (data as any)?.pack?.features;
-    subscriptionFeatures.value = Array.isArray(packFeatures) ? packFeatures : (Array.isArray((data as any)?.features) ? (data as any).features : []);
+    const packFeatures = data?.pack?.features;
+    subscriptionFeatures.value = Array.isArray(packFeatures) ? packFeatures : (Array.isArray(data?.features) ? data.features : []);
 
     await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
 
@@ -55,10 +57,13 @@ export const useAbonnementStore = defineStore("Abonnement", () => {
 
   const updateAbonnement = async () => {
     if (!isAbonnement.value) {
-      const { data } = await axios.post(URL_API_ROUTE.ABONNEMENT_COMFIRM, {
+      const { data: raw } = await axios.post(URL_API_ROUTE.ABONNEMENT_COMFIRM, {
         userId: (await StorageUtils().getStore("nUser_Id")).value,
         transactionId: (await StorageUtils().getStore("nTransactionId")).value,
       });
+
+      // Unwrap TransformInterceptor response
+      const data = unwrap(raw) as any;
 
       if (data?.paiement?.id) {
         isAbonnement.value = true;

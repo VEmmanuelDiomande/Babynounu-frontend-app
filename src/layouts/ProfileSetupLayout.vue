@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-rose-50/30 to-white w-full">
+  <div class="flex-1 flex py-8 flex-col overflow-hidden bg-gradient-to-b from-rose-50/30 to-white w-full">
     <!-- Header -->
     <AppHeader
       mode="close"
@@ -14,45 +14,20 @@
     </div>
 
     <!-- Step content -->
-    <div class="flex-1 overflow-y-auto px-4 py-4 pb-24">
+    <div class="flex-1 overflow-y-auto px-4 py-4 pb-[calc(6rem+var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))]">
       <div class="w-full max-w-xl mx-auto">
         <slot />
       </div>
     </div>
 
     <!-- Bottom navigation -->
-    <div class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-t border-rose-50 bg-white/95 backdrop-blur-md">
-      <button
-        v-if="currentStep > 1"
-        type="button"
-        @click="$emit('back')"
-        class="flex items-center gap-2 font-love text-sm font-medium text-gray-600 hover:text-rose-400 transition-colors px-4 py-2.5 rounded-2xl hover:bg-rose-50"
-      >
-        <i class="ri ri-arrow-left-line" style="font-size: 16px;"></i>
-        Retour
-      </button>
-      <div v-else></div>
-
-      <button
-        type="button"
-        @click="$emit('next')"
-        :disabled="loading"
-        class="relative inline-flex items-center justify-center gap-2 font-love font-semibold text-white bg-gradient-to-r from-rose-400 to-primary hover:from-rose-500 hover:to-primary/90 active:scale-[0.98] rounded-2xl shadow-lg shadow-rose-200 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3.5 text-sm"
-      >
-        <span v-if="loading" class="absolute inset-0 flex items-center justify-center">
-          <i class="ri ri-loader-4-line ri-spin" style="font-size: 20px;"></i>
-        </span>
-        <span :class="{ 'opacity-0': loading }">
-          {{ currentStep === totalSteps ? 'Finaliser' : 'Continuer' }}
-        </span>
-        <i
-          v-if="currentStep !== totalSteps"
-          class="ri ri-arrow-right-line"
-          :class="{ 'opacity-0': loading }"
-          style="font-size: 16px;"
-        ></i>
-      </button>
-    </div>
+    <StepFooter
+      :current-step="currentStep"
+      :total-steps="totalSteps"
+      :loading="loading"
+      @back="$emit('back')"
+      @next="$emit('next')"
+    />
 
     <!-- Image Cropper -->
     <ImageCropper
@@ -69,7 +44,7 @@
 
 <script setup lang="ts">
 import ImageCropper from '@/components/ui/ImageCropper.vue';
-import { AppHeader } from '@/components/ui';
+import { AppHeader, StepFooter } from '@/components/ui';
 
 withDefaults(defineProps<{
   title: string;

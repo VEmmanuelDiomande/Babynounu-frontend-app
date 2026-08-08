@@ -9,13 +9,16 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useProfilStore } from "@/stores/authProfilStore";
 import { useParentHook } from "@/hooks/parentHooks/parent.hooks";
 import router from "@/routes";
+import { unwrap, isSubscriptionActive } from "@/utils/helpers.utils";
 
 async function checkAndStoreSubscription(token: string, userId: string) {
   try {
     const { data } = await axios.get(URL_API_ROUTE.ABONNEMENT_HAS_ACTIVE_SUBSCRIPTION, {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     });
-    const hasActive = !!data && data.status === 'active' && new Date(data.expiresAt) > new Date();
+    // Déwrappe la réponse du TransformInterceptor : { success, data: subscription }
+    const subscription = unwrap(data);
+    const hasActive = isSubscriptionActive(subscription);
     await StorageUtils().setStore("nIsAbonnement", hasActive ? "true" : "false");
   } catch {
     await StorageUtils().setStore("nIsAbonnement", "false");
@@ -107,59 +110,86 @@ class AuthService {
    */
   async login(signInBody: SIGN_IN) {
     try {
-      const { data } = await this.createService(URL_API_ROUTE.AUTH_LOGIN, {
+      const response = await this.createService(URL_API_ROUTE.AUTH_LOGIN, {
         email: signInBody.email,
         password: signInBody.password,
       });
+      const { data } = response;
+      // Debug: log la structure de la reponse pour diagnostiquer le parsing CapacitorHttp
+      console.log('[Auth] Login response keys:', Object.keys(data || {}));
+      console.log('[Auth] data.success:', data?.success, 'data.data?.user?', !!data?.data?.user, 'data.user?', !!data?.user);
 
-      if (data.user.access_token) {
+      // Avec CapacitorHttp active, la reponse peut etre { success, data: { user } } ou { user }
+      const user = data?.data?.user || data?.user;
+      if (!user) {
+        console.error('[Auth] No user in response. Full data:', JSON.stringify(data).substring(0, 500));
+        return;
+      }
+      const userData = user;
         // Stockage des informations utilisateur
-        this.storageUtils.setStore("nUser_Id", data.user?.id);
-        this.storageUtils.setStore("nToken", data.user?.access_token);
-        this.storageUtils.setStore("nRefreshToken", data.user?.refresh_token);
-        this.storageUtils.setStore("nType_Profil", data.user?.type_profil?.slug);
-        this.storageUtils.setStore("nRole", data.user?.role?.slug);
+        // IMPORTANT: await toutes les ecritures Preferences avant location.assign,
+        // sinon le route guard ne trouve pas le token au rechargement -> boucle login.
+        await Promise.all([
+          this.storageUtils.setStore("nUser_Id", userData?.id),
+          this.storageUtils.setStore("nToken", userData?.access_token),
+          this.storageUtils.setStore("nRefreshToken", userData?.refresh_token),
+          this.storageUtils.setStore("nType_Profil", userData?.type_profil?.slug),
+          this.storageUtils.setStore("nRole", userData?.role?.slug),
+        ]);
 
         // Stocker les infos utilisateur pour le paiement
-        const profil = data.user?.profil?.[0];
-        const userData = {
-          id: data.user?.id,
-          email: data.user?.email,
+        const profil = userData?.profil?.[0];
+        const userStoreData = {
+          id: userData?.id,
+          email: userData?.email,
           fullname: profil?.fullname || profil?.name || '',
           phone: profil?.phone || profil?.telephone || '',
         };
-        this.storageUtils.setStore("nUser", JSON.stringify(userData));
+        await this.storageUtils.setStore("nUser", JSON.stringify(userStoreData));
 
         // Vérification du statut d'abonnement avant redirection
-        if (data.user?.role?.slug !== "admin") {
-          await checkAndStoreSubscription(data.user.access_token, data.user.id);
+        if (userData?.role?.slug !== "admin") {
+          await checkAndStoreSubscription(userData.access_token, userData.id);
         } else {
           await this.storageUtils.setStore("nIsAbonnement", "true");
         }
 
         // Redirection en fonction du rôle et du profil
-        if (data.user?.role?.slug === "admin" || data.user.profil.length !== 0) {
-          if (data.user?.role?.slug === "admin") {
-            await this.storageUtils.setStore("nAdmin_Id", data.user?.id);
+        if (userData?.role?.slug === "admin" || userData.profil.length !== 0) {
+          if (userData?.role?.slug === "admin") {
+            await this.storageUtils.setStore("nAdmin_Id", userData?.id);
           } else {
-            await this.storageUtils.setStore("nProfil_1_Id", data.user?.profil[0]?.id.toString());
+            await this.storageUtils.setStore("nProfil_1_Id", userData?.profil[0]?.id.toString());
           }
-          
-          const toRedirect = this.getRedirectPath(data.user);
+
+          const toRedirect = this.getRedirectPath(userData);
           await this.storageUtils.setStore("nPageType", toRedirect);
-          location.assign(toRedirect);
+          // In Capacitor WebView, location.assign() does not trigger a full page
+          // reload for SPA routes. Use router.push() instead, then manually
+          // initialize push notifications (normally done in App.vue onMounted).
+          if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
+            await router.push(toRedirect);
+            // Initialize push notifications after login (App.vue only inits on mount)
+            try {
+              const { pushNotificationService } = await import('@/services/pushNotification.services');
+              await pushNotificationService.init();
+            } catch (e) {
+              console.warn('[Auth] Push init after login failed:', e);
+            }
+          } else {
+            location.assign(toRedirect);
+          }
           return;
         } else {
           // Redirection vers la création de profil pour les nouveaux utilisateurs
-          useProfilStore().state.activeMenu_typeOfProfil = data.user.type_profil.description;
-          const profileRoute = data.user.type_profil.slug === "parent"
+          useProfilStore().state.activeMenu_typeOfProfil = userData.type_profil.description;
+          const profileRoute = userData.type_profil.slug === "parent"
             ? { name: "AUTH_PROFILE_PARENT" }
             : { name: "AUTH_PROFILE_NOUNU" };
           await router.replace(profileRoute);
           return;
         }
-      }
-      
+
       return data;
     } catch (error: any) {
       this.handleLoginError(error);

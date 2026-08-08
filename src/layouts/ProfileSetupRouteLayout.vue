@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-white">
+  <div class="min-h-screen py-8 flex flex-col bg-white">
     <router-view v-slot="{ Component }">
       <component :is="Component" />
     </router-view>

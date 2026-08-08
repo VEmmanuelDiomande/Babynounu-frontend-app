@@ -3,7 +3,6 @@ import { StorageUtils } from "@/utils/store.utils";
 import { URL_API_ROUTE } from "@/routes/_requests/index.request";
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import { useChatUnreadCount, useNotificationUnreadCount } from "@/features/notifications/hooks/useNotificationCounts";
 
 export const useNotificationStore = defineStore("NOTIFICATION", () => {
   const state = reactive({

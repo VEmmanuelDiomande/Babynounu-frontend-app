@@ -21,6 +21,10 @@ export const useAuthSignInHook = () => {
 
 
   const Login = async (data: SIGN_IN) => {
+    // Garde anti-double-clic : si une connexion est déjà en cours,
+    // on ignore les clics suivants pour éviter les requêtes dupliquées.
+    if (state.loading) return;
+
     const authStore = useAuthStore();
     authStore.clearErrors();
     authStore.setUpdateProfil(false);

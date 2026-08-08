@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/vue-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { StorageUtils } from '@/utils/store.utils';
 import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 import axios from 'axios';
 import { queryKeys } from '@/lib/query/query-keys';
-import { computed, Ref } from 'vue';
+import { computed, toValue, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export function useParentProfile(enabled?: Ref<boolean> | boolean) {
   return useQuery({
@@ -24,14 +24,15 @@ export function useParentProfile(enabled?: Ref<boolean> | boolean) {
   });
 }
 
-export function useParentProfileById(parentId: string) {
+export function useParentProfileById(parentId: MaybeRefOrGetter<string>) {
   return useQuery({
-    queryKey: queryKeys.users.parentDetail(parentId),
+    queryKey: computed(() => queryKeys.users.parentDetail(toValue(parentId))),
     queryFn: async () => {
-      const response = await axios.get(`${URL_API_ROUTE.PARENT_FIND_ONE}/${parentId}`);
+      const id = toValue(parentId);
+      const response = await axios.get(`${URL_API_ROUTE.PARENT_FIND_ONE}/${id}`);
       return response.data;
     },
-    enabled: !!parentId,
+    enabled: computed(() => !!toValue(parentId)),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -55,14 +56,38 @@ export function useNounuProfile(enabled?: Ref<boolean> | boolean) {
   });
 }
 
-export function useNounuProfileById(nounuId: string) {
+export function useNounuProfileById(nounuId: MaybeRefOrGetter<string>) {
   return useQuery({
-    queryKey: queryKeys.users.nounuDetail(nounuId),
+    queryKey: computed(() => queryKeys.users.nounuDetail(toValue(nounuId))),
     queryFn: async () => {
-      const response = await axios.get(`${URL_API_ROUTE.NOUNU_DETAIL}/${nounuId}`);
+      const id = toValue(nounuId);
+      const response = await axios.get(`${URL_API_ROUTE.NOUNU_DETAIL}/${id}`);
       return response.data;
     },
-    enabled: !!nounuId,
+    enabled: computed(() => !!toValue(nounuId)),
     staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useUpdateNounuStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (status: 'disponible' | 'indisponible') => {
+      const nToken = await StorageUtils().getStore('nToken');
+      const token = nToken?.value;
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await axios.patch(
+        URL_API_ROUTE.NOUNU_UPDATE_STATUS,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.nounuProfile() });
+    },
   });
 }

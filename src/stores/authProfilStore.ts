@@ -66,6 +66,7 @@ interface ProfileState {
   in_error: {
     path?: string;
     message?: string;
+    errors?: Record<string, string>;
   };
 }
 
@@ -133,9 +134,17 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
 
     if (!result.success) {
       const firstError = result.error.issues[0];
+      const errorsMap: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path.join(".") || "_root";
+        if (!errorsMap[key]) {
+          errorsMap[key] = issue.message;
+        }
+      }
       state.in_error = {
         path: firstError.path.join("."),
         message: firstError.message,
+        errors: errorsMap,
       };
       return false;
     }
@@ -157,11 +166,13 @@ export const useProfilStore = defineStore("AuthProfilStore", () => {
         await createParentProfile();
       } catch (error) {
         const err = error as any;
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Erreur lors de la création du profil";
         state.in_error = {
-          message:
-            err?.response?.data?.message ||
-            err?.message ||
-            "Erreur lors de la création du profil",
+          message: msg,
+          errors: { _root: msg },
         };
       }
     } else {

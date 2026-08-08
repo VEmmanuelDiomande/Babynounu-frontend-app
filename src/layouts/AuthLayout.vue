@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-rose-50 flex flex-col">
+  <div class="min-h-screen py-8 bg-rose-50 flex flex-col">
     <!-- Top bar -->
     <div class="flex items-center justify-between px-6 py-5 hidden">
       <div class="flex items-center gap-2">

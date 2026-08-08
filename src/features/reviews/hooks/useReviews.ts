@@ -14,16 +14,17 @@ const getAuthHeaders = async () => {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 };
 
-export function useNounuReviews(nounuId: string, page = 1, limit = 5) {
+export function useNounuReviews(nounuId: MaybeRefOrGetter<string>, page = 1, limit = 5) {
   return useQuery({
-    queryKey: queryKeys.nounus.reviews(nounuId),
+    queryKey: computed(() => queryKeys.nounus.reviews(toValue(nounuId))),
     queryFn: async () => {
-      const response = await axios.get(`${URL_API_ROUTE.REVIEW_GET_BY_NOUNU}/${nounuId}`, {
+      const id = toValue(nounuId);
+      const response = await axios.get(`${URL_API_ROUTE.REVIEW_GET_BY_NOUNU}/${id}`, {
         params: { page, limit },
       });
       return response.data;
     },
-    enabled: !!nounuId,
+    enabled: computed(() => !!toValue(nounuId)),
     staleTime: 1000 * 60 * 5,
   });
 }
@@ -77,7 +78,9 @@ export function useCheckReviewsBatch(contractIds: MaybeRefOrGetter<string[]>) {
     const map = new Map<string, boolean>();
     const queryResults = (queries as unknown) as any[];
     ids.value.forEach((id, i) => {
-      const data = queryResults[i]?.data?.value;
+      const raw = queryResults[i]?.data?.value;
+      // TransformInterceptor wraps responses as { success, data }
+      const data = raw && typeof raw === 'object' && !Array.isArray(raw) && 'success' in raw && 'data' in raw ? raw.data : raw;
       if (data?.hasReviewed) {
         map.set(id, true);
       }

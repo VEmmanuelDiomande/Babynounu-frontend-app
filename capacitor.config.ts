@@ -8,7 +8,20 @@ const config: CapacitorConfig = {
   // Avec l'edge-to-edge Android 15+, le status bar est transparent et montre
   // ce fond. Sans cette option, le fond par defaut est sombre/noir.
   backgroundColor: "#fff1f2",
+  // Autorise les requetes HTTP (non-HTTPS) depuis le WebView servi en HTTPS.
+  // Necessaire pour tester en local contre http://<ip-pc>:3000 en dev.
+  // En production, l'API est en HTTPS donc cette option est sans effet.
+  android: {
+    allowMixedContent: true,
+  },
   plugins: {
+    // CapacitorHttp : intercepte les requetes HTTP/HTTPS du WebView et les
+    // execute via le client HTTP natif Android (OkHttp). Contourne les
+    // restrictions de Mixed Content du WebView et permet d'utiliser adb reverse
+    // (localhost:3000 sur le device -> localhost:3000 sur le PC via USB).
+    CapacitorHttp: {
+      enabled: true,
+    },
     // SystemBars (Capacitor 8 built-in) : gere l'edge-to-edge Android 15+/16.
     // insetsHandling "css" = Capacitor injecte les variables CSS --safe-area-inset-*
     // et applique le padding du WebView pour eviter que le contenu passe sous

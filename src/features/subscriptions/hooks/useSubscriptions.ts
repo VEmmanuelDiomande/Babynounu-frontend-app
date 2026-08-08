@@ -3,6 +3,7 @@ import { URL_API_ROUTE } from '@/routes/_requests/index.request';
 import { StorageUtils } from '@/utils/store.utils';
 import axios from 'axios';
 import { queryKeys } from '@/lib/query/query-keys';
+import { unwrap } from '@/utils/helpers.utils';
 
 const getAuthHeaders = async () => {
   const nToken = await StorageUtils().getStore('nToken');
@@ -16,7 +17,8 @@ export function useSubscription(userId: string) {
     queryFn: async () => {
       const headers = await getAuthHeaders();
       const response = await axios.get(URL_API_ROUTE.ABONNEMENT_USER, { headers });
-      return response.data;
+      // Déwrappe la réponse du TransformInterceptor : { success, data: subscription }
+      return unwrap(response.data);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,

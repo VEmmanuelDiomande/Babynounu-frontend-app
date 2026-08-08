@@ -101,7 +101,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import { verifyPayment, subscribeToPack } from '@/services/subscrible.services';
+import { verifyPayment } from '@/services/subscrible.services';
 import { StorageUtils } from '@/utils/store.utils';
 
 const router = useRouter();
@@ -118,7 +118,13 @@ const handleReturn = async (transactionId?: string) => {
   if (isHandling) return;
   isHandling = true;
 
-  const txId = transactionId || (route.query.transaction_id as string);
+  // Lit les params avec rétrocompatibilité :
+  // - bn_tx : nouveau nom préfixé (évite les conflits avec GeniusPay)
+  // - transaction_id / transactionId : anciens noms (paiements en cours)
+  const txId = transactionId
+    || (route.query.bn_tx as string)
+    || (route.query.transaction_id as string)
+    || (route.query.transactionId as string);
 
   if (!txId) {
     status.value = 'error';
@@ -148,18 +154,10 @@ const verifyTransaction = async (transactionId: string) => {
     const result = await verifyPayment(transactionId);
 
     if (result.status === 'Success') {
-      if (pendingPayment.value) {
-        try {
-          await subscribeToPack({
-            paymentId: result.paymentId,
-            packId: pendingPayment.value.packId,
-            durationDays: pendingPayment.value.packDurationDays,
-          });
-        } catch (e: any) {
-          console.warn('Subscription creation warning:', e.message);
-        }
-      }
-
+      // L'abonnement est créé automatiquement côté backend par VerifyPaymentUseCase
+      // (ensureSubscription). Ne PAS appeler subscribeToPack ici : cela créait un
+      // double-abonnement. SubscribeUseCase est désormais idempotent par sécurité,
+      // mais l'appel est superflu.
       await StorageUtils().setStore("nIsAbonnement", "true");
       await StorageUtils().removeStore("nPendingPayment");
       status.value = 'success';
@@ -194,7 +192,7 @@ const goSubscribe = () => {
 onMounted(async () => {
   if (Capacitor.isNativePlatform()) {
     browserListener = await Browser.addListener('browserFinished', () => {
-      const txId = route.query.transaction_id as string;
+      const txId = (route.query.bn_tx || route.query.transaction_id || route.query.transactionId) as string;
       if (txId) {
         handleReturn(txId);
       }
